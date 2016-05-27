@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>vuesmarttable</title>
+  </head>
+  <body>
+    <smart-table :body="{
+      0: {'city': 'Genoa', 'food': 'pesto', 'invented': 'banking'},
+      1: {'city': 'Florence', 'food': 'fiorentina', 'invented': 'italian language'},
+      2: {'city': 'Verona', 'food': 'amarone', 'invented': 'pandoro'},
+      3: {'city': 'Bologna', 'food': 'lasagne', 'invented': 'italic type'},
+      5: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'}
+    }">
+      <example-component slot="invented"></example-component>
+    </smart-table>
+    <!-- built files will be auto injected -->
+  </body>
+</html>
