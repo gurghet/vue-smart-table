@@ -39,7 +39,7 @@ npm run unit
 Working on break dependencies on other modules
 - build now yields only two files
 - external dependencies now needs to be available in global namespace
-..- Ramda
-..- jQuery
-..- Vue
-..- VueResource
+    - Ramda
+    - jQuery
+    - Vue
+    - VueResource
