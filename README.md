@@ -2,6 +2,8 @@
 
 > A vue table with dynamic components
 
+![vue smart table](http://s33.postimg.org/q4kvrqeu3/2016_05_29_15_20_48.jpg)
+
 ## Usage
 
 ``` bash
