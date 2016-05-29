@@ -45,8 +45,6 @@ module.exports = merge(baseWebpackConfig, {
   ],
   externals: {
       jquery: "jQuery",
-      ramda: "ramda",
-      vue: "Vue",
-      'vue-resource': "vueResource"
+      ramda: "ramda"
   }
 })
