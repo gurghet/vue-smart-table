@@ -1,8 +1,8 @@
 {
   "name": "vue-smart-table",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A Vue.js project",
-  "main": "dist/static/app.js",
+  "main": "dist/static/vue-smart-table.js",
   "author": "Andrea Passaglia <gurghet@gmail.com>",
   "scripts": {
     "dev": "node build/dev-server.js",
