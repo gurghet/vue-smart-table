@@ -7,6 +7,25 @@
 ``` bash
 npm install vue-smart-table --save
 ```
+In your app then you write (assuming you use ES6):
+
+``` javascript
+import 'vue-smart-table'
+let SmartTable = window.SmartTable
+...
+Vue.use(VueResource)
+Vue.component('smart-table', SmartTable)
+```
+
+After that you can freely use it in your templates:
+
+``` html
+<smart-table :body="{1:{hello:'world'}}"></smart-table>
+```
+
+*nota bene: I know this is not the best way to import a component for use in a Vue.js project,
+if anyone knows how to do it properly please send me a message, javascript is not
+my native language*
 
 ## Documentation
 
@@ -34,7 +53,11 @@ npm run unit
 
 ##Changelog
 
-1.0.4
+###1.0.5
+
+- stains the global scope with SmartTable constructor
+
+###1.0.4
 
 Working on break dependencies on other modules
 - build now yields only two files
