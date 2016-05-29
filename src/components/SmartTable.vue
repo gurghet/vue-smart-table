@@ -93,8 +93,6 @@
 <script type="module">
   import Modal from './Modal'
   import ModalEdit from './ModalEdit'
-  import $ from 'jquery'
-  import R from 'ramda'
   export default {
     components: { Modal, ModalEdit },
     data () {
