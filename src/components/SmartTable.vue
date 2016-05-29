@@ -380,13 +380,13 @@
       updateInjectedValues () {
         let children = this.$children
         let columns = Object.keys(this.tableHeader)
-        for (var child of children) {
+        children.forEach( (child) => {
           let col = (typeof child.$el.getAttribute === 'function') ? child.$el.getAttribute('slot') : null
           if (col !== null && columns.indexOf(col) !== -1) {
             let rowId = child.$el.parentElement.id.match(/^value-([0-9]+)-/)[1]
             child.value = this.processedSmartBody[rowId][col]
           }
-        }
+        });
       },
       toggleAllRows () {
         if (this.toggleAll === false) {
