@@ -17,7 +17,7 @@ describe('SmartTable.vue', () => {
       template: '<div><smart-table :body="testBody" :header="testColumns"></smart-table></div>',
       components: {SmartTable},
       data: {
-        testBody: {0: {c1: 'c11', c2: 'c21', c3: 'c31'}, 1: {c1: 'c12', c2: 'c22', c3: 'c32'}},
+        testBody: {7: {c1: 'c11', c2: 'c21', c3: 'c31'}, 1: {c1: 'c12', c2: 'c22', c3: 'c32'}},
         testColumns: ['C1', 'C2', 'C3']
       }
     }).$mount()
@@ -812,7 +812,7 @@ describe('SmartTable.vue', () => {
       done()
     })
   })
-  it('should report the total', () => {
+  xit('should report the total', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :sum="[\'age\']"  v-ref:ut></smart-table></div>',
       components: {'smart-table': SmartTable},

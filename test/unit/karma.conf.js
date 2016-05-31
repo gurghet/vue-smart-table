@@ -18,7 +18,7 @@ var webpackConfig = merge(baseConfig, {
   devtool: '#inline-source-map',
   vue: {
     loaders: {
-      js: 'isparta'
+      // js: 'isparta'
     }
   },
   plugins: [

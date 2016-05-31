@@ -5,12 +5,42 @@
     <title>vuesmarttable</title>
   </head>
   <body>
-    <smart-table :body="{
+    <smart-table :header="{city:'Citta',invented:'oien', fod:'s'}" :can-filter-by="['food']" :body="{
       0: {'city': 'Genoa', 'food': 'pesto', 'invented': 'banking'},
       1: {'city': 'Florence', 'food': 'fiorentina', 'invented': 'italian language'},
       2: {'city': 'Verona', 'food': 'amarone', 'invented': 'pandoro'},
       3: {'city': 'Bologna', 'food': 'lasagne', 'invented': 'italic type'},
-      5: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'}
+      5: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'},
+      10: {'city': 'Genoa', 'food': 'pesto', 'invented': 'banking'},
+      11: {'city': 'Florence', 'food': 'fiorentina', 'invented': 'italian language'},
+      12: {'city': 'Verona', 'food': 'amarone', 'invented': 'pandoro'},
+      13: {'city': 'Bologna', 'food': 'lasagne', 'invented': 'italic type'},
+      15: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'},
+      810: {'city': 'Genoa', 'food': 'pesto', 'invented': 'banking'},
+      811: {'city': 'Florence', 'food': 'fiorentina', 'invented': 'italian language'},
+      812: {'city': 'Verona', 'food': 'amarone', 'invented': 'pandoro'},
+      813: {'city': 'Bologna', 'food': 'lasagne', 'invented': 'italic type'},
+      815: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'},
+      210: {'city': 'Genoa', 'food': 'pesto', 'invented': 'banking'},
+      211: {'city': 'Florence', 'food': 'fiorentina', 'invented': 'italian language'},
+      212: {'city': 'Verona', 'food': 'amarone', 'invented': 'pandoro'},
+      213: {'city': 'Bologna', 'food': 'lasagne', 'invented': 'italic type'},
+      215: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'},
+      310: {'city': 'Genoa', 'food': 'pesto', 'invented': 'banking'},
+      311: {'city': 'Florence', 'food': 'fiorentina', 'invented': 'italian language'},
+      312: {'city': 'Verona', 'food': 'amarone', 'invented': 'pandoro'},
+      313: {'city': 'Bologna', 'food': 'lasagne', 'invented': 'italic type'},
+      315: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'},
+      4310: {'city': 'Genoa', 'food': 'pesto', 'invented': 'banking'},
+      4311: {'city': 'Florence', 'food': 'fiorentina', 'invented': 'italian language'},
+      4312: {'city': 'Verona', 'food': 'amarone', 'invented': 'pandoro'},
+      4313: {'city': 'Bologna', 'food': 'lasagne', 'invented': 'italic type'},
+      4315: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'},
+      54310: {'city': 'Genoa', 'food': 'pesto', 'invented': 'banking'},
+      54311: {'city': 'Florence', 'food': 'fiorentina', 'invented': 'italian language'},
+      54312: {'city': 'Verona', 'food': 'amarone', 'invented': 'pandoro'},
+      54313: {'city': 'Bologna', 'food': 'lasagne', 'invented': 'italic type'},
+      54315: {'city': 'Turin', 'food': 'panna cotta', 'invented': 'vermouth'}
     }">
       <example-component slot="invented"></example-component>
     </smart-table>
