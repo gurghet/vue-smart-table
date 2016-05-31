@@ -1,4 +1,4 @@
-# vuesmarttable
+# vue-smart-table
 
 > A vue table with dynamic components
 
