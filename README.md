@@ -12,10 +12,7 @@ npm install vue-smart-table --save
 In your app then you write (assuming you use ES6):
 
 ``` javascript
-import 'vue-smart-table'
-let SmartTable = window.SmartTable
-...
-Vue.use(VueResource)
+import SmartTable from "vue-smart-table"
 Vue.component('smart-table', SmartTable)
 ```
 
@@ -24,10 +21,6 @@ After that you can freely use it in your templates:
 ``` html
 <smart-table :body="{1:{hello:'world'}}"></smart-table>
 ```
-
-*nota bene: I know this is not the best way to import a component for use in a Vue.js project,
-if anyone knows how to do it properly please send me a message, javascript is not
-my native language*
 
 ## Documentation
 
