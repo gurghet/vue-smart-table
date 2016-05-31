@@ -30,12 +30,12 @@
       </tr>
       </thead>
       <tfoot>
-      <tr v-if="totals" class="totals-row">
-        <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
+      <!--tr v-if="totals" class="totals-row">
+        <td v-if="actionsArePresent"><!-- to match the toggle checkboxes -/-></td>
         <td v-for="(col, totalCell) in totals" id="value-total-{{col}}" track-by="$index">
           {{totalCell}}
         </td>
-      </tr>
+      </tr-->
       <tr v-for="footerRow in processedFooter" class="footer-row">
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td v-for="footerCell in footerRow" track-by="$index">
@@ -106,8 +106,8 @@
         newRow: {},
         canSaveNewRow: false,
         scrolledPast: false,
-        filters: {},
-        totals: undefined // footer line with totals
+        filters: {}
+        // totals: undefined // footer line with totals
       }
     },
     props: {
@@ -167,10 +167,10 @@
         type: Boolean,
         default: false
       },
-      sum: {
+      /* sum: {
         type: Array,
         default: () => []
-      }
+      }*/
     },
     computed: {
       processedFooter () {
@@ -213,10 +213,10 @@
         if (this.editable === false) {
           return []
         }
-        if ($.isArray(this.editable) && this.editable.length > 0) {
+        if (Array.isArray(this.editable) && this.editable.length > 0) {
           return this.editable.filter((el) => tableCols.indexOf(el) !== -1)
         }
-        if ($.isPlainObject(this.editable) && Object.keys(this.editable) > 0) {
+        if (this.isPlainObject(this.editable) && Object.keys(this.editable) > 0) {
           return Object.keys(this.editable).filter((el) => tableCols.indexOf(el) !== -1)
         }
         return []
@@ -264,27 +264,40 @@
       },
       processedSmartBody () {
         const bodyKeys = Object.keys(this.body)
-        var retVal = {}
-        bodyKeys.forEach((rowID) => {
-          retVal[rowID] = {}
-          const colIDs = Object.keys(this.tableHeader)
-          colIDs.forEach((id) => {
-            retVal[rowID][id] = this.body[rowID][id]
-          })
-        })
+        let props = [];
 
         // filter body using gui filters
-        retVal = R.filter(
-          row => R.all(
-            col => R.all(
-              filter => (filter !== col) ||
-              (JSON.stringify(row[col]).toLowerCase().indexOf(this.filters[filter].model.toLowerCase()) !== -1),
-              R.keys(this.filters)), // todo: for now JSON stringify, in the future let's use
-            R.keys(row)),            // todo: a flatten object function and then some textContent inside components
-          retVal)
+        let rows = [];
+          for(var o in this.body) {
+            rows.push(this.body[o]);
+            props.push(o)
+          }
+        let acc = {}
+        // remove unwanted columns
+        if (this.header !== undefined && !Array.isArray(this.header)) {
+          rows = rows.map(row => {
+            let retVal = {}
+            for (var col in this.header) {
+              if (this.header[col] !== undefined) {
+                retVal[col] = row[col]
+              }
+            }
+            return retVal
+          })
+        }
+        rows.forEach((row, i) => {
+          if (Object.keys(row).every(col =>
+            Object.keys(this.filters).every(filter =>
+              (filter !== col) ||
+              (JSON.stringify(row[col]).toLowerCase().indexOf(this.filters[filter].model.toLowerCase()) !== -1)
+            )
+          )) {
+            acc[props[i]] = row
+          }
+        })
 
         // compute the requested totals
-        if (this.sum.length > 0) {
+        /*if (this.sum.length > 0) {
           var addAsNumbers = (a, b) => Number(a) + Number(b) // otherwise they might be interpreted as strings
           this.totals = R.mapObjIndexed((v, k) => {
             if (R.contains(k, this.sum)) {
@@ -293,9 +306,9 @@
               return ''
             }
           }, R.values(retVal)[0])
-        }
+        }*/
 
-        return retVal
+        return acc
       },
       span () {
         return Object.keys(this.tableHeader).length + 1
@@ -310,15 +323,16 @@
       }
       // initialize filters
       if (Array.isArray(this.canFilterBy)) {
-        this.filters =
-          R.zipObj(this.canFilterBy, R.map(x => {return {open: false, model: ''}}, this.canFilterBy))
+        let acc = {}
+        this.canFilterBy.forEach(col => acc[col] = {open: false, model: ''} )
+        this.filters = acc
       }
     },
     compiled () {
       this.updateInjectedValues()
     },
     ready () {
-      $(window).scroll(this.refreshTableHeader)
+      window.addEventListener('scroll', this.refreshTableHeader)
     },
     watch: {
       'processedSmartBody' () {
@@ -329,8 +343,8 @@
       openFilter (column) {
         this.filters[column].open = true
         this.$nextTick(() => {
-          console.log('.' + column + '-filter-input > input')
-          $('.' + column + '-filter-input > input')[1].focus()
+          // todo: this doesn't work
+          // $('.' + column + '-filter-input > input')[1].focus()
         })
       },
       saveNewRow () {
@@ -359,20 +373,39 @@
         }
       },
       refreshTableHeader () {
-        const persistArea = $('.persist-area', this.$el)
-        const offset = persistArea.offset()
-        const scrollTop = $(window).scrollTop()
-        const scrollLeft = $(window).scrollLeft()
-        const scrolledDown = (scrollTop > offset.top)
-        const notScrolledAway = (scrollTop < offset.top + persistArea.height())
+        const persistAreas = [].slice.call(this.$el.getElementsByClassName('persist-area'))
+        const offset = persistAreas.map( (persistArea) => {
+          var offsetTop = 0
+            do {
+              if ( !isNaN( persistArea.offsetTop ) ) {
+                offsetTop += persistArea.offsetTop;
+              }
+            } while( persistArea = persistArea.offsetParent );
+           return offsetTop;
+        })[0]
+        const offsetLeft = persistAreas.map( (persistArea) => {
+          var offsetLeft = 0
+            do {
+              if ( !isNaN( persistArea.offsetLeft ) ) {
+                offsetLeft += persistArea.offsetLeft;
+              }
+            } while( persistArea = persistArea.offsetParent );
+           return offsetLeft;
+        })[0]
+        const scrollTop = window.scrollY
+        const scrollLeft = window.scrollX
+        const scrolledDown = (scrollTop > offset)
+        const notScrolledAway = (scrollTop < offset + persistAreas[0].offsetHeight)
         this.scrolledPast = scrolledDown && notScrolledAway
         // init
-        $('.floating-header').css({
-          'left': offset.left - scrollLeft,
-          'z-index': 3
-        })
-        $('.floating-header th').each(function (i) {
-          $(this).width($('.regular-header th').eq(i).width())
+        const floatingHeader = this.$el.getElementsByClassName('floating-header')[0]
+        const regularHeader = this.$el.getElementsByClassName('regular-header')[0]
+        floatingHeader.style.left = offsetLeft - scrollLeft
+        floatingHeader.style.zIndex = 3
+        const rths = [].slice.call(regularHeader.getElementsByTagName('th'))
+        const fths = [].slice.call(floatingHeader.getElementsByTagName('th'))
+        fths.forEach((fth, i) => {
+          fth.style.width = rths[i].offsetWidth + "px"
         })
       },
       updateInjectedValues () {
@@ -479,6 +512,9 @@
           this.$dispatch('failed-request')
           this.$dispatch('after-request')
         })
+      },
+      isPlainObject ( obj ) {
+        return obj !== null && typeof obj === 'object'
       },
       // setUndo (id, col, value) {
       // this.backMatrix[id][col] = value
