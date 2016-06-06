@@ -116,6 +116,11 @@
       orderKey: String,
       useTextAreaFor: Array,
       header: [Object, Array],
+      idCol: {
+        type: String,
+        required: false,
+        default: '_id'
+      },
       footer: {
         required: false
       },
@@ -135,12 +140,10 @@
           }
           if (body.length < 1) {
             console.warn('Warning: body has no rows')
-            return true
           }
-          if (body.some(row => row._id === undefined)) {
-            console.warn('The body passed has no _id field in at laest one row, they will be created')
-            return true
-          }
+          /*if (body.some(row => row[this.idCol] === undefined)) {
+            console.warn('The body passed has no ' + this.idCol + ' field in at laest one row, they will be created')
+          }*/
           return true
         }
       },
@@ -264,11 +267,12 @@
         if (this.body === undefined) {
           this.body = []
         }
-        // at least 1 row has _id undefined, add them where it's not present
+
+        // at least 1 row has id undefined, add them where it's not present
         let counter = 0
         this.body.forEach(row => {
-          if (row._id === undefined) {
-            row._id = "smart_" + counter++
+          if (row[this.idCol] === undefined) {
+            row[this.idCol] = "smart_" + counter++
           }
         })
 
@@ -286,7 +290,7 @@
             // filter unwanted columns
             let finalRow = {}
             Object.keys(this.tableHeader).forEach(col => finalRow[col] = row[col])
-            smartBody[row._id] = finalRow
+            smartBody[row[this.idCol]] = finalRow
           }
         })
 
