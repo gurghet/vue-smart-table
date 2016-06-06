@@ -13,6 +13,7 @@ chai.use(require('chai-dom'))
 let testBody = [{_id: 0, name: 'Gennaro', age: 34}, {_id: 1, name: 'Marco', age: 22}]
 let testBody2 = [{_id: 1, name: 'Gennaro', age: 34}, {_id: 3, name: 'Marco', age: 22}]
 let testBody3 = [{_id: 1, bau: 'Gennaro', pau: 34}, {_id: 55, bau: 'Marco', pau: 22}]
+let testBodyNoId = [{name: 'Gennaro', age: 34}, {name: 'Marco', age: 22}]
 
 describe('SmartTable.vue', () => {
   it('should display 6 td cells when given a 3x2 body', () => {
@@ -25,6 +26,15 @@ describe('SmartTable.vue', () => {
       }
     }).$mount()
     expect(vm.$el.querySelectorAll('td').length).to.eql(6)
+  })
+  it('should behave well when _id not present', () => {
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBodyNoId" v-ref:ut></smart-table></div>',
+      components: {'smart-table': SmartTable},
+      data: { testBodyNoId }
+    }).$mount()
+    expect(vm.$el.querySelectorAll('td').length).to.eql(4)
+    expect(vm.$el.querySelectorAll('#value-smart_1-name')).to.contain.text('Marco')
   })
   it('should display 6 td cells when given a 3x2 body and 9 td cells when one row is added', (done) => {
     const vm = new Vue({
