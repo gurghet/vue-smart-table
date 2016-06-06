@@ -111,6 +111,7 @@
       }
     },
     props: {
+      autoLoad: Boolean,
       canFilterBy: Array,
       orderKey: String,
       useTextAreaFor: Array,
@@ -125,10 +126,11 @@
       },
       body: {
         type: Array,
-        required: true,
+        required: false,
+        default: undefined,
         validator (body) {
-          if (body === null || body === undefined) {
-            console.error('Passed null as body! If you are loading data, pass an empty array')
+          if ((body === null || body === undefined) && this.autoLoad !== true) {
+            console.error('Passed null as body! If you are loading data, add \':auto-load="true"\'')
             return false
           }
           if (body.length < 1) {
@@ -259,6 +261,9 @@
         }
       },
       processedSmartBody () {
+        if (this.body === undefined) {
+          this.body = []
+        }
         // at least 1 row has _id undefined, add them where it's not present
         let counter = 0
         this.body.forEach(row => {
@@ -318,7 +323,23 @@
       }
     },
     compiled () {
-      this.updateInjectedValues()
+      // load data if auto-load set to true
+      if (this.autoLoad === true) {
+         this.$http.get(this.endpoint).then((response) => {
+          this.$set('body', response.data.body)
+          this.$set('footer', response.data.footer)
+          this.$dispatch('successful-request')
+          this.$dispatch('after-request')
+          this.$set('error', false)
+          this.updateInjectedValues()
+        }, (response) => {
+          this.$set('error', { status: response.status, data: response.data.error })
+          this.$dispatch('failed-request')
+          this.$dispatch('after-request')
+        })
+      } else {
+        this.updateInjectedValues()
+      }
     },
     ready () {
       window.addEventListener('scroll', this.refreshTableHeader)
