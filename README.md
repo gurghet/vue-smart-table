@@ -30,6 +30,15 @@ http://forum.vuejs.org/topic/4140/vue-smart-table
 
 I will move it to a dedicated website as soon as possible.
 
+## Current branch, yet to release breaking changes
+
+The format of the body will be soon turned into the following (__current branch, not yet in npm__):
+
+``` json
+[ { _id: 3 , name: 'John'  , surname: 'Smith' },
+  { _id: 92, name: 'Fulano', surname: 'Perro' } ]
+```
+
 ## Contribute
 
 ``` bash
@@ -47,6 +56,10 @@ npm run unit
 ```
 
 ##Changelog
+
+###2.0.0 [Not released yet!]
+
+- The format of the body is completely changed to a more standard format (see above)
 
 ###1.0.5
 
