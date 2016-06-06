@@ -53,18 +53,18 @@
       </tr>
       </tfoot>
       <tbody>
-      <tr v-for="(id, entry) in processedSmartBody
-        | orderBy orderKey -1" class="row-{{id}}">
+      <tr v-for="(key, entry) in processedSmartBody
+        | orderBy orderKey -1" class="row-{{key}}">
         <td v-if="actionsArePresent">
-          <input id="toggle-{{id}}" value="{{id}}" type="checkbox" v-model="selection"/>
+          <input id="toggle-{{key}}" value="{{key}}" type="checkbox" v-model="selection"/>
         </td>
         <td
           v-for="(col, value) in entry"
-          id="cell-{{id}}-{{col}}"
+          id="cell-{{key}}-{{col}}"
           class="cell-{{col}}"
-          @dblclick="valueClick(id, col)"
+          @dblclick="valueClick(key, col)"
         >
-          <div id="value-{{id}}-{{col}}">
+          <div id="value-{{key}}-{{col}}">
             <slot :name="col">
               {{value}}
             </slot>
@@ -124,29 +124,16 @@
         default: undefined
       },
       body: {
-        type: Object,
+        type: Array,
         required: true,
         validator (body) {
           if (body === null || body === undefined) {
-            console.log('Passed null as body! If you are loading data, pass an empty object')
+            console.log('Passed null as body! If you are loading data, pass an empty array')
             return false
           }
-          const bodyKeys = Object.keys(body)
-          if (bodyKeys.length < 1) {
+          if (body.length < 1) {
             console.log('Warning: body has no rows')
             return true
-          }
-          const firstEntry = body[bodyKeys[0]]
-          const firstEntryCol = Object.keys(firstEntry)
-          const span = firstEntryCol.length
-          for (var id in body) {
-            if (body.hasOwnProperty(id)) {
-              var entrySpan = Object.keys(body[id]).length
-              if (span !== entrySpan) {
-                console.log('entry ' + JSON.stringify(body[id]) + ' has not length ' + span)
-                return false
-              }
-            }
           }
           return true
         }
@@ -231,30 +218,35 @@
         return false
       },
       tableHeader () {
+        // must not depend on processedSmartBody
         // if object return object
         if (this.header !== undefined && !Array.isArray(this.header)) {
           return this.header
         }
+        // the header is either an array or undefined
         var bodyKeys = Object.keys(this.body)
         if (bodyKeys.length < 1) {
           return {}
         }
         var header = {}
-        const firstEntry = this.body[bodyKeys[0]]
-        const firstEntryKeys = Object.keys(firstEntry)
-        firstEntryKeys.forEach((colKey, i) => {
+        let columns = [...new Set([].concat.apply([], this.body.map(row => Object.keys(row))))]
+        // filter hidden columns (columns that start with underscore)
+        columns = columns.filter(col => !/^_/.test(col))
+        // build the tableHeader object
+        columns.forEach((colKey, i) => {
           if (this.header === undefined) {
             header[colKey] = colKey
           } else {
             header[colKey] = this.header[i]
           }
         })
+
         return header
       },
       mainCol () {
         // choose an appropriate default label column
-        var bodyKeys = Object.keys(this.body)
-        const firstEntry = this.body[bodyKeys[0]]
+        var bodyKeys = Object.keys(this.processedSmartBody)
+        const firstEntry = this.processedSmartBody[bodyKeys[0]]
         const firstEntryKeys = Object.keys(firstEntry)
         if (firstEntryKeys.indexOf(this.labelCol) === -1) {
           return firstEntryKeys[0]
@@ -263,36 +255,21 @@
         }
       },
       processedSmartBody () {
-        const bodyKeys = Object.keys(this.body)
-        let props = [];
-
         // filter body using gui filters
-        let rows = [];
-          for(var o in this.body) {
-            rows.push(this.body[o]);
-            props.push(o)
-          }
-        let acc = {}
-        // remove unwanted columns
-        if (this.header !== undefined && !Array.isArray(this.header)) {
-          rows = rows.map(row => {
-            let retVal = {}
-            for (var col in this.header) {
-              if (this.header[col] !== undefined) {
-                retVal[col] = row[col]
-              }
-            }
-            return retVal
-          })
-        }
-        rows.forEach((row, i) => {
+        let smartBody = {}
+
+        // filter unwanted rows
+        this.body.forEach(row => {
           if (Object.keys(row).every(col =>
             Object.keys(this.filters).every(filter =>
               (filter !== col) ||
               (JSON.stringify(row[col]).toLowerCase().indexOf(this.filters[filter].model.toLowerCase()) !== -1)
             )
           )) {
-            acc[props[i]] = row
+            // filter unwanted columns
+            let finalRow = {}
+            Object.keys(this.tableHeader).forEach(col => finalRow[col] = row[col])
+            smartBody[row._id] = finalRow
           }
         })
 
@@ -308,7 +285,7 @@
           }, R.values(retVal)[0])
         }*/
 
-        return acc
+        return smartBody
       },
       span () {
         return Object.keys(this.tableHeader).length + 1
@@ -431,13 +408,13 @@
       next () {
         var actionKey = this.action
         var actionLabel = this.actions[this.action]
-        var selectionKeyLabel = this.selection.map((k) => {
-          if (this.body[k] !== undefined) {
-            return {key: k, label: this.body[k][this.mainCol]}
+        var selectionKeyLabel = this.selection.map(k => {
+          if (this.processedSmartBody[k] !== undefined) {
+            return {key: k, label: this.processedSmartBody[k][this.mainCol]}
           } else {
             return null
           }
-        }, this).filter((a) => {return a !== null})
+        }).filter(a => a !== null)
         var commandToBeConfirmed = { action: { key: actionKey, label: actionLabel}, selection: selectionKeyLabel }
         this.$broadcast('command', commandToBeConfirmed)
       },
