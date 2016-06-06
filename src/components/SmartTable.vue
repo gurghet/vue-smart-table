@@ -128,11 +128,15 @@
         required: true,
         validator (body) {
           if (body === null || body === undefined) {
-            console.log('Passed null as body! If you are loading data, pass an empty array')
+            console.error('Passed null as body! If you are loading data, pass an empty array')
             return false
           }
           if (body.length < 1) {
-            console.log('Warning: body has no rows')
+            console.warn('Warning: body has no rows')
+            return true
+          }
+          if (body.some(row => row._id === undefined)) {
+            console.warn('The body passed has no _id field in at laest one row, they will be created')
             return true
           }
           return true
@@ -255,6 +259,14 @@
         }
       },
       processedSmartBody () {
+        // at least 1 row has _id undefined, add them where it's not present
+        let counter = 0
+        this.body.forEach(row => {
+          if (row._id === undefined) {
+            row._id = "smart_" + counter++
+          }
+        })
+
         // filter body using gui filters
         let smartBody = {}
 
