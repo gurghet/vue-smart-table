@@ -1,6 +1,6 @@
 {
   "name": "vue-smart-table",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "description": "A table with dynamic components for vue.js",
   "main": "src/components/SmartTable.vue",
   "author": "Andrea Passaglia <gurghet@gmail.com>",
@@ -25,8 +25,7 @@
     "grid",
     "smart"
   ],
-  "dependencies": {
-  },
+  "dependencies": {},
   "peerDependencies": {
     "vue": "^1.0.21",
     "vue-resource": "^0.7.0"

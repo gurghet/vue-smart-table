@@ -19,7 +19,8 @@ In your app then you write:
 import SmartTable from "vue-smart-table"
 Vue.component('smart-table', SmartTable)
 ```
-### <script> tag inside your page
+
+### &lt;script&gt; tag inside your page
 
 Nothing! The component will register itself!
 
@@ -40,7 +41,7 @@ http://forum.vuejs.org/topic/4140/vue-smart-table
 I will move it to a dedicated website as soon as possible.
 
 
-The format of the body is like the following (__current branch, not yet in npm__):
+The format of the body is like the following:
 
 ``` json
 [ { _id: 3 , name: 'John'  , surname: 'Smith' },
