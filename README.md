@@ -7,11 +7,11 @@
 
 ## Usage
 
+### Webpack/Browserify
+
 ``` bash
 npm install vue-smart-table --save
 ```
-
-### Webpack/Browserify
 
 In your app then you write:
 
