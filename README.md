@@ -7,7 +7,7 @@
 
 ## Usage
 
-### Webpack/Browserify
+#### Webpack/Browserify
 
 ``` bash
 npm install vue-smart-table --save
@@ -20,7 +20,7 @@ import SmartTable from "vue-smart-table"
 Vue.component('smart-table', SmartTable)
 ```
 
-### &lt;script&gt; tag inside your page
+#### &lt;script&gt; tag inside your page
 
 ``` html
 <!-- optional in your head -->
