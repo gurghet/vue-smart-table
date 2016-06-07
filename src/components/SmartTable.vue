@@ -129,28 +129,19 @@
         required: false,
         default: undefined
       },
+      bodyField: {
+        type: String,
+        default: "body"
+      },
       body: {
         type: Array,
         required: false,
-        default: undefined,
-        validator (body) {
-          if ((body === null || body === undefined) && this.autoLoad !== true) {
-            console.error('Passed null as body! If you are loading data, add \':auto-load="true"\'')
-            return false
-          }
-          if (body.length < 1) {
-            console.warn('Warning: body has no rows')
-          }
-          /*if (body.some(row => row[this.idCol] === undefined)) {
-            console.warn('The body passed has no ' + this.idCol + ' field in at laest one row, they will be created')
-          }*/
-          return true
-        }
+        default: undefined
       },
       actions: [Object, Array],
       endpoint: {
         type: String,
-        default: 'http://jsonplaceholder.typicode.com/photos'
+        default: 'http://api.randomuser.me/?results=2&seed=abc'
       },
       labelCol: {
         type: String,
@@ -227,6 +218,9 @@
         return false
       },
       tableHeader () {
+        if (this.body === undefined) {
+          this.body = []
+        }
         // must not depend on processedSmartBody
         // if object return object
         if (this.header !== undefined && !Array.isArray(this.header)) {
@@ -271,7 +265,8 @@
         // at least 1 row has id undefined, add them where it's not present
         let counter = 0
         this.body.forEach(row => {
-          if (row[this.idCol] === undefined) {
+          let idValue = this.idCol.split('.').reduce((o,i)=>o[i], row)
+          if ((idValue === undefined || idValue === null) && (row[this.idCol] === undefined || row[this.idCol] === null)) {
             row[this.idCol] = "smart_" + counter++
           }
         })
@@ -289,8 +284,14 @@
           )) {
             // filter unwanted columns
             let finalRow = {}
-            Object.keys(this.tableHeader).forEach(col => finalRow[col] = row[col])
-            smartBody[row[this.idCol]] = finalRow
+            Object.keys(this.tableHeader).forEach(col => {
+              let realColValue = col.split('.').reduce((o,i)=>o[i], row)
+              finalRow[col] = realColValue
+            })
+            let idValue = this.idCol.split('.').reduce((o,i)=>o[i], row)
+            let altIdValue = row[this.idCol]
+            let finalIdValue = idValue || altIdValue
+            smartBody[finalIdValue] = finalRow
           }
         })
 
@@ -313,6 +314,10 @@
       }
     },
     beforeCompile () {
+      if ((this.body === undefined || this.body.lenght < 1) && this.autoLoad === false) {
+        console.warn("Body passed is empty, if you want to load data set auto-load to true")
+      }
+
       // if actions is not an object, it doesn't have labels
       if (Array.isArray(this.actions)) {
         var actionsObj = {}
@@ -330,7 +335,7 @@
       // load data if auto-load set to true
       if (this.autoLoad === true) {
          this.$http.get(this.endpoint).then((response) => {
-          this.$set('body', response.data.body)
+          this.$set('body', response.data[this.bodyField])
           this.$set('footer', response.data.footer)
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
@@ -428,7 +433,8 @@
         children.forEach( (child) => {
           let col = (typeof child.$el.getAttribute === 'function') ? child.$el.getAttribute('slot') : null
           if (col !== null && columns.indexOf(col) !== -1) {
-            let rowId = child.$el.parentElement.id.match(/^value-([0-9]+)-/)[1]
+            // let pattern = new RegExp("/^value-([a-zA-Z0-9 ._-]+)-"+col+"/")
+            let rowId = child.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
             child.value = this.processedSmartBody[rowId][col]
           }
         });
