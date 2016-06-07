@@ -22,7 +22,14 @@ Vue.component('smart-table', SmartTable)
 
 ### &lt;script&gt; tag inside your page
 
-Nothing! The component will register itself!
+``` html
+<!-- optional in your head -->
+<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.0.0/dist/static/vue-smart-table-default.css">
+<!-- at the end of your body -->
+<script src="https://npmcdn.com/vue-smart-table@2.0.0/dist/static/vue-smart-table.js"></script>
+```
+
+That’s it! The component will register itself!
 
  ---
 
@@ -43,7 +50,7 @@ I will move it to a dedicated website as soon as possible.
 
 The format of the body is like the following:
 
-``` json
+```
 [ { _id: 3 , name: 'John'  , surname: 'Smith' },
   { _id: 92, name: 'Fulano', surname: 'Perro' } ]
 ```
