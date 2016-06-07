@@ -13,6 +13,7 @@ chai.use(require('chai-dom'))
 let testBody = [{_id: 0, name: 'Gennaro', age: 34}, {_id: 1, name: 'Marco', age: 22}]
 let testBody2 = [{_id: 1, name: 'Gennaro', age: 34}, {_id: 3, name: 'Marco', age: 22}]
 let testBody3 = [{_id: 1, bau: 'Gennaro', pau: 34}, {_id: 55, bau: 'Marco', pau: 22}]
+let testBodyId = [{id: 1, name: 'Gennaro', age: 34}, {id: 3, name: 'Marco', age: 22}]
 let testBodyNoId = [{name: 'Gennaro', age: 34}, {name: 'Marco', age: 22}]
 
 describe('SmartTable.vue', () => {
@@ -122,6 +123,29 @@ describe('SmartTable.vue', () => {
     vm.$children[0].next()
     expect(vm.$children[0].$refs.son.received).to.eql(true)
   })
+  it('should broadcast \'command\' with an action when command called and id-col is set', () => {
+    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
+    const SmartTableWithMock = inject({
+      './Modal': {
+        data () {
+          this.$parent.$refs['son'] = this
+          return {received: false}
+        },
+        events: {
+          'command' () {
+            this.received = true
+          }
+        }
+      }
+    })
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBodyId" :actions="[\'act1\']" id-col="id"></smart-table></div>',
+      components: {'smart-table': SmartTableWithMock},
+      data: { testBodyId }
+    }).$mount()
+    vm.$children[0].next()
+    expect(vm.$children[0].$refs.son.received).to.eql(true)
+  })
   it('should broadcast \'command\' with an action key and label when command called (simple array case)', (done) => {
     const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
     const SmartTableWithMock = inject({
@@ -183,6 +207,27 @@ describe('SmartTable.vue', () => {
       template: '<div><smart-table :body="testBody2" :actions="[\'act1\']"></smart-table></div>',
       components: {'smart-table': SmartTableWithMock},
       data: { testBody2 }
+    }).$mount()
+    vm.$children[0].action = 'act1'
+    vm.$children[0].selection = [1, 3]
+    vm.$children[0].next()
+  })
+  it('should broadcast \'command\' with an array of id and labels when command called with id-col changed', (done) => {
+    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
+    const SmartTableWithMock = inject({
+      './Modal': {
+        events: {
+          'command' (command) {
+            expect(command.selection).to.eql([{key: 1, label: 'Gennaro'}, {key: 3, label: 'Marco'}])
+            done()
+          }
+        }
+      }
+    })
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBodyId" :actions="[\'act1\']" id-col="id" label-col="name"></smart-table></div>',
+      components: {'smart-table': SmartTableWithMock},
+      data: { testBodyId }
     }).$mount()
     vm.$children[0].action = 'act1'
     vm.$children[0].selection = [1, 3]
@@ -351,6 +396,26 @@ describe('SmartTable.vue', () => {
       data: { testBody3 }
     }).$mount()
     expect(vm.$children[0].mainCol).to.eql('bau')
+  })
+  it('should show a delete button if delete is set to true', () => {
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBody2" :delete="true"></smart-table></div>',
+      components: {SmartTable},
+      data: {testBody2}
+    }).$mount()
+    expect(vm.$el.querySelectorAll('button#delete-3').length).to.eql(1)
+  })
+  it('should be able to form derived columns', () => {
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBody" :header="subset"></smart-table></div>',
+      components: {SmartTable},
+      data: {
+        subset: {'name+age': 'Nome+'},
+        testBody: [{_id: 1, name: 'Gennaro', age: 34, hidden: 'pupu'}, {_id: 55, name: 'Marco', age: 22, hidden: 'caca'}]
+      }
+    }).$mount()
+    expect(vm.$el.querySelectorAll('td').length).to.eql(2)
+    expect(vm.$el.querySelector('#value-1-name\\+age')).to.exist
   })
   // todo: bring this to e2e
   /* it('double clicking a field should put it in edit mode', (done) => {
