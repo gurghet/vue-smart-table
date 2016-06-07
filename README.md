@@ -19,7 +19,7 @@ Vue.component('smart-table', SmartTable)
 After that you can freely use it in your templates:
 
 ``` html
-<smart-table :body="{1:{hello:'world'}}"></smart-table>
+<smart-table :body="[{hello:'world'}]"></smart-table>
 ```
 
 ## Documentation
@@ -57,9 +57,13 @@ npm run unit
 
 ##Changelog
 
-###2.0.0 [Not released yet!]
+###2.0.0
 
-- The format of the body is completely changed to a more standard format (see above)
+- completely new body format (see docs)
+- auto loading data on startup using the "auto-load" prop
+- header can read from nested attributes with dot notation (eg. "name.last")
+- ids can now include letters, some signs (._-) and can be null
+- body and id fields can be changed through "body-field" and "id-col" props
 
 ###1.0.5
 
