@@ -74,6 +74,10 @@ npm run ~unit
 
 ##Changelog
 
+###2.1.0
+
+- derived columns (`:header="{'home+office+mobile':'contacts'}"`)
+
 ###2.0.0
 
 - completely new body format (see docs)
