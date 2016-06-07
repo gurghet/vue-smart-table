@@ -3,18 +3,27 @@
 > A vue table with dynamic components
 
 ![vue smart table](http://s33.postimg.org/tbffbcza7/2016_05_29_15_20_48.png)[Demo](http://codepen.io/gurghet/pen/gMOoPB)
+![vue smart table2](http://s32.postimg.org/l807y2sxh/Cattura.png)[Demo2](http://codepen.io/gurghet/pen/KMdvar)
 
 ## Usage
 
 ``` bash
 npm install vue-smart-table --save
 ```
-In your app then you write (assuming you use ES6):
+
+### Webpack/Browserify
+
+In your app then you write:
 
 ``` javascript
 import SmartTable from "vue-smart-table"
 Vue.component('smart-table', SmartTable)
 ```
+### <script> tag inside your page
+
+Nothing! The component will register itself!
+
+ ---
 
 After that you can freely use it in your templates:
 
@@ -30,9 +39,8 @@ http://forum.vuejs.org/topic/4140/vue-smart-table
 
 I will move it to a dedicated website as soon as possible.
 
-## Current branch, yet to release breaking changes
 
-The format of the body will be soon turned into the following (__current branch, not yet in npm__):
+The format of the body is like the following (__current branch, not yet in npm__):
 
 ``` json
 [ { _id: 3 , name: 'John'  , surname: 'Smith' },
@@ -45,14 +53,15 @@ The format of the body will be soon turned into the following (__current branch,
 # install dependencies
 npm install
 
-# serve demo app  with hot reload at localhost:8080
+# serve demo app with hot reload at localhost:8080
 npm run dev
 
-# build for production with minification
+# build standalone with minification
 npm run build
 
 # run unit tests
-npm run unit
+# always run unit tests! D:<
+npm run ~unit
 ```
 
 ##Changelog

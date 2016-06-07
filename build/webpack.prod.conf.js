@@ -20,6 +20,8 @@ module.exports = merge(baseWebpackConfig, {
   output: {
     path: config.build.assetsRoot, // dist directory
     filename: utils.assetsPath('vue-smart-table.js'),
+    library: "SmartTable",
+    libraryTarget: "umd"
   },
   vue: {
     loaders: utils.cssLoaders({
