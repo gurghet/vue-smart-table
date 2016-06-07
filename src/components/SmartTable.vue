@@ -14,6 +14,7 @@
           <input type="text" v-model="filters[column].model"/>
         </div>
       </th>
+      <th v-if="delete">
       </thead>
       <thead class="regular-header" :class="{ transparent: scrolledPast }">
       <tr>
@@ -26,6 +27,8 @@
           <div v-if="filters[column] && filters[column].open" class="{{column}}-filter-input">
             <input type="text" v-model="filters[column].model"/>
           </div>
+        </th>
+        <th v-if="delete">
         </th>
       </tr>
       </thead>
@@ -41,6 +44,7 @@
         <td v-for="footerCell in footerRow" track-by="$index">
           {{footerCell}}
         </td>
+        <td v-if="delete"></td>
       </tr>
       <tr v-if="actionsArePresent" class="action-row">
         <td class="smart-control-bar" colspan="{{span}}">
@@ -70,6 +74,9 @@
             </slot>
           </div>
         </td>
+        <td v-if="delete">
+          <button id="delete-{{key}}" @click="remove(key)">Delete</button>
+        </td>
       </tr>
       <tr v-if="addRow" class="row-new">
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
@@ -82,6 +89,7 @@
             <option v-for="(value, label) in inputList[col]" value="{{value}}" class="input-label">{{label}}</option>
           </select>
         </td>
+        <td v-if="delete"></td>
       </tr>
       </tbody>
     </table>
@@ -121,6 +129,10 @@
         required: false,
         default: '_id'
       },
+      'delete': {
+        type: Boolean,
+        default: false
+      },
       footer: {
         required: false
       },
@@ -141,7 +153,7 @@
       actions: [Object, Array],
       endpoint: {
         type: String,
-        default: 'http://api.randomuser.me/?results=2&seed=abc'
+        default: 'http://localhost:8080'
       },
       labelCol: {
         type: String,
@@ -218,10 +230,11 @@
         return false
       },
       tableHeader () {
+        // WARNING: must not (and cannot) depend on processedSmartBody!
+
         if (this.body === undefined) {
           this.body = []
         }
-        // must not depend on processedSmartBody
         // if object return object
         if (this.header !== undefined && !Array.isArray(this.header)) {
           return this.header
@@ -248,11 +261,8 @@
       },
       mainCol () {
         // choose an appropriate default label column
-        var bodyKeys = Object.keys(this.processedSmartBody)
-        const firstEntry = this.processedSmartBody[bodyKeys[0]]
-        const firstEntryKeys = Object.keys(firstEntry)
-        if (firstEntryKeys.indexOf(this.labelCol) === -1) {
-          return firstEntryKeys[0]
+        if (Object.keys(this.tableHeader).indexOf(this.labelCol) === -1) {
+          return Object.keys(this.tableHeader)[0]
         } else {
           return this.labelCol
         }
@@ -285,7 +295,15 @@
             // filter unwanted columns
             let finalRow = {}
             Object.keys(this.tableHeader).forEach(col => {
-              let realColValue = col.split('.').reduce((o,i)=>o[i], row)
+              let realColValue = {}
+              if (/\+/.test(col)) {
+                // it's a composite column will return an object
+                col.split('+').forEach(d=>{
+                  realColValue[d] = d.split('.').reduce((o,i)=>o[i], row)
+                })
+              } else {
+                realColValue = col.split('.').reduce((o,i)=>o[i], row)
+              }
               finalRow[col] = realColValue
             })
             let idValue = this.idCol.split('.').reduce((o,i)=>o[i], row)
@@ -310,7 +328,7 @@
         return smartBody
       },
       span () {
-        return Object.keys(this.tableHeader).length + 1
+        return Object.keys(this.tableHeader).length + 1 + (this.delete ? 1 : 0)
       }
     },
     beforeCompile () {
@@ -369,7 +387,7 @@
       saveNewRow () {
         if (this.canSaveNewRow) {
           this.$dispatch('before-request')
-          this.$http.get(this.endpoint, {action: 'addRow', resource: this.newRow}).then((response) => {
+          this.$http.post(this.endpoint, {action: 'addRow', resource: this.newRow}).then((response) => {
             this.$set('error', false)
             this.$set('body', response.data.body)
             this.$dispatch('successful-request')
@@ -442,7 +460,7 @@
       toggleAllRows () {
         if (this.toggleAll === false) {
           this.toggleAll = true
-          this.selection = Object.keys(this.body)
+          this.selection = Object.keys(this.processedSmartBody)
         } else {
           this.toggleAll = false
           this.selection = []
@@ -463,19 +481,50 @@
       },
       doCommand (command) {
         this.$dispatch('before-request')
-        this.$http.get(this.endpoint, command).then((response) => {
-          if (response.data.body !== undefined || response.data.body === {}) {
-            this.$set('body', response.data.body)
+
+        // special case
+        if (/^(_remove|_delete)$/i.test(command.action)) {
+          this.$http.delete(this.endpoint, command).then(onSuccess, onFailure)
+        } else {
+          this.$http.get(this.endpoint, command).then(onSuccess, onFailure)
+        }
+
+        function onSuccess(response) {
+          if (response.data[this.bodyField] !== undefined || response.data[this.bodyField] === {}) {
+            this.$set('body', response.data[this.bodyField])
             this.$set('footer', response.data.footer)
           }
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
           this.$set('error', false)
-        }, (response) => {
+        }
+
+        function onFailure(response) {
           this.$set('error', { status: response.status, data: response.data.error })
           this.$dispatch('failed-request')
           this.$dispatch('after-request')
-        })
+        }
+      },
+      remove (id) {
+        this.$dispatch('before-request')
+
+        this.$http.delete(this.endpoint + '/' + id).then(onSuccess, onFailure)
+
+        function onSuccess(response) {
+          if (response.data[this.bodyField] !== undefined || response.data[this.bodyField] === {}) {
+            this.$set('body', response.data[this.bodyField])
+            this.$set('footer', response.data.footer)
+          }
+          this.$dispatch('successful-request')
+          this.$dispatch('after-request')
+          this.$set('error', false)
+        }
+
+        function onFailure(response) {
+          this.$set('error', { status: response.status, data: response.data.error })
+          this.$dispatch('failed-request')
+          this.$dispatch('after-request')
+        }
       },
       isEditable (col) {
         if (this.editable === false) {
@@ -499,8 +548,8 @@
           this.modalEdit = {
             id: id,
             col: col,
-            currentValue: this.body[id][col],
-            previousValue: this.body[id][col],
+            currentValue: this.processedSmartBody[id][col],
+            previousValue: this.processedSmartBody[id][col],
             type: this.editType(col)
           }
           this.$broadcast('modalEdit', this.modalEdit)
