@@ -451,9 +451,15 @@
         children.forEach( (child) => {
           let col = (typeof child.$el.getAttribute === 'function') ? child.$el.getAttribute('slot') : null
           if (col !== null && columns.indexOf(col) !== -1) {
-            // let pattern = new RegExp("/^value-([a-zA-Z0-9 ._-]+)-"+col+"/")
             let rowId = child.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
             child.value = this.processedSmartBody[rowId][col]
+            if (this.addRow && child.inputTemplate !== undefined) {
+              let addRowId = 'edit-new-' + col
+              child.inputTemplate
+              // 1. mount the input sub-component
+              // 2. add watcher for known value inside sub-component
+              // 3. link said value to newRow[col]
+            }
           }
         });
       },
