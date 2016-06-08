@@ -24,9 +24,9 @@ Vue.component('smart-table', SmartTable)
 
 ``` html
 <!-- optional in your head -->
-<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.0.0/dist/static/vue-smart-table-default.css">
+<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.1.1/dist/static/vue-smart-table-default.css">
 <!-- at the end of your body -->
-<script src="https://npmcdn.com/vue-smart-table@2.0.0/dist/static/vue-smart-table.js"></script>
+<script src="https://npmcdn.com/vue-smart-table@2.1.1/dist/static/vue-smart-table.js"></script>
 ```
 
 That’s it! The component will register itself!
@@ -73,6 +73,10 @@ npm run ~unit
 ```
 
 ##Changelog
+
+###2.1.1
+
+- forgot to rebuild the dist files -.-
 
 ###2.1.0
 
