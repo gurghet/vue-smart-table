@@ -3,10 +3,14 @@
 </template>
 
 <script>
+  let inputTemplate = `
+    <p>You gimme input. You gimme input nao!</p>
+  `
   export default {
     data () {
       return {
-        value: ''
+        value: '',
+        inputTemplate
       }
     }
   }
