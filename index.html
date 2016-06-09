@@ -3,20 +3,43 @@
   <head>
     <meta charset="utf-8">
     <title>vuesmarttable</title>
+    <style>
+      body {
+        background-color: #252830;
+      }
+    </style>
   </head>
   <body>
-    <smart-table
+   <smart-table
     :auto-load="true"
     body-field="results"
     id-col="id.value"
-    endpoint="http://api.randomuser.me/?page=1&results=20&seed=abc"
-    :header="{'name.first': 'name', 'name.last': 'surname', 'gender+phone': 'gender+', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
-    :actions="{'_delete': 'Delete'}"
-    :delete="true"
-    :add-row="true"
+    endpoint="http://api.randomuser.me/?page=1&results=20"
+    :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
     >
-      <src2img slot="picture.thumbnail"></src2img>
-    </smart-table>
+   <src2img slot="picture.thumbnail"></src2img>
+   <!-- this component will read the image
+        address inside the nested json
+        object and put it into the scr of
+        an img tag -->
+
+   <contacts slot="phone+cell"></contacts>
+   <!-- every derived column needs a component
+        to be displayed correctly this
+        component is just a <p> tag and some
+        styling -->
+
+   <nationality slot="nat"></nationality>
+   <!-- this component will take the country
+        iso code from the json, query
+        a web service and overwrite itself with
+        the full country name! -->
+
+   <fontawesome slot="gender"></fontawesome>
+   <!-- this last component is pretty self
+        explanatory, it will turn the string
+        into the specified icon -->
+  </smart-table>
     <!-- built files will be auto injected -->
   </body>
 </html>
