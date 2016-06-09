@@ -14,10 +14,10 @@ Basically you write this
     endpoint="http://api.randomuser.me/?page=1&results=20"
     :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
     >
-   <src2img slot="picture.thumbnail"></src2img>
-   <contacts slot="phone+cell"></contacts>
+   <src2img slot="picture.thumbnail"></src2img><!-- renders pictures -->
+   <contacts slot="phone+cell"></contacts><!-- custom formatting -->
    <nationality slot="nat"></nationality><!-- queries a remote server -->
-   <fontawesome slot="gender"></fontawesome>
+   <fontawesome slot="gender"></fontawesome><!-- font awesome! -->
   </smart-table>
 ```
 
