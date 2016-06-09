@@ -626,40 +626,41 @@
   }
 
   .smart-table table {
-    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-    font-size: 12px;
+    font-family: "Helvetica neue", "Helvetica", sans-serif;
+    font-size: 13px;
     text-align: left;
     border-collapse: collapse;
+    color: #cfd2da;
   }
 
   .smart-table th {
     height: 51px;
     font-size: 13px;
-    font-weight: normal;
-    background: #2C3E50;
-    border-top: 4px solid #34495E;
-    border-bottom: 1px solid #fff;
-    color: #798795;
-    padding: 8px;
+    font-weight: bold;
+    background: #252830;
+    border-top: 1px solid #434857;
+    border-bottom: 2px solid #434857;
+    color: #cfd2da;
+    padding: 2px 10px;
     text-transform: capitalize;
+    box-sizing: border-box;
   }
 
   .smart-table td {
-    background: hsla(210,19%,96%,1);
-    border-bottom: 1px solid #fff;
-    color: hsla(196,8%,31%,1);
-    border-top: 1px solid transparent;
-    padding: 8px;
+    background: #252830;
+    border-bottom: 1px solid #434857;
+    color: #cfd2da;
+    padding: 2px 10px;
   }
 
-  .smart-table td.smart-control-bar {
-    background: hsl(210, 30%, 92%);
+  .smart-table .smart-control-bar {
+    background: #454850;
   }
 
-  .smart-table tr:hover td {
+  /*.smart-table tr:hover td {
     background: hsla(210,29%,91%,1);
     color: hsla(196,8%,31%,1);
-  }
+  }*/
 
   .bottom-right-corner {
     font-size: 42px;
@@ -678,7 +679,7 @@
   }
 
   table input[type="checkbox"] {
-    transform: scale(1.6);
+    transform: scale(1.4);
     margin: 0;
   }
 
