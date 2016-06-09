@@ -25,7 +25,7 @@ and you get this
 
 ![vue smart table](http://s33.postimg.org/rdqda5btb/Demo.png)
 
-[Demo](http://codepen.io/gurghet/pen/KMdvar)
+[Demo](http://codepen.io/gurghet/pen/OXyeER)
 
 ## Installation
 
