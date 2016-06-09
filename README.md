@@ -16,7 +16,7 @@ Basically you write this
     >
    <src2img slot="picture.thumbnail"></src2img>
    <contacts slot="phone+cell"></contacts>
-   <nationality slot="nat"></nationality>
+   <nationality slot="nat"></nationality><!-- queries a remote server -->
    <fontawesome slot="gender"></fontawesome>
   </smart-table>
 ```
