@@ -2,10 +2,32 @@
 
 > A vue table with dynamic components
 
-![vue smart table](http://s33.postimg.org/tbffbcza7/2016_05_29_15_20_48.png)[Demo](http://codepen.io/gurghet/pen/gMOoPB)
-![vue smart table2](http://s32.postimg.org/l807y2sxh/Cattura.png)[Demo2](http://codepen.io/gurghet/pen/KMdvar)
-
 ## Usage
+
+Basically you write this
+
+```html
+<smart-table
+    :auto-load="true"
+    body-field="results"
+    id-col="id.value"
+    endpoint="http://api.randomuser.me/?page=1&results=20"
+    :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
+    >
+   <src2img slot="picture.thumbnail"></src2img>
+   <contacts slot="phone+cell"></contacts>
+   <nationality slot="nat"></nationality>
+   <fontawesome slot="gender"></fontawesome>
+  </smart-table>
+```
+
+and you get this
+
+![vue smart table](http://s33.postimg.org/rdqda5btb/Demo.png)
+
+[Demo](http://codepen.io/gurghet/pen/KMdvar)
+
+## Installation
 
 #### Webpack/Browserify
 
