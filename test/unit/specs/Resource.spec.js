@@ -39,11 +39,48 @@ describe('Asyncronous resource loading when auto-load is set to true', () => {
         'smart-table': SmartTable
       },
       methods: {
-        test (event) {
+        test () {
           vm.$nextTick(() => {
             expect(vm.$el.querySelector('#value-3-name')).to.contain.text('Marco')
             done()
           })
+        }
+      }
+    }).$mount()
+  })
+  it('should load data automatically on refresh', (done) => {
+    let counter = 0
+    Vue.http.interceptors.shift()
+    Vue.http.interceptors.unshift({
+      request (request) {
+        request.client = (request) => {
+          var response = {
+            request
+          }
+          response.data = {}
+          response.data.body = testBody
+          response.status = 200
+          counter++
+          return response
+        }
+        return request
+      }
+    })
+    const vm = new Vue({
+      template: '<div><smart-table :auto-load="true" @successful-request="test" :auto-refresh="true"></smart-table></div>',
+      components: {
+        'smart-table': SmartTable
+      },
+      methods: {
+        test () {
+          if (counter === 1) {
+            vm.$nextTick(() => {
+              expect(vm.$el.querySelector('#value-3-name')).to.contain.text('Marco')
+              vm.$children[0].doCommand({action: 'foo', selection: [1, 2]})
+            })
+          } else if (counter === 3) {
+            done()
+          }
         }
       }
     }).$mount()
