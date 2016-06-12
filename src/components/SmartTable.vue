@@ -352,8 +352,14 @@
     compiled () {
       // load data if auto-load set to true
       if (this.autoLoad === true) {
-         this.$http.get(this.endpoint).then((response) => {
-          this.$set('body', response.data[this.bodyField])
+        this.$http.get(this.endpoint).then((response) => {
+          let body = ''
+          if (this.bodyField.length === 0) {
+            body = response.data
+          } else {
+            body = response.data[this.bodyField]
+          }
+          this.$set('body', body)
           this.$set('footer', response.data.footer)
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
@@ -496,8 +502,14 @@
         }
 
         function onSuccess(response) {
-          if (response.data[this.bodyField] !== undefined || response.data[this.bodyField] === {}) {
-            this.$set('body', response.data[this.bodyField])
+          let body = ''
+          if (this.bodyField.length === 0) {
+            body = response.data
+          } else {
+            body = response.data[this.bodyField]
+          }
+          if (body !== undefined || body === {}) {
+            this.$set('body', body)
             this.$set('footer', response.data.footer)
           }
           this.$dispatch('successful-request')
@@ -517,8 +529,14 @@
         this.$http.delete(this.endpoint + '/' + id).then(onSuccess, onFailure)
 
         function onSuccess(response) {
-          if (response.data[this.bodyField] !== undefined || response.data[this.bodyField] === {}) {
-            this.$set('body', response.data[this.bodyField])
+          let body = ''
+          if (this.bodyField.length === 0) {
+            body = response.data
+          } else {
+            body = response.data[this.bodyField]
+          }
+          if (body !== undefined || body === {}) {
+            this.$set('body', body)
             this.$set('footer', response.data.footer)
           }
           this.$dispatch('successful-request')
