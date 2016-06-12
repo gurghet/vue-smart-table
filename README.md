@@ -95,6 +95,17 @@ npm run build
 npm run ~unit
 ```
 
+## Roadmap
+
+* [ ] Pagination
+  * [ ] Client side
+  * [ ] Server side
+* [ ] Inline editing/adding
+* [ ] Drag row to reorder
+* [ ] Filtering
+  * [ ] Client side
+  * [ ] Server side
+
 ##Changelog
 
 ###2.3.0
