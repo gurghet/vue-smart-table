@@ -63,14 +63,15 @@ After that you can freely use it in your templates:
 
 ## Documentation
 
-For the moment being I'll collect all documentation at the following link:
+For the moment being I'll collect some documentation at the following link:
 
 http://forum.vuejs.org/topic/4140/vue-smart-table
 
-I will move it to a dedicated website as soon as possible.
+I'm also writing the wiki
 
+[Documentation](https://github.com/gurghet/vue-smart-table/wiki)
 
-The format of the body is like the following:
+The format of the `body` prop is like the following:
 
 ```
 [ { _id: 3 , name: 'John'  , surname: 'Smith' },
