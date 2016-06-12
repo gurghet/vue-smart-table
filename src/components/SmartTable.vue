@@ -7,7 +7,7 @@
       <th v-if="actionsArePresent">
         <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
       </th>
-      <th v-for="(column, label) in tableHeader" class="col-{{column}} col-cell">
+      <th v-for="(column, label) in tableHeader" class="col-{{column}} col-cell {{canOrderBy(column) ? 'ord' : ''}} {{orderClass(column)}}" @click="doOrderBy(column)">
         {{label}}
         <div v-if="filters[column]" class="{{column}}-filter-cue click-cue fa fa-filter" @click="openFilter(column)"></div>
         <div v-if="filters[column] && filters[column].open" class="{{column}}-filter-input">
@@ -21,7 +21,7 @@
         <th v-if="actionsArePresent">
           <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
         </th>
-        <th v-for="(column, label) in tableHeader" class="col-{{column}}">
+        <th v-for="(column, label) in tableHeader" class="col-{{column}} col-cell {{canOrderBy(column) ? 'ord' : ''}} {{orderClass(column)}}" @click="doOrderBy(column)">
           {{label}}
           <div v-if="filters[column]" class="{{column}}-filter-cue click-cue fa fa-filter" @click="openFilter(column)"></div>
           <div v-if="filters[column] && filters[column].open" class="{{column}}-filter-input">
@@ -57,25 +57,25 @@
       </tr>
       </tfoot>
       <tbody>
-      <tr v-for="(key, entry) in processedSmartBody
-        | orderBy orderKey -1" class="row-{{key}}">
+      <tr v-for="entry in processedSmartBody" class="row-{{entry._id}}">
         <td v-if="actionsArePresent">
-          <input id="toggle-{{key}}" value="{{key}}" type="checkbox" v-model="selection"/>
+          <input id="toggle-{{entry._id}}" value="{{entry._id}}" type="checkbox" v-model="selection"/>
         </td>
         <td
           v-for="(col, value) in entry"
-          id="cell-{{key}}-{{col}}"
+          v-if="col !== '_id'"
+          id="cell-{{entry._id}}-{{col}}"
           class="cell-{{col}}"
-          @dblclick="valueClick(key, col)"
+          @dblclick="valueClick(entry._id, col)"
         >
-          <div id="value-{{key}}-{{col}}">
+          <div id="value-{{entry._id}}-{{col}}">
             <slot :name="col">
               {{value}}
             </slot>
           </div>
         </td>
         <td v-if="delete">
-          <button id="delete-{{key}}" @click="remove(key)">Delete</button>
+          <button id="delete-{{entry._id}}" @click="remove(entry._id)">Delete</button>
         </td>
       </tr>
       <tr v-if="addRow" class="row-new">
@@ -114,16 +114,19 @@
         newRow: {},
         canSaveNewRow: false,
         scrolledPast: false,
-        filters: {}
+        filters: {},
+        orderKey: undefined,
+        reverseOrder: false
         // totals: undefined // footer line with totals
       }
     },
     props: {
       autoLoad: Boolean,
+      autoRefresh: Boolean,
       canFilterBy: Array,
-      orderKey: String,
       useTextAreaFor: Array,
       header: [Object, Array],
+      orderBy: [Array, Object],
       idCol: {
         type: String,
         required: false,
@@ -282,7 +285,7 @@
         })
 
         // filter body using gui filters
-        let smartBody = {}
+        let smartBody = []
 
         // filter unwanted rows
         this.body.forEach(row => {
@@ -308,8 +311,8 @@
             })
             let idValue = this.idCol.split('.').reduce((o,i)=>o[i], row)
             let altIdValue = row[this.idCol]
-            let finalIdValue = idValue || altIdValue
-            smartBody[finalIdValue] = finalRow
+            finalRow._id = String(idValue || altIdValue)
+            smartBody.push(finalRow)
           }
         })
 
@@ -325,6 +328,41 @@
           }, R.values(retVal)[0])
         }*/
 
+        if (this.orderKey !== undefined &&
+          Object.keys(this.tableHeader).indexOf(this.orderKey) !== -1 &&
+        Object.keys(this.orderBy).indexOf(this.orderKey) !== -1) {
+          let _this = this
+          function numericCompare(row1, row2) {
+            let valA = row1[_this.orderKey]
+            var valB = row2[_this.orderKey]
+            if (valA === undefined || valB === undefined) {
+              return 0
+            }
+            return (valA - valB) * (_this.reverseOrder ? -1 : 1)
+          }
+          function lexicographicCompare(row1, row2) {
+            let valA = row1[_this.orderKey]
+            var valB = row2[_this.orderKey]
+            if (valA === undefined || valB === undefined) {
+              return 0
+            }
+            var r = (valA > valB) ? 1 : -1
+            return r * (_this.reverseOrder ? -1 : 1)
+          }
+
+          var lexicographical = this.orderBy[this.orderKey].lexicographical;
+          function isNumeric (n) {
+            return !isNaN(parseFloat(n)) && isFinite(n)
+          }
+          let everyRowIsNonNumeric = smartBody.every(r => !isNumeric(r[this.orderKey]))
+          if (lexicographical === true || everyRowIsNonNumeric) {
+            smartBody.sort(lexicographicCompare)
+          } else {
+            smartBody.sort(numericCompare)
+          }
+        }
+
+
         return smartBody
       },
       span () {
@@ -336,12 +374,26 @@
         console.warn("Body passed is empty, if you want to load data set auto-load to true")
       }
 
+      // if orderBy is not an object turn it into one
+      if (Array.isArray(this.orderBy)) {
+        var orderByObj = {}
+        this.orderBy.forEach((el) => orderByObj[el] = {})
+        this.orderBy = orderByObj
+      }
+      if (this.orderBy === undefined) {
+        this.orderBy = {}
+      }
+
       // if actions is not an object, it doesn't have labels
       if (Array.isArray(this.actions)) {
         var actionsObj = {}
         this.actions.forEach((el) => actionsObj[el] = el)
         this.actions = actionsObj
       }
+      if (this.actions === undefined) {
+        this.actions = {}
+      }
+
       // initialize filters
       if (Array.isArray(this.canFilterBy)) {
         let acc = {}
@@ -352,6 +404,21 @@
     compiled () {
       // load data if auto-load set to true
       if (this.autoLoad === true) {
+        this.refresh()
+      } else {
+        this.updateInjectedValues()
+      }
+    },
+    ready () {
+      window.addEventListener('scroll', this.refreshTableHeader)
+    },
+    watch: {
+      'processedSmartBody' () {
+        this.updateInjectedValues()
+      }
+    },
+    methods: {
+      refresh () {
         this.$http.get(this.endpoint).then((response) => {
           let body = ''
           if (this.bodyField.length === 0) {
@@ -370,19 +437,12 @@
           this.$dispatch('failed-request')
           this.$dispatch('after-request')
         })
-      } else {
-        this.updateInjectedValues()
-      }
-    },
-    ready () {
-      window.addEventListener('scroll', this.refreshTableHeader)
-    },
-    watch: {
-      'processedSmartBody' () {
-        this.updateInjectedValues()
-      }
-    },
-    methods: {
+      },
+      maybeRefresh () {
+        if (this.autoRefresh) {
+          this.refresh()
+        }
+      },
       openFilter (column) {
         this.filters[column].open = true
         this.$nextTick(() => {
@@ -398,6 +458,7 @@
             this.$set('body', response.data.body)
             this.$dispatch('successful-request')
             this.$dispatch('after-request')
+            this.maybeRefresh()
           }, (response) => {
             this.$set('error', {status: response.status, data: response.data})
             this.$dispatch('failed-request')
@@ -458,7 +519,11 @@
           let col = (typeof child.$el.getAttribute === 'function') ? child.$el.getAttribute('slot') : null
           if (col !== null && columns.indexOf(col) !== -1) {
             let rowId = child.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
-            child.value = this.processedSmartBody[rowId][col]
+            function findById(row) {
+              return row._id === rowId
+            }
+            let row = this.processedSmartBody.filter(findById)[0]
+            child.value = row[col]
             if (this.addRow && child.inputTemplate !== undefined) {
               let addRowId = 'edit-new-' + col
               child.inputTemplate
@@ -481,9 +546,11 @@
       next () {
         var actionKey = this.action
         var actionLabel = this.actions[this.action]
-        var selectionKeyLabel = this.selection.map(k => {
-          if (this.processedSmartBody[k] !== undefined) {
-            return {key: k, label: this.processedSmartBody[k][this.mainCol]}
+        var selectionKeyLabel = this.selection.map(rowId => {
+          let selectedRow = this.processedSmartBody.filter((row => row._id === rowId))[0]
+          if (selectedRow !== undefined) {
+            let rowLabel = selectedRow[this.mainCol];
+              return {key: rowId, label: rowLabel}
           } else {
             return null
           }
@@ -515,6 +582,7 @@
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
           this.$set('error', false)
+          this.maybeRefresh()
         }
 
         function onFailure(response) {
@@ -542,6 +610,7 @@
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
           this.$set('error', false)
+          this.maybeRefresh()
         }
 
         function onFailure(response) {
@@ -572,8 +641,8 @@
           this.modalEdit = {
             id: id,
             col: col,
-            currentValue: this.processedSmartBody[id][col],
-            previousValue: this.processedSmartBody[id][col],
+            currentValue: this.processedSmartBody.filter((row => row._id === id))[0][col],
+            previousValue: this.processedSmartBody.filter((row => row._id === id))[0][col],
             type: this.editType(col)
           }
           this.$broadcast('modalEdit', this.modalEdit)
@@ -600,6 +669,7 @@
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
           this.$set('error', false)
+          this.maybeRefresh()
         }, (response) => {
           this.$set('error', { status: response.status, data: response.data.error})
           this.$dispatch('failed-request')
@@ -608,6 +678,29 @@
       },
       isPlainObject ( obj ) {
         return obj !== null && typeof obj === 'object'
+      },
+      doOrderBy (col) {
+        if (this.canOrderBy(col)) {
+          return;
+        }
+        if (this.orderKey === col) {
+          this.reverseOrder = !this.reverseOrder
+        } else {
+          this.reverseOrder = false
+        }
+        this.orderKey = col
+      },
+      orderClass (col) {
+        if (this.orderKey === col && this.reverseOrder === false) {
+          return 'ordered-asc'
+        }
+        if (this.orderKey === col && this.reverseOrder === true) {
+          return 'ordered-desc'
+        }
+        return ''
+      },
+      canOrderBy (col) {
+        return Object.keys(this.orderBy).indexOf(col) === -1
       },
       // setUndo (id, col, value) {
       // this.backMatrix[id][col] = value
@@ -641,6 +734,14 @@
 
   .transparent {
     opacity: 0;
+  }
+
+  .ordered-asc:after {
+    content: "▲";
+  }
+
+  .ordered-desc:after {
+    content: "▼";
   }
 
   .smart-table table {

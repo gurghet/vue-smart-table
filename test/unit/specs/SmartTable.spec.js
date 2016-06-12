@@ -188,7 +188,7 @@ describe('SmartTable.vue', () => {
       }
     }).$mount()
     vm.$children[0].action = 'action1'
-    vm.$children[0].selection = [1, 3]
+    vm.$children[0].selection = ['1', '3']
     vm.$children[0].next()
   })
   it('should broadcast \'command\' with an array of id and labels when command called ', (done) => {
@@ -197,7 +197,7 @@ describe('SmartTable.vue', () => {
       './Modal': {
         events: {
           'command' (command) {
-            expect(command.selection).to.eql([{key: 1, label: 'Gennaro'}, {key: 3, label: 'Marco'}])
+            expect(command.selection).to.eql([{key: '1', label: 'Gennaro'}, {key: '3', label: 'Marco'}])
             done()
           }
         }
@@ -209,7 +209,7 @@ describe('SmartTable.vue', () => {
       data: { testBody2 }
     }).$mount()
     vm.$children[0].action = 'act1'
-    vm.$children[0].selection = [1, 3]
+    vm.$children[0].selection = ['1', '3']
     vm.$children[0].next()
   })
   it('should broadcast \'command\' with an array of id and labels when command called with id-col changed', (done) => {
@@ -218,7 +218,7 @@ describe('SmartTable.vue', () => {
       './Modal': {
         events: {
           'command' (command) {
-            expect(command.selection).to.eql([{key: 1, label: 'Gennaro'}, {key: 3, label: 'Marco'}])
+            expect(command.selection).to.eql([{key: '1', label: 'Gennaro'}, {key: '3', label: 'Marco'}])
             done()
           }
         }
@@ -230,7 +230,7 @@ describe('SmartTable.vue', () => {
       data: { testBodyId }
     }).$mount()
     vm.$children[0].action = 'act1'
-    vm.$children[0].selection = [1, 3]
+    vm.$children[0].selection = ['1', '3']
     vm.$children[0].next()
   })
   it('should extend an array of action names as an object', () => {
@@ -622,7 +622,7 @@ describe('SmartTable.vue', () => {
       components: {SmartTable},
       data: { testBody2 }
     }).$mount()
-    vm.$children[0].valueClick(1, 'name')
+    vm.$children[0].valueClick('1', 'name')
     vm.$nextTick(() => {
       expect(vm.$el.querySelectorAll('#value-1-name-edit input').length).to.eql(1)
       done()
@@ -669,7 +669,7 @@ describe('SmartTable.vue', () => {
       components: {'smart-table': SmartTableWithMock},
       data: { testBody2 }
     }).$mount()
-    vm.$children[0].valueClick(1, 'name')
+    vm.$children[0].valueClick('1', 'name')
   })
   it('should detect if the footer is an array and it should display 3 columns specified', () => {
     const vm = new Vue({
@@ -722,6 +722,56 @@ describe('SmartTable.vue', () => {
     }).$mount()
     // check that there is not a filter gui
     expect(vm.$el.querySelectorAll('.age-filter-cue').length).to.eql(0)
+  })
+  it('should order the table numerically by age', (done) => {
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBody2" :order-by="[\'age\']" v-ref:ut></smart-table></div>',
+      components: {'smart-table': SmartTable},
+      data: { testBody2 }
+    }).$mount()
+    // check that there is not a filter gui
+    expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('34')
+    vm.$refs['ut'].doOrderBy('age')
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('22')
+      done()
+    })
+  })
+  it('should order the table numerically by age in reverse when same function called twice', (done) => {
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBody2" :order-by="[\'age\']" v-ref:ut></smart-table></div>',
+      components: {'smart-table': SmartTable},
+      data: { testBody2 }
+    }).$mount()
+    // check that there is not a filter gui
+    expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('34')
+    vm.$refs['ut'].doOrderBy('age')
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('22')
+      vm.$refs['ut'].doOrderBy('age')
+      vm.$nextTick(() => {
+        expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('34')
+        vm.$refs['ut'].doOrderBy('age')
+        vm.$nextTick(() => {
+          expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('22')
+          done()
+        })
+      })
+    })
+  })
+  it('should order the table lexicographically by age', (done) => {
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBody" :order-by="{age: {lexicographical:true}}" v-ref:ut></smart-table></div>',
+      components: {'smart-table': SmartTable},
+      data: { testBody: [{_id: 0, name: 'Gennaro', age: '34'}, {_id: 1, name: 'Marco', age: '220'}] }
+    }).$mount()
+    // check that there is not a filter gui
+    expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('34')
+    vm.$refs['ut'].doOrderBy('age')
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('220')
+      done()
+    })
   })
   xit('should report the total', () => {
     const vm = new Vue({
