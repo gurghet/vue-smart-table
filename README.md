@@ -97,7 +97,10 @@ npm run ~unit
 
 ## Roadmap
 
-* [x] Sorting
+* [x] Derived columns
+* [ ] Sorting
+  * [x] Client side
+  * [ ] Server side
 * [ ] Pagination
   * [ ] Client side
   * [ ] Server side
