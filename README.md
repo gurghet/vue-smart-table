@@ -96,6 +96,10 @@ npm run ~unit
 
 ##Changelog
 
+###2.2.0
+
+- can set body-field to empty string if data is already in an array
+
 ###2.1.1
 
 - forgot to rebuild the dist files -.-
