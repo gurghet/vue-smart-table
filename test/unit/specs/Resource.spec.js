@@ -154,6 +154,40 @@ describe('Asyncronous resource loading when auto-load is set to true', () => {
       }
     }).$mount()
   })
+  it('should set the body to the field passed in body-field if empty string', (done) => {
+    Vue.http.interceptors.shift()
+    Vue.http.interceptors.unshift({
+      request (request) {
+        request.client = (request) => {
+          var response = {
+            request
+          }
+          response.data = [{
+            _id: '98',
+            gender: 'male',
+            name: 'john'
+          }]
+          response.status = 200
+          return response
+        }
+        return request
+      }
+    })
+    const vm = new Vue({
+      template: '<div><smart-table :auto-load="true" body-field="" @successful-request="test"></smart-table></div>',
+      components: {
+        'smart-table': SmartTable
+      },
+      methods: {
+        test (event) {
+          vm.$nextTick(() => {
+            expect(vm.$el.querySelector('#value-98-name')).to.contain.text('john')
+            done()
+          })
+        }
+      }
+    }).$mount()
+  })
   it('should set the id to the dot notation \'id.SSN\' passed parameter', (done) => {
     Vue.http.interceptors.shift()
     Vue.http.interceptors.unshift({
