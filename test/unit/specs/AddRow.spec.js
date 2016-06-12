@@ -118,7 +118,7 @@ describe('Add row feature', () => {
     }).$mount()
     expect(vm.$refs.ut.editableFields).to.eql(['c1'])
   })
-  it('should show the input template instead of a text input when specified', () => {
+  xit('should show the input template instead of a text input when specified', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :add-row="true"><doge slot="pic"></doge></smart-table></div>',
       components: {SmartTable, doge: {template: '<p class="myclass">doge</p>', data () { return {inputTemplate: '<p class="myinput">dog</p>'} }}},
