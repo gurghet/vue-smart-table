@@ -1,22 +1,9 @@
 <template>
-  <div class="smart-table">
+  <div class="smart-table table-responsive">
     <modal @confirm="doCommand"></modal>
     <modal-edit @confirm="doEdit" @close="closedModalEdit"></modal-edit>
-    <table :class="'persist-area ' + (classes ? classes : 'table')">
-      <thead v-show="scrolledPast" class="floating-header">
-      <th v-if="actionsArePresent">
-        <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
-      </th>
-      <th v-for="(column, label) in tableHeader" class="col-{{column}} col-cell {{canOrderBy(column) ? 'ord' : ''}} {{orderClass(column)}}" @click="doOrderBy(column)">
-        {{label}}
-        <div v-if="filters[column]" class="{{column}}-filter-cue click-cue fa fa-filter" @click="openFilter(column)"></div>
-        <div v-if="filters[column] && filters[column].open" class="{{column}}-filter-input">
-          <input type="text" v-model="filters[column].model"/>
-        </div>
-      </th>
-      <th v-if="delete">
-      </thead>
-      <thead class="regular-header" :class="{ transparent: scrolledPast }">
+    <table :class="tableClassesProcessed">
+      <thead>
       <tr>
         <th v-if="actionsArePresent">
           <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
@@ -33,12 +20,6 @@
       </tr>
       </thead>
       <tfoot>
-      <!--tr v-if="totals" class="totals-row">
-        <td v-if="actionsArePresent"><!-- to match the toggle checkboxes -/-></td>
-        <td v-for="(col, totalCell) in totals" id="value-total-{{col}}" track-by="$index">
-          {{totalCell}}
-        </td>
-      </tr-->
       <tr v-for="footerRow in processedFooter" class="footer-row">
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td v-for="footerCell in footerRow" track-by="$index">
@@ -65,8 +46,8 @@
           v-for="(col, value) in entry"
           v-if="col !== '_id'"
           id="cell-{{entry._id}}-{{col}}"
-          class="cell-{{col}}"
-          @dblclick="valueClick(entry._id, col)"
+          :class="tdClasses(col, entry._id) + 'cell-' + col"
+          @click="valueClick(entry._id, col)"
         >
           <div id="value-{{entry._id}}-{{col}}">
             <slot :name="col">
@@ -134,6 +115,10 @@
       }
     },
     props: {
+      tableClasses: {
+        type: String,
+        default: 'ui celled table'
+      },
       autoLoad: Boolean,
       autoRefresh: Boolean,
       canFilterBy: Array,
@@ -176,18 +161,22 @@
         default: 'name'
       },
       editable: {
-        default: true
+        type: Array,
+        default: []
       },
       addRow: {
         type: Boolean,
         default: false
-      },
-      /* sum: {
-        type: Array,
-        default: () => []
-      }*/
+      }
     },
     computed: {
+      tableClassesProcessed () {
+        if (this.orderBy !== {}) {
+          return 'sortable ' + this.tableClasses
+        } else {
+          return this.tableClasses
+        }
+      },
       processedFooter () {
         if (this.footer === undefined) {
           return []
@@ -329,18 +318,6 @@
           }
         })
 
-        // compute the requested totals
-        /*if (this.sum.length > 0) {
-          var addAsNumbers = (a, b) => Number(a) + Number(b) // otherwise they might be interpreted as strings
-          this.totals = R.mapObjIndexed((v, k) => {
-            if (R.contains(k, this.sum)) {
-              return R.reduce(addAsNumbers, 0, R.values(R.map(r => r[k], retVal))).toFixed(2)
-            } else {
-              return ''
-            }
-          }, R.values(retVal)[0])
-        }*/
-
         if (this.orderKey !== undefined &&
           Object.keys(this.tableHeader).indexOf(this.orderKey) !== -1 &&
         Object.keys(this.orderBy).indexOf(this.orderKey) !== -1) {
@@ -425,15 +402,18 @@
         this.updateInjectedValues()
       }
     },
-    ready () {
-      window.addEventListener('scroll', this.refreshTableHeader)
-    },
     watch: {
       'processedSmartBody' () {
         this.updateInjectedValues()
       }
     },
     methods: {
+      tdClasses(col, id) {
+        let isEditableCol = Object.keys(this.editable).indexOf(col) !== 1;
+        if (isEditableCol) {
+          return 'selectable'
+        }
+      },
       refresh () {
         this.$http.get(this.endpoint).then((response) => {
           let body = ''
@@ -461,10 +441,6 @@
       },
       openFilter (column) {
         this.filters[column].open = true
-        this.$nextTick(() => {
-          // todo: this doesn't work
-          // $('.' + column + '-filter-input > input')[1].focus()
-        })
       },
       saveNewRow () {
         if (this.canSaveNewRow) {
@@ -491,42 +467,6 @@
         } else {
           return false
         }
-      },
-      refreshTableHeader () {
-        const persistAreas = [].slice.call(this.$el.getElementsByClassName('persist-area'))
-        const offset = persistAreas.map( (persistArea) => {
-          var offsetTop = 0
-            do {
-              if ( !isNaN( persistArea.offsetTop ) ) {
-                offsetTop += persistArea.offsetTop;
-              }
-            } while( persistArea = persistArea.offsetParent );
-           return offsetTop;
-        })[0]
-        const offsetLeft = persistAreas.map( (persistArea) => {
-          var offsetLeft = 0
-            do {
-              if ( !isNaN( persistArea.offsetLeft ) ) {
-                offsetLeft += persistArea.offsetLeft;
-              }
-            } while( persistArea = persistArea.offsetParent );
-           return offsetLeft;
-        })[0]
-        const scrollTop = window.scrollY
-        const scrollLeft = window.scrollX
-        const scrolledDown = (scrollTop > offset)
-        const notScrolledAway = (scrollTop < offset + persistAreas[0].offsetHeight)
-        this.scrolledPast = scrolledDown && notScrolledAway
-        // init
-        const floatingHeader = this.$el.getElementsByClassName('floating-header')[0]
-        const regularHeader = this.$el.getElementsByClassName('regular-header')[0]
-        floatingHeader.style.left = offsetLeft - scrollLeft
-        floatingHeader.style.zIndex = 3
-        const rths = [].slice.call(regularHeader.getElementsByTagName('th'))
-        const fths = [].slice.call(floatingHeader.getElementsByTagName('th'))
-        fths.forEach((fth, i) => {
-          fth.style.width = rths[i].offsetWidth + "px"
-        })
       },
       updateInjectedValues () {
         let children = this.$children
@@ -636,15 +576,8 @@
         }
       },
       isEditable (col) {
-        if (this.editable === false) {
-          return false
-        }
-        if (Array.isArray(this.editable)) {
-          if (this.editable.indexOf(col) === -1) {
-            return false
-          }
-        }
-        return true
+        return this.editable.indexOf(col) !== -1;
+
       },
       isNotEditable (col) {
         return !this.isEditable(col)
@@ -681,7 +614,6 @@
           action: 'edit',
           value: modalEdit.currentValue
         }).then((response) => {
-          // this.setUndo(modalEdit.id, modalEdit.col, modalEdit.previousValue)
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
           this.$set('error', false)
@@ -708,94 +640,24 @@
       },
       orderClass (col) {
         if (this.orderKey === col && this.reverseOrder === false) {
-          return 'ordered-asc'
+          return 'sorted ascending'
         }
         if (this.orderKey === col && this.reverseOrder === true) {
-          return 'ordered-desc'
+          return 'sorted descending'
         }
         return ''
       },
       canOrderBy (col) {
         return Object.keys(this.orderBy).indexOf(col) === -1
       },
-      // setUndo (id, col, value) {
-      // this.backMatrix[id][col] = value
-      // },
       closedModalEdit () {
         this.modalEdit = undefined
       }
-      // undo (id, col) {
-      // this.doEdit({id: id, col: col, currentValue: this.backMatrix[id][col], previousValue: null})
-      // },
-      // hasUndo (id, col) {
-      // return this.backMatrix[id] !== undefined && this.backMatrix[id][col] !== undefined
-      // }
-      // undo button to add later
-      // <span
-      //      id="back-{{id}}-{{col}}"
-      //    class="undo-button"
-      //  @click="undo(id, col)"
-      //  v-show="hasUndo(id,col)"
-      //    >
-      //    &#223;</span>
     }
   }
 </script>
 
 <style>
-  .floating-header {
-    position: fixed;
-    top: 0;
-  }
-
-  .transparent {
-    opacity: 0;
-  }
-
-  .ordered-asc:after {
-    content: "▲";
-  }
-
-  .ordered-desc:after {
-    content: "▼";
-  }
-
-  .smart-table table {
-    font-family: "Helvetica neue", "Helvetica", sans-serif;
-    font-size: 13px;
-    text-align: left;
-    border-collapse: collapse;
-    color: #cfd2da;
-  }
-
-  .smart-table th {
-    height: 51px;
-    font-size: 13px;
-    font-weight: bold;
-    background: #252830;
-    border-top: 1px solid #434857;
-    border-bottom: 2px solid #434857;
-    color: #cfd2da;
-    padding: 2px 10px;
-    text-transform: capitalize;
-    box-sizing: border-box;
-  }
-
-  .smart-table td {
-    background: #252830;
-    border-bottom: 1px solid #434857;
-    color: #cfd2da;
-    padding: 2px 10px;
-  }
-
-  .smart-table .smart-control-bar {
-    background: #454850;
-  }
-
-  /*.smart-table tr:hover td {
-    background: hsla(210,29%,91%,1);
-    color: hsla(196,8%,31%,1);
-  }*/
 
   .bottom-right-corner {
     font-size: 42px;

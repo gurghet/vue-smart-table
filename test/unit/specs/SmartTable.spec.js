@@ -347,9 +347,8 @@ describe('SmartTable.vue', () => {
       components: {SmartTable},
       data: { testBody2 }
     }).$mount()
-    expect(vm.$el.querySelectorAll('.regular-header th').length).to.eql(2)
-    expect(vm.$el.querySelectorAll('th').length).to.eql(4)
-    expect(vm.$el.querySelectorAll('.col-name').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('th').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('.col-name').length).to.eql(1)
     expect(vm.$el.querySelector('.col-name').textContent).to.contain('name')
   })
   it('should put the labels if the header is an array and matches the number of columns', () => {
@@ -358,9 +357,8 @@ describe('SmartTable.vue', () => {
       components: {SmartTable},
       data: { testBody }
     }).$mount()
-    expect(vm.$el.querySelectorAll('.regular-header th').length).to.eql(2)
-    expect(vm.$el.querySelectorAll('th').length).to.eql(4)
-    expect(vm.$el.querySelectorAll('.col-age').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('th').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('.col-age').length).to.eql(1)
     expect(vm.$el.querySelector('.col-age').textContent).to.contain('Anni')
   })
   it('should show a subset of columns in the header if the header is an object with 2 cols and there are 3', () => {
@@ -372,8 +370,7 @@ describe('SmartTable.vue', () => {
         testBody: [{_id: 1, name: 'Gennaro', age: 34, hidden: 'pupu'}, {_id: 55, name: 'Marco', age: 22, hidden: 'caca'}]
       }
     }).$mount()
-    expect(vm.$el.querySelectorAll('.regular-header th').length).to.eql(2)
-    expect(vm.$el.querySelectorAll('th').length).to.eql(4)
+    expect(vm.$el.querySelectorAll('th').length).to.eql(2)
     expect(vm.$el.querySelectorAll('.col-hidden').length).to.eql(0)
     expect(vm.$el.querySelector('.col-age').textContent).to.contain('Età')
   })
@@ -638,11 +635,9 @@ describe('SmartTable.vue', () => {
       }
     }).$mount()
     const headerCells = vm.$el.querySelectorAll('th')
-    expect(headerCells.length).to.eql(4)
+    expect(headerCells.length).to.eql(2)
     expect(headerCells[0].textContent).to.contain('Età')
     expect(headerCells[1].textContent).to.contain('Nome')
-    expect(headerCells[2].textContent).to.contain('Età')
-    expect(headerCells[3].textContent).to.contain('Nome')
     const firstRowCells = vm.$el.querySelectorAll('.row-1 td')
     expect(firstRowCells.length).to.eql(2)
     expect(firstRowCells[0].textContent).to.contain('34')
@@ -703,7 +698,7 @@ describe('SmartTable.vue', () => {
       data: { testBody2 }
     }).$mount()
     // check that there is a filter gui
-    expect(vm.$el.querySelectorAll('.age-filter-cue').length).to.eql(2) // because one is in the floating header
+    expect(vm.$el.querySelectorAll('.age-filter-cue').length).to.eql(1)
     // simulate click and write '22' to its model
     vm.$refs.ut.filters = {age: {open: true, model: '22'}}
     // check that there is only one row visible and that it contains the Marco row

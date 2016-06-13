@@ -99,7 +99,7 @@ npm run ~unit
 
 ## Roadmap
 
-* [ ] Bootsrap/Flat/Semantic compatibility
+* [x] Bootsrap/Semantic compatibility
 * [x] Derived columns
 * [ ] Sorting
   * [x] Client side
@@ -114,6 +114,10 @@ npm run ~unit
   * [ ] Server side
 
 ##Changelog
+
+###2.4.0-beta
+
+- Bootstrap/Semantic compatibility
 
 ###2.3.1
 
