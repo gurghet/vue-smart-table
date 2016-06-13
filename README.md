@@ -26,7 +26,7 @@ Basically you write this
 
 and you get this
 
-![vue smart table](http://s31.postimg.org/vjgm319q3/2016_06_13_20_41_43.png)
+![vue smart table](http://s32.postimg.org/yavvy76it/2016_06_13_20_56_00.png)
 
 [Demo](http://codepen.io/gurghet/pen/qNZprz)
 
