@@ -63,7 +63,7 @@
         </td>
         <td
           v-for="(col, value) in entry"
-          v-if="col !== '_id'"
+          v-if="(col !== '_id' || shouldShowId)"
           id="cell-{{entry._id}}-{{col}}"
           class="cell-{{col}}"
           @dblclick="valueClick(entry._id, col)"
@@ -364,6 +364,9 @@
 
 
         return smartBody
+      },
+      shouldShowId () {
+        Object.keys(this.tableHeader).indexOf('_id') !== -1
       },
       span () {
         return Object.keys(this.tableHeader).length + 1 + (this.delete ? 1 : 0)
