@@ -75,19 +75,18 @@
       <tr v-if="addRow" class="row-new">
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td
-          v-for="(col, value) in tableHeader"
+          v-for="(col, label) in tableHeader"
           id="edit-new-{{col}}"
         >
-          <input v-if="isEditable(col) && editType(col) !== 'select'" :type="editType(col)" v-model="newRow[col]"/>
-          <select v-if="isEditable(col) && editType(col) === 'select'" v-model="newRow[col]">
-            <option v-for="(value, label) in inputList[col]" value="{{value}}" class="input-label">{{label}}</option>
-          </select>
+          <div :class="'ui input' + (isMandatoryField(col) ? ' required field' : '')">
+            <input v-if="isEditable(col)" type="text" v-model="newRowInput[col]" placeholder="{{tableHeader[col]}}"/>
+          </div>
         </td>
         <td v-if="delete"></td>
       </tr>
       </tbody>
     </table>
-    <div class="add-row-button" v-show="canSaveNewRow"><button @click="saveNewRow">Add Row</button></div>
+    <div class="add-row-button" v-show="canSaveNewRow"><button class="ui button" @click="saveNewRow">Add Row</button></div>
     <div class="error-panel" v-show="error">{{error | json}}</div>
   </div>
 </template>
@@ -105,12 +104,13 @@
         error: false,
         modalEdit: undefined,
         backMatrix: {},
-        newRow: {},
-        canSaveNewRow: false,
+        newRowInput: {},
         scrolledPast: false,
         filters: {},
         orderKey: undefined,
-        reverseOrder: false
+        reverseOrder: false,
+        additionalTdClasses: [], // [col][id][class1, class2...]
+        mandatory: [] // [col]true|false
         // totals: undefined // footer line with totals
       }
     },
@@ -122,7 +122,6 @@
       autoLoad: Boolean,
       autoRefresh: Boolean,
       canFilterBy: Array,
-      useTextAreaFor: Array,
       header: [Object, Array],
       orderBy: [Array, Object],
       idCol: {
@@ -136,11 +135,6 @@
       },
       footer: {
         required: false
-      },
-      inputList: {
-        type: Object,
-        required: false,
-        default: undefined
       },
       bodyField: {
         type: String,
@@ -162,7 +156,9 @@
       },
       editable: {
         type: Array,
-        default: []
+        default () {
+          return []
+        }
       },
       addRow: {
         type: Boolean,
@@ -193,37 +189,18 @@
           return this.footer
         }
       },
+      mandatoryFields () {
+        // console.log('tableHeader(of which mandatory fields are always a subset) is: ' + JSON.stringify(Object.keys(this.tableHeader)) + '\n' +
+        // 'their mandatoriness is ' + JSON.stringify(Object.keys(this.tableHeader).map(h => this.isMandatoryField(h))))
+        return Object.keys(this.tableHeader).filter(col => this.isMandatoryField(col))
+      },
       canSaveNewRow () {
-        if (Object.keys(this.newRow).length === 0) {
-          return false
-        }
-        var retVal = true
-        this.editableFields.forEach((col) => {
-          if (!this.newRow.hasOwnProperty(col)) {
-            retVal = false
-          } else {
-            if (this.newRow[col] === undefined || this.doesNotPassValidation(col, this.newRow[col])) {
-              retVal = false
-            }
-          }
-        })
-        return retVal
+        // console.log('mandatory fields are: ' + JSON.stringify(this.mandatoryFields) + '\n' +
+        // 'their values are: ' + JSON.stringify(this.mandatoryFields.map(c => this.newRowInput[c])))
+        return this.mandatoryFields.every(col => this.validate(col, this.newRowInput[col]))
       },
       editableFields () {
-        const tableCols = Object.keys(this.tableHeader)
-        if (this.editable === true) {
-          return tableCols
-        }
-        if (this.editable === false) {
-          return []
-        }
-        if (Array.isArray(this.editable) && this.editable.length > 0) {
-          return this.editable.filter((el) => tableCols.indexOf(el) !== -1)
-        }
-        if (this.isPlainObject(this.editable) && Object.keys(this.editable) > 0) {
-          return Object.keys(this.editable).filter((el) => tableCols.indexOf(el) !== -1)
-        }
-        return []
+        return Object.keys(this.tableHeader).filter(col => this.isEditable(col))
       },
       actionsArePresent () {
         if (Array.isArray(this.actions) && this.actions.length > 0) {
@@ -409,10 +386,19 @@
     },
     methods: {
       tdClasses(col, id) {
-        let isEditableCol = Object.keys(this.editable).indexOf(col) !== 1;
+        let acc = ''
+        let isEditableCol = Object.keys(this.editableFields).indexOf(col) !== 1;
         if (isEditableCol) {
-          return 'selectable'
+          acc += ' selectable'
         }
+        if (this.additionalTdClasses[col] === undefined) {
+          this.additionalTdClasses[col] = []
+        }
+        if (this.additionalTdClasses[col][id] === undefined) {
+          this.additionalTdClasses[col][id] = []
+        }
+        this.additionalTdClasses[col][id].forEach(additionalTdClass => acc += ' ' + additionalTdClass)
+        return acc
       },
       refresh () {
         this.$http.get(this.endpoint).then((response) => {
@@ -445,7 +431,7 @@
       saveNewRow () {
         if (this.canSaveNewRow) {
           this.$dispatch('before-request')
-          this.$http.post(this.endpoint, {action: 'addRow', resource: this.newRow}).then((response) => {
+          this.$http.post(this.endpoint, {action: 'addRow', resource: this.newRowInput}).then((response) => {
             this.$set('error', false)
             this.$set('body', response.data.body)
             this.$dispatch('successful-request')
@@ -458,20 +444,14 @@
           })
         }
       },
-      doesNotPassValidation (col, value) {
-        return !this.passesValidation(col, value)
-      },
-      passesValidation (col, value) {
-        if (value) {
-          return true
-        } else {
-          return false
-        }
+      validate (col, value) {
+        return (value !== undefined && value !== '')
+        // todo: more complex validation
       },
       updateInjectedValues () {
         let children = this.$children
         let columns = Object.keys(this.tableHeader)
-        children.forEach( (child) => {
+        children.forEach(child => {
           let col = (typeof child.$el.getAttribute === 'function') ? child.$el.getAttribute('slot') : null
           if (col !== null && columns.indexOf(col) !== -1) {
             let rowId = child.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
@@ -480,9 +460,26 @@
             }
             let row = this.processedSmartBody.filter(findById)[0]
             child.value = row[col]
-            if (this.addRow && child.inputTemplate !== undefined) {
-              let addRowId = 'edit-new-' + col
-              child.inputTemplate
+            if (this.additionalTdClasses[col] === undefined) {
+              this.additionalTdClasses[col] = []
+            }
+            this.additionalTdClasses[col][rowId] = child.tdClasses || []
+            if (child.edit === undefined) {
+              child.edit = {}
+            }
+            this.mandatory[col] = (child.edit.mandatory === true)
+            if (this.addRow && child.edit.template !== undefined) {
+              let addRowId = '#edit-new-' + col
+              let template = child.edit.template
+              let EditComponent = Vue.extend({
+                template
+              })
+              let editComponent = new EditComponent({
+                data: {
+
+                }
+              })
+              editComponent.$mount(addRowId)
               // 1. mount the input sub-component
               // 2. add watcher for known value inside sub-component
               // 3. link said value to newRow[col]
@@ -576,37 +573,29 @@
         }
       },
       isEditable (col) {
+        // console.log(JSON.stringify(col), 'is', this.editable.indexOf(col) !== -1, 'editable, (editables are', JSON.stringify(this.editable), ')')
         return this.editable.indexOf(col) !== -1;
-
-      },
-      isNotEditable (col) {
-        return !this.isEditable(col)
       },
       valueClick (id, col) {
-        if (this.isNotEditable(col)) {
+        if (!this.isEditable(col)) {
           return
         }
         if (this.modalEdit === undefined) {
+          const rowObj = this.processedSmartBody.filter(row => row._id === id)[0];
+          if (rowObj === undefined) {
+            let possibleId = rowObj._id
+            let maybeBit = possibleId ? '\nMaybe you meant '+JSON.stringify(possibleId) : ''
+            // console.error('Cannot find row with id '+JSON.stringify(id)+maybeBit)
+            return
+          }
           this.modalEdit = {
             id: id,
             col: col,
-            currentValue: this.processedSmartBody.filter((row => row._id === id))[0][col],
-            previousValue: this.processedSmartBody.filter((row => row._id === id))[0][col],
-            type: this.editType(col)
+            currentValue: rowObj[col],
+            previousValue: rowObj[col]
           }
           this.$broadcast('modalEdit', this.modalEdit)
         }
-      },
-      editType (col) {
-        if (this.inputList !== undefined &&
-          this.inputList[col] !== undefined) {
-          return 'select'
-        }
-        if (this.useTextAreaFor !== undefined &&
-          this.useTextAreaFor.indexOf(col) !== undefined) {
-          return 'textarea'
-        }
-        return 'text'
       },
       doEdit (modalEdit) {
         this.$dispatch('before-request')
@@ -626,6 +615,14 @@
       },
       isPlainObject ( obj ) {
         return obj !== null && typeof obj === 'object'
+      },
+      isMandatoryField (col) {
+        if (this.mandatory[col] === false) {
+          // console.log(col + 'is explicitly non mandatory')
+          return false;
+        }
+        return this.mandatory[col] || this.isEditable(col)
+        // todo: subject to change
       },
       doOrderBy (col) {
         if (this.canOrderBy(col)) {

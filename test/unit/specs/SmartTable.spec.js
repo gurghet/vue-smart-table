@@ -515,21 +515,23 @@ describe('SmartTable.vue', () => {
    }) */
   it('should not go in edit mode if the field is not editable', (/* done */) => {
     const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :actions="[\'mela\']" :editable="[\'name\']"></smart-table></div>',
+      template: '<div><smart-table :body="testBody" :actions="[\'mela\']" :editable="[\'name\']" v-ref:ut></smart-table></div>',
       components: {SmartTable},
       data: { testBody }
     }).$mount()
-    vm.$children[0].valueClick(1, 'age')
-    expect(vm.$el.querySelectorAll('#value-1-age-edit input').length).to.eql(0)
+    vm.$children[0].valueClick('1', 'age')
+    expect(vm.$refs.ut.modalEdit).to.equal(undefined)
+    vm.$children[0].valueClick('1', 'name')
+    expect(vm.$refs.ut.modalEdit).to.not.equal(undefined)
   })
   it('should not go in edit mode if the entire table is not editable', () => {
     const vm = new Vue({
-      template: '<div><smart-table :body="testBody2" :actions="[\'mela\']" :editable="false"></smart-table></div>',
+      template: '<div><smart-table :body="testBody2" :actions="[\'mela\']" v-ref:ut></smart-table></div>',
       components: {SmartTable},
       data: { testBody2 }
     }).$mount()
-    vm.$children[0].valueClick(1, 'name')
-    expect(vm.$el.querySelectorAll('#value-1-name-edit input').length).to.eql(0)
+    vm.$children[0].valueClick('1', 'name')
+    expect(vm.$refs.ut.modalEdit).to.eql(undefined)
   })
   it('main col should set age as main col when age is set and present in first row', () => {
     const vm = new Vue({
@@ -613,17 +615,14 @@ describe('SmartTable.vue', () => {
     expect(vm.$el.querySelectorAll('.smart-control-bar').length).to.eql(0)
     expect(vm.$el.querySelectorAll('input[type="checkbox="]').length).to.eql(0)
   })
-  it('should put into edit mode even if cell is empty', (done) => {
+  it('should put into edit mode even if cell is empty', () => {
     const vm = new Vue({
-      template: '<div><smart-table :body="testBody2" :actions="[\'mela\']"></smart-table></div>',
+      template: '<div><smart-table :body="testBody" :editable="[\'name\']" v-ref:ut></smart-table></div>',
       components: {SmartTable},
-      data: { testBody2 }
+      data: { testBody: [{_id: 0, name: 'Gennaro', age: 34}, {_id: 1, name: '', age: 22}] }
     }).$mount()
     vm.$children[0].valueClick('1', 'name')
-    vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('#value-1-name-edit input').length).to.eql(1)
-      done()
-    })
+    expect(vm.$refs.ut.modalEdit).to.not.equal(undefined)
   })
   it('should show an ordered set of columns in the body if the header is an object with 2 swapped columns', () => {
     const vm = new Vue({
@@ -642,29 +641,6 @@ describe('SmartTable.vue', () => {
     expect(firstRowCells.length).to.eql(2)
     expect(firstRowCells[0].textContent).to.contain('34')
     expect(firstRowCells[1].textContent).to.contain('Gennaro')
-  })
-  it('should pass textarea to the modal editor component', (done) => {
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './ModalEdit': {
-        data () {
-          this.$parent.$refs['son'] = this
-          return {received: false}
-        },
-        events: {
-          'modalEdit' (modalEdit) {
-            expect(modalEdit.type).to.eql('textarea')
-            done()
-          }
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2" :use-text-area-for="[\'name\']"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBody2 }
-    }).$mount()
-    vm.$children[0].valueClick('1', 'name')
   })
   it('should detect if the footer is an array and it should display 3 columns specified', () => {
     const vm = new Vue({
@@ -724,11 +700,10 @@ describe('SmartTable.vue', () => {
       components: {'smart-table': SmartTable},
       data: { testBody2 }
     }).$mount()
-    // check that there is not a filter gui
-    expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('34')
-    vm.$refs['ut'].doOrderBy('age')
+    expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(34)
+    vm.$refs.ut.doOrderBy('age')
     vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('22')
+      expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(22)
       done()
     })
   })
@@ -739,16 +714,16 @@ describe('SmartTable.vue', () => {
       data: { testBody2 }
     }).$mount()
     // check that there is not a filter gui
-    expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('34')
+    expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(34)
     vm.$refs['ut'].doOrderBy('age')
     vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('22')
+      expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(22)
       vm.$refs['ut'].doOrderBy('age')
       vm.$nextTick(() => {
-        expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('34')
+        expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(34)
         vm.$refs['ut'].doOrderBy('age')
         vm.$nextTick(() => {
-          expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('22')
+          expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(22)
           done()
         })
       })
@@ -761,10 +736,10 @@ describe('SmartTable.vue', () => {
       data: { testBody: [{_id: 0, name: 'Gennaro', age: '34'}, {_id: 1, name: 'Marco', age: '220'}] }
     }).$mount()
     // check that there is not a filter gui
-    expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('34')
+    expect(vm.$refs.ut.processedSmartBody[0].age).to.equal('34')
     vm.$refs['ut'].doOrderBy('age')
     vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('.cell-age')[0].textContent).to.contain('220')
+      expect(vm.$refs.ut.processedSmartBody[0].age).to.equal('220')
       done()
     })
   })
