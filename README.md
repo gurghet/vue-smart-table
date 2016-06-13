@@ -15,6 +15,7 @@ Basically you write this
     id-col="id.value"
     endpoint="http://api.randomuser.me/?page=1&results=20"
     :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
+    :order-by="['name.first', 'name.last']"
     >
    <src2img slot="picture.thumbnail"></src2img><!-- renders pictures -->
    <contacts slot="phone+cell"></contacts><!-- custom formatting -->
@@ -25,9 +26,9 @@ Basically you write this
 
 and you get this
 
-![vue smart table](http://s33.postimg.org/taf7s21sf/2016_06_09_19_15_33.png)
+![vue smart table](http://s31.postimg.org/vjgm319q3/2016_06_13_20_41_43.png)
 
-[Demo](http://codepen.io/gurghet/pen/OXyeER)
+[Demo](http://codepen.io/gurghet/pen/qNZprz)
 
 ## Installation
 
