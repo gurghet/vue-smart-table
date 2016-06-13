@@ -2,7 +2,7 @@
   <div class="smart-table">
     <modal @confirm="doCommand"></modal>
     <modal-edit @confirm="doEdit" @close="closedModalEdit"></modal-edit>
-    <table class="persist-area">
+    <table :class="'persist-area ' + (classes ? classes : 'table')">
       <thead v-show="scrolledPast" class="floating-header">
       <th v-if="actionsArePresent">
         <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
@@ -63,7 +63,7 @@
         </td>
         <td
           v-for="(col, value) in entry"
-          v-if="(col !== '_id' || shouldShowId)"
+          v-if="col !== '_id'"
           id="cell-{{entry._id}}-{{col}}"
           class="cell-{{col}}"
           @dblclick="valueClick(entry._id, col)"
@@ -74,6 +74,15 @@
             </slot>
           </div>
         </td>
+        <th
+          v-for="(col, value) in entry"
+          id="cell-{{entry._id}}-{{col}}"
+          class="cell-{{col}}"
+          scope="row"
+          v-if="col === '_id' && shouldShowId"
+        >
+          {{value}}
+        </th>
         <td v-if="delete">
           <button id="delete-{{entry._id}}" @click="remove(entry._id)">Delete</button>
         </td>
@@ -366,7 +375,7 @@
         return smartBody
       },
       shouldShowId () {
-        Object.keys(this.tableHeader).indexOf('_id') !== -1
+        return Object.keys(this.tableHeader).indexOf('_id') !== -1
       },
       span () {
         return Object.keys(this.tableHeader).length + 1 + (this.delete ? 1 : 0)
