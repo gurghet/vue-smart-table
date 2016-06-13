@@ -81,7 +81,11 @@
           scope="row"
           v-if="col === '_id' && shouldShowId"
         >
-          {{value}}
+          <div id="value-{{entry._id}}-_id">
+            <slot name="_id">
+              {{value}}
+            </slot>
+          </div>
         </th>
         <td v-if="delete">
           <button id="delete-{{entry._id}}" @click="remove(entry._id)">Delete</button>
