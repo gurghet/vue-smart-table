@@ -99,6 +99,7 @@ npm run ~unit
 
 ## Roadmap
 
+* [ ] Bootsrap/Flat/Semantic compatibility
 * [x] Derived columns
 * [ ] Sorting
   * [x] Client side
@@ -113,6 +114,10 @@ npm run ~unit
   * [ ] Server side
 
 ##Changelog
+
+###2.3.1
+
+- [Fix] Shows `_id` column if explicitly set in the header
 
 ###2.3.0
 
