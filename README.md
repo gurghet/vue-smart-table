@@ -116,7 +116,7 @@ npm run ~unit
 
 ##Changelog
 
-###2.4.0-beta
+###2.4.0-beta2
 
 - Bootstrap/Semantic compatibility
 
