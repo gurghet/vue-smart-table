@@ -197,7 +197,7 @@
       canSaveNewRow () {
         // console.log('mandatory fields are: ' + JSON.stringify(this.mandatoryFields) + '\n' +
         // 'their values are: ' + JSON.stringify(this.mandatoryFields.map(c => this.newRowInput[c])))
-        return this.mandatoryFields.every(col => this.validate(col, this.newRowInput[col]))
+        return this.mandatoryFields.every(col => this.validate(col, this.newRowInput[col])) && this.addRow
       },
       editableFields () {
         return Object.keys(this.tableHeader).filter(col => this.isEditable(col))
