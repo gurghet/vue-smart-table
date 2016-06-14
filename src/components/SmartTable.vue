@@ -94,6 +94,7 @@
 <script type="module">
   import Modal from './Modal'
   import ModalEdit from './ModalEdit'
+  import Vue from 'vue'
   export default {
     components: { Modal, ModalEdit },
     data () {
@@ -459,7 +460,7 @@
               return row._id === rowId
             }
             let row = this.processedSmartBody.filter(findById)[0]
-            child.value = row[col]
+            Vue.set(child.$data, 'value', row[col])
             if (this.additionalTdClasses[col] === undefined) {
               this.additionalTdClasses[col] = []
             }
