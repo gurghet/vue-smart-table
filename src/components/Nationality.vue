@@ -1,19 +1,18 @@
 <template>
-  <p>{{pvalue}}</p>
+  <p>{{value}}</p>
 </template>
 
 <script>
   export default {
     data () {
       return {
-        value: '',
-        pvalue: ''
+        value: ''
       }
     },
     watch: {
       'value' (val) {
         this.$http.get('https://restcountries.eu/rest/v1/alpha/' + val)
-          .then(res => this.$set('pvalue', res.data.name))
+          .then(res => this.$set('value', res.data.name))
       }
     }
   }

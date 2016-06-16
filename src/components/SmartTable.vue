@@ -38,7 +38,7 @@
       </tr>
       </tfoot>
       <tbody>
-      <tr v-for="entry in processedSmartBody" class="row-{{entry._id}}">
+      <tr v-for="entry in processedSmartBody" class="row-{{entry._id}}" track-by="_id">
         <td v-if="actionsArePresent">
           <input id="toggle-{{entry._id}}" value="{{entry._id}}" type="checkbox" v-model="selection"/>
         </td>
@@ -380,7 +380,7 @@
       }
     },
     watch: {
-      'processedSmartBody' () {
+      'body' () {
         this.updateInjectedValues()
       }
     },
