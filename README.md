@@ -114,6 +114,10 @@ npm run ~unit
   * [ ] Client side
   * [ ] Server side
 
+## Similar Components
+
+[vue-table](https://github.com/ratiw/vue-table)
+
 ##Changelog
 
 ###2.3.1
