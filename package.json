@@ -1,6 +1,6 @@
 {
   "name": "vue-smart-table",
-  "version": "2.4.0-beta5",
+  "version": "2.4.0-beta6",
   "description": "A table with dynamic components for vue.js",
   "main": "src/components/SmartTable.vue",
   "author": "Andrea Passaglia <gurghet@gmail.com>",
