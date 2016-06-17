@@ -116,7 +116,9 @@ npm run ~unit
 
 ## Similar Components
 
-[vue-table](https://github.com/ratiw/vue-table)
+Here is a list of similar components that also display a table:
+
+- [vue-table](https://github.com/ratiw/vue-table)
 
 ##Changelog
 
