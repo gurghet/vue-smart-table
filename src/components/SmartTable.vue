@@ -47,7 +47,6 @@
           v-if="col !== '_id'"
           id="cell-{{entry._id}}-{{col}}"
           :class="tdClasses(col, entry._id) + 'cell-' + col"
-          @click="valueClick(entry._id, col)"
         >
           <div id="value-{{entry._id}}-{{col}}">
             <slot :name="col">
@@ -94,6 +93,7 @@
 <script type="module">
   import Modal from './Modal'
   import ModalEdit from './ModalEdit'
+  import PlainText from './PlainText'
   import Vue from 'vue'
   export default {
     components: { Modal, ModalEdit },
@@ -200,6 +200,7 @@
         // 'their values are: ' + JSON.stringify(this.mandatoryFields.map(c => this.newRowInput[c])))
         return this.mandatoryFields.every(col => this.validate(col, this.newRowInput[col])) && this.addRow
       },
+      // fields that right now are visible and editable and should present themselves in the new row if present
       editableFields () {
         return Object.keys(this.tableHeader).filter(col => this.isEditable(col))
       },
@@ -388,9 +389,8 @@
     methods: {
       tdClasses(col, id) {
         let acc = ''
-        let isEditableCol = Object.keys(this.editableFields).indexOf(col) !== 1;
-        if (isEditableCol) {
-          acc += ' selectable'
+        if (this.isEditable(col)) {
+          acc += 'selectable '
         }
         if (this.additionalTdClasses[col] === undefined) {
           this.additionalTdClasses[col] = []
@@ -450,17 +450,21 @@
         // todo: more complex validation
       },
       updateInjectedValues () {
+        let customComponentsCols = new Set()
         let children = this.$children
         let columns = Object.keys(this.tableHeader)
+        function byId (id) {
+          return function (row) {
+            return row._id === id
+          }
+        }
         children.forEach(child => {
           let col = (typeof child.$el.getAttribute === 'function') ? child.$el.getAttribute('slot') : null
           if (col !== null && columns.indexOf(col) !== -1) {
             let rowId = child.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
-            function findById(row) {
-              return row._id === rowId
-            }
-            let row = this.processedSmartBody.filter(findById)[0]
+            let row = this.processedSmartBody.find(byId(rowId))
             Vue.set(child.$data, 'value', row[col])
+            customComponentsCols.add(col) // todo: optimize
             if (this.additionalTdClasses[col] === undefined) {
               this.additionalTdClasses[col] = []
             }
@@ -486,7 +490,19 @@
               // 3. link said value to newRow[col]
             }
           }
-        });
+        })
+        columns
+          .filter(col => !customComponentsCols.has(col))
+          .forEach(col => {
+            this.$el.querySelectorAll('.cell-' + CSS.escape(col)).forEach(cell => {
+              let PlainTextConstructor = Vue.extend(PlainText)
+              let plainText = new PlainTextConstructor()
+              let rowId = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
+              let row = this.processedSmartBody.find(byId(rowId))
+              plainText.$mount('#' + CSS.escape(cell.id) + ' div')
+              Vue.set(plainText.$data, 'value', row[col])
+            })
+          })
       },
       toggleAllRows () {
         if (this.toggleAll === false) {
@@ -573,6 +589,7 @@
           this.$dispatch('after-request')
         }
       },
+      // this field, if visible, should be editable and present in the new row
       isEditable (col) {
         // console.log(JSON.stringify(col), 'is', this.editable.indexOf(col) !== -1, 'editable, (editables are', JSON.stringify(this.editable), ')')
         return this.editable.indexOf(col) !== -1;

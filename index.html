@@ -14,6 +14,7 @@
     endpoint="http://api.randomuser.me/?page=1&results=20&seed=abc"
     :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
     :order-by="['name.first', 'name.last']"
+    :editable="['name.last']"
     >
    <src2img slot="picture.thumbnail"></src2img>
    <!-- this component will read the image
