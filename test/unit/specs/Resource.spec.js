@@ -3,7 +3,7 @@
 import Vue from 'vue'
 Vue.use(require('vue-resource'))
 Vue.config.debug = true
-import SmartTable from 'src/components/SmartTable'
+import SmartTable from '/Users/gurghet/Documents/vue-smart-table/dist/static/vue-smart-table'
   // var $ = require('jquery')
 chai.use(require('chai-dom'))
 let testBody = [{
@@ -16,22 +16,15 @@ let testBody = [{
   age: 22
 }]
 
-describe('Asyncronous resource loading when auto-load is set to true', () => {
+describe('Asyncronous resource loading when "auto-load" is set to true', () => {
   it('should load data automatically on startup', (done) => {
     Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {
-            request
-          }
-          response.data = {}
-          response.data.body = testBody
-          response.status = 200
-          return response
-        }
-        return request
-      }
+    Vue.http.interceptors.unshift((req, next) => {
+      next({
+        data: {body:testBody},
+        status: 200,
+        statusText: 'Ok'
+      })
     })
     const vm = new Vue({
       template: '<div><smart-table :auto-load="true" @successful-request="test"></smart-table></div>',
