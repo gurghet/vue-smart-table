@@ -1,7 +1,6 @@
 <template>
   <div class="smart-table table-responsive">
     <modal @confirm="doCommand"></modal>
-    <modal-edit @confirm="doEdit" @close="closedModalEdit"></modal-edit>
     <table :class="tableClassesProcessed">
       <thead>
       <tr>
@@ -451,60 +450,58 @@
         // todo: more complex validation
       },
       updateInjectedValues () {
-        let customComponentsCols = new Set()
-        let children = this.$children
+        let customChildrenByCol = {}
+        this.$children.forEach(c => {
+          if (typeof c.$el.getAttribute === 'function' && c.$el.getAttribute('slot') !== null) {
+            let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
+            let col = c.$el.parentElement.id.match(/^value-[a-zA-Z0-9 ._-]+-([a-zA-Z0-9.+]+)$/)[1]
+            if (customChildrenByCol[col] === undefined) {
+              customChildrenByCol[col] = {}
+            }
+            customChildrenByCol[col][id] = c
+          }
+        })
         let columns = Object.keys(this.tableHeader)
         function byId (id) {
           return function (row) {
             return row._id === id
           }
         }
-        children.forEach(child => {
-          let col = (typeof child.$el.getAttribute === 'function') ? child.$el.getAttribute('slot') : null
-          if (col !== null && columns.indexOf(col) !== -1) {
-            let rowId = child.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
-            let row = this.processedSmartBody.find(byId(rowId))
-            Vue.set(child.$data, 'value', row[col])
-            customComponentsCols.add(col) // todo: optimize
-            if (this.additionalTdClasses[col] === undefined) {
-              this.additionalTdClasses[col] = []
-            }
-            this.additionalTdClasses[col][rowId] = child.tdClasses || []
-            if (child.edit === undefined) {
-              child.edit = {}
-            }
-            this.mandatory[col] = (child.edit.mandatory === true)
-            if (this.addRow && child.edit.template !== undefined) {
-              let addRowId = '#edit-new-' + col
-              let template = child.edit.template
-              let EditComponent = Vue.extend({
-                template
-              })
-              let editComponent = new EditComponent({
-                data: {
-
-                }
-              })
-              editComponent.$mount(addRowId)
-              // 1. mount the input sub-component
-              // 2. add watcher for known value inside sub-component
-              // 3. link said value to newRow[col]
-            }
-          }
-        })
         columns
-          .filter(col => !customComponentsCols.has(col))
           .forEach(col => {
             this.$el.querySelectorAll('.cell-' + CSS.escape(col)).forEach(cell => {
-              let PlainTextConstructor = Vue.extend(PlainText)
-              let plainText = new PlainTextConstructor({
-                parent: this
-              })
-              let rowId = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
+              let child
+              let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
+              if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
+                child = customChildrenByCol[col][id]
+              } else {
+                console.log('no custom child component in col ' + col + ' with id that matches ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
+                let PlainTextConstructor = Vue.extend(PlainText)
+                child = new PlainTextConstructor({
+                  parent: this
+                })
+                if (this.$el.querySelector('#' + CSS.escape(cell.id) + ' div') === undefined) {
+                  console.error('could not find element "#' + cell.id + ' div"')
+                  return
+                }
+                child.$mount('#' + CSS.escape(cell.id) + ' div')
+              }
+              if (child === undefined) {
+                console.error('no child component found for id ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
+                return
+              }
+              console.log('mounted component in ' + '#' + cell.id + ' div')
+              let rowId = child.$el.parentElement.id.match(/^(?:value|cell)-([a-zA-Z0-9 ._-]+)-/)[1]
               let row = this.processedSmartBody.find(byId(rowId))
-              plainText.$mount('#' + CSS.escape(cell.id) + ' div')
-              Vue.set(plainText, 'value', row[col])
-              Vue.set(plainText, 'editable', this.isEditable(col))
+              Vue.set(child, 'id', rowId)
+              Vue.set(child, 'col', col)
+              Vue.set(child, 'value', row[col])
+              Vue.set(child, 'editable', this.isEditable(col))
+              Vue.set(child, 'mandatory', this.isMandatoryField(col))
+              if (this.additionalTdClasses[col] === undefined) {
+                this.additionalTdClasses[col] = []
+              }
+              this.additionalTdClasses[col][rowId] = child.tdClasses || []
             })
           })
       },
@@ -551,21 +548,36 @@
       isEditable (col) {
         return this.editable.indexOf(col) !== -1
       },
-      doEdit (resource) {
+      /**
+       *
+       * @param resource {value, id, col}
+       * @param httpRESTreq if false will not propagate PUT request
+         */
+      put (resource, httpRESTreq = true) {
         this.$dispatch('before-request')
-        this.$http.put(this.endpoint + '/' + resource.id + '/' + resource.col, {
-          action: 'edit',
-          value: resource.value
-        }).then((response) => {
-          this.$dispatch('successful-request')
-          this.$dispatch('after-request')
-          this.$set('error', false)
-          this.maybeRefresh()
-        }, (response) => {
-          this.$set('error', {status: response.status, data: response.data.error})
-          this.$dispatch('failed-request')
-          this.$dispatch('after-request')
-        })
+        let child = this.$children.find(c => c.id === resource.id && c.col === resource.col)
+        if (child === undefined) {
+          console.error('Children with id ' + resource.id + ' was not found')
+          return
+        }
+        Vue.set(child, 'mode', 'saving')
+        if (httpRESTreq) {
+          this.$http.put(this.endpoint + '/' + resource.id + '/' + resource.col, {
+            action: 'edit',
+            value: resource.value
+          }).then((response) => {
+            Vue.set(child, 'mode', 'readOnly')
+            this.$dispatch('successful-request')
+            this.$dispatch('after-request')
+            this.$set('error', false)
+            this.maybeRefresh()
+          }, (response) => {
+            Vue.set(child, 'mode', 'readOnly')
+            this.$set('error', {status: response.status, data: response.data.error})
+            this.$dispatch('failed-request')
+            this.$dispatch('after-request')
+          })
+        }
       },
       isPlainObject (obj) {
         return obj !== null && typeof obj === 'object'

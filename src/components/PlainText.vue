@@ -1,30 +1,27 @@
 <template>
   <div :class="classes" @click="edit">
     <input
-      v-if="editable && mode === 'edit'"
-      type="text" v-model="value"
+      v-if="mode === 'edit' || mode === 'saving'"
+      type="text" v-model="newValue"
       @blur="save"
-      @keyup="saveK"
-      :disabled="saving"
+      @keyup.13="save"
+      @keyup.27="cancel"
+      :disabled="mode === 'saving'"
     >
     <span v-if="mode === 'readOnly'">{{value}}</span>
   </div>
 </template>
 
 <script lang="babel">
-  import Vue from 'vue'
-  let editTemplate = `
-    <input type="text" v-model="value" @blur="save">
-  `
   export default {
     data () {
       return {
         value: undefined,
-        editTemplate,
+        newValue: undefined,
+        id: undefined,
+        col: undefined,
         editable: true,
-        mode: 'readOnly',
-        saving: false,
-        saveData: new Promise((resolve) => resolve())
+        mode: 'readOnly'
       }
     },
     computed: {
@@ -33,7 +30,7 @@
         if (this.editable && this.mode === 'readOnly') {
           acc.push('pointer-cursor full-height')
         }
-        if (this.mode === 'edit') {
+        if (this.mode === 'edit' || this.mode === 'saving') {
           acc.push('ui input') // semantic ui input
           acc.push('padding') // semantic ui fix
           acc.push('input-group') // bootstrap
@@ -42,32 +39,21 @@
       }
     },
     methods: {
-      saveK (e) {
-        if (e.keyCode === 13) {
-          this.save()
+      cancel () {
+        if (this.mode === 'edit') {
+          this.mode = 'readOnly'
+          this.newValue = undefined
         }
       },
       save () {
-        if (this.saving === false) {
-          console.log('saving was false setting it to true')
-          this.saving = true
-          this.saveData.then(() => {
-            const idSplit = this.$el.id.match(/^value-([a-zA-Z0-9 ._-]+)-([^-]+)/)
-            const id = idSplit[1]
-            const col = idSplit[2]
-            console.log('saving was true setting it to false')
-            Vue.set(this, 'saving', false)
-            Vue.set(this, 'mode', 'readOnly')
-            console.log('will dispatsh')
-            this.$dispatch('save-value', {value: this.value, id, col})
-          })
-        } else {
-          console.log('saving is true doing nothing')
+        if (this.mode === 'edit') {
+          this.$parent.put({value: this.newValue, id: this.id, col: this.col})
         }
       },
       edit () {
         if (this.editable) {
           this.mode = 'edit'
+          this.newValue = this.value
           this.$nextTick(() => {
             this.$el.querySelector('input').focus()
           })
