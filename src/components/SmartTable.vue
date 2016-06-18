@@ -450,8 +450,10 @@
         // todo: more complex validation
       },
       updateInjectedValues () {
+        let father = this
         let customChildrenByCol = {}
-        this.$children.forEach(c => {
+        let columns = Object.keys(father.tableHeader)
+        father.$children.forEach(c => {
           if (typeof c.$el.getAttribute === 'function' && c.$el.getAttribute('slot') !== null) {
             let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
             let col = c.$el.parentElement.id.match(/^value-[a-zA-Z0-9 ._-]+-([a-zA-Z0-9.+]+)$/)[1]
@@ -461,7 +463,6 @@
             customChildrenByCol[col][id] = c
           }
         })
-        let columns = Object.keys(this.tableHeader)
         function byId (id) {
           return function (row) {
             return row._id === id
@@ -469,7 +470,9 @@
         }
         columns
           .forEach(col => {
-            this.$el.querySelectorAll('.cell-' + CSS.escape(col)).forEach(cell => {
+            var escapedCol = CSS.escape(col)
+            console.log(escapedCol)
+            father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
               let child
               let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
               if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
@@ -478,37 +481,40 @@
                 console.log('no custom child component in col ' + col + ' with id that matches ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
                 let PlainTextConstructor = Vue.extend(PlainText)
                 child = new PlainTextConstructor({
-                  parent: this
+                  parent: father
                 })
-                if (this.$el.querySelector('#' + CSS.escape(cell.id) + ' div') === undefined) {
+                var escapedId = CSS.escape(cell.id)
+                if (father.$el.querySelector('#' + escapedId + ' div') === undefined) {
                   console.error('could not find element "#' + cell.id + ' div"')
                   return
                 }
-                child.$mount('#' + CSS.escape(cell.id) + ' div')
+                // having father in the argument ensures that this works even if smart table is not mounted in the DOM
+                child.$mount(father.$el.querySelector('#' + escapedId + ' div'))
               }
               if (child === undefined) {
                 console.error('no child component found for id ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
                 return
               }
               console.log('mounted component in ' + '#' + cell.id + ' div')
-              let rowId = child.$el.parentElement.id.match(/^(?:value|cell)-([a-zA-Z0-9 ._-]+)-/)[1]
-              let row = this.processedSmartBody.find(byId(rowId))
-              Vue.set(child, 'id', rowId)
+              let row = father.processedSmartBody.find(byId(id))
+              Vue.set(child, 'id', id)
               Vue.set(child, 'col', col)
               Vue.set(child, 'value', row[col])
-              Vue.set(child, 'editable', this.isEditable(col))
-              Vue.set(child, 'mandatory', this.isMandatoryField(col))
-              if (this.additionalTdClasses[col] === undefined) {
-                this.additionalTdClasses[col] = []
+              Vue.set(child, 'editable', father.isEditable(col))
+              Vue.set(child, 'mandatory', father.isMandatoryField(col))
+              if (father.additionalTdClasses[col] === undefined) {
+                father.additionalTdClasses[col] = []
               }
-              this.additionalTdClasses[col][rowId] = child.tdClasses || []
+              father.additionalTdClasses[col][id] = child.tdClasses || []
             })
           })
       },
       toggleAllRows () {
+        console.log('1')
         if (this.toggleAll === false) {
           this.toggleAll = true
-          this.selection = Object.keys(this.processedSmartBody)
+          this.selection = this.processedSmartBody.map(r => r._id)
+          console.log('2', this.selection)
         } else {
           this.toggleAll = false
           this.selection = []

@@ -3,7 +3,7 @@
 import Vue from 'vue'
 Vue.use(require('vue-resource'))
 Vue.config.debug = true
-import SmartTable from '/Users/gurghet/Documents/vue-smart-table/dist/static/vue-smart-table'
+import SmartTable from 'src/components/SmartTable'
   // var $ = require('jquery')
 chai.use(require('chai-dom'))
 let testBody = [{
@@ -21,7 +21,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
     Vue.http.interceptors.shift()
     Vue.http.interceptors.unshift((req, next) => {
       next({
-        data: {body:testBody},
+        data: {body: testBody},
         status: 200,
         statusText: 'Ok'
       })
@@ -44,20 +44,13 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
   it('should load data automatically on refresh', (done) => {
     let counter = 0
     Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {
-            request
-          }
-          response.data = {}
-          response.data.body = testBody
-          response.status = 200
-          counter++
-          return response
-        }
-        return request
-      }
+    Vue.http.interceptors.unshift((req, next) => {
+      counter++
+      next({
+        data: {body: testBody},
+        status: 200,
+        statusText: 'Ok'
+      })
     })
     const vm = new Vue({
       template: '<div><smart-table :auto-load="true" @successful-request="test" :auto-refresh="true"></smart-table></div>',
@@ -80,21 +73,14 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
   })
   it('should query the specified endpoint', (done) => {
     Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {
-            request
-          }
-          response.data = {}
-          response.data.body = testBody
-          response.status = 200
-          expect(request.url).to.eql('http://api.randomuser.me/')
-          done()
-          return response
-        }
-        return request
-      }
+    Vue.http.interceptors.unshift((req, next) => {
+      expect(req.url).to.eql('http://api.randomuser.me/')
+      done()
+      next({
+        data: {body: testBody},
+        status: 200,
+        statusText: 'Ok'
+      })
     })
     new Vue({
       template: '<div><smart-table :auto-load="true" endpoint="http://api.randomuser.me/"></smart-table></div>',
@@ -105,29 +91,23 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
   })
   it('should set the _id to newId column', (done) => {
     Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {
-            request
+    Vue.http.interceptors.unshift((req, next) => {
+      next({
+        data: {
+          'body': [{
+            _id: 'no no',
+            gender: 'male',
+            name: 'john',
+            newId: '476'
+          }],
+          'info': {
+            'results': 1,
+            'page': 1
           }
-          response.data = {
-            'body': [{
-              _id: 'no no',
-              gender: 'male',
-              name: 'john',
-              newId: '476'
-            }],
-            'info': {
-              'results': 1,
-              'page': 1
-            }
-          }
-          response.status = 200
-          return response
-        }
-        return request
-      }
+        },
+        status: 200,
+        statusText: 'Ok'
+      })
     })
     const vm = new Vue({
       template: '<div><smart-table :auto-load="true" id-col="newId" @successful-request="test"></smart-table></div>',
@@ -144,67 +124,27 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       }
     }).$mount()
   })
-  it('should set the body to the field passed in body-field', (done) => {
+  it('should set the body to the field passed in body-path', (done) => {
     Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {
-            request
-          }
-          response.data = {
-            'results': [{
-              _id: '98',
-              gender: 'male',
-              name: 'john'
-            }],
-            'info': {
-              'results': 1,
-              'page': 1
-            }
-          }
-          response.status = 200
-          return response
-        }
-        return request
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :auto-load="true" body-field="results" @successful-request="test"></smart-table></div>',
-      components: {
-        'smart-table': SmartTable
-      },
-      methods: {
-        test (event) {
-          vm.$nextTick(() => {
-            expect(vm.$el.querySelector('#value-98-name')).to.contain.text('john')
-            done()
-          })
-        }
-      }
-    }).$mount()
-  })
-  it('should set the body to the field passed in body-field if empty string', (done) => {
-    Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {
-            request
-          }
-          response.data = [{
+    Vue.http.interceptors.unshift((req, next) => {
+      next({
+        data: {
+          'results': [{
             _id: '98',
             gender: 'male',
             name: 'john'
-          }]
-          response.status = 200
-          return response
-        }
-        return request
-      }
+          }],
+          'info': {
+            'results': 1,
+            'page': 1
+          }
+        },
+        status: 200,
+        statusText: 'Ok'
+      })
     })
     const vm = new Vue({
-      template: '<div><smart-table :auto-load="true" body-field="" @successful-request="test"></smart-table></div>',
+      template: '<div><smart-table :auto-load="true" body-path="results" @successful-request="test"></smart-table></div>',
       components: {
         'smart-table': SmartTable
       },
@@ -218,33 +158,55 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       }
     }).$mount()
   })
-  it('should set the id to the dot notation \'id.SSN\' passed parameter', (done) => {
+  it('should set the body to the field passed in body-path if empty string', (done) => {
     Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {
-            request
-          }
-          response.data = {
-            'body': [{
-              id: {
-                name: 'SSN',
-                value: '476B'
-              },
-              gender: 'male',
-              name: 'john'
-            }],
-            info: {
-              results: 1,
-              page: 1
-            }
-          }
-          response.status = 200
-          return response
+    Vue.http.interceptors.unshift((req, next) => {
+      next({
+        data: [{
+          _id: '98',
+          gender: 'male',
+          name: 'john'
+        }],
+        status: 200,
+        statusText: 'Ok'
+      })
+    })
+    const vm = new Vue({
+      template: '<div><smart-table :auto-load="true" body-path="" @successful-request="test"></smart-table></div>',
+      components: {
+        'smart-table': SmartTable
+      },
+      methods: {
+        test (event) {
+          vm.$nextTick(() => {
+            expect(vm.$el.querySelector('#value-98-name')).to.contain.text('john')
+            done()
+          })
         }
-        return request
       }
+    }).$mount()
+  })
+  xit('should set the id to the dot notation \'id.SSN\' passed parameter', (done) => {
+    Vue.http.interceptors.shift()
+    Vue.http.interceptors.unshift((req, next) => {
+      next({
+        data: {
+          'body': [{
+            id: {
+              name: 'SSN',
+              value: '476B'
+            },
+            gender: 'male',
+            name: 'john'
+          }],
+          info: {
+            results: 1,
+            page: 1
+          }
+        },
+        status: 200,
+        statusText: 'Ok'
+      })
     })
     const vm = new Vue({
       template: '<div><smart-table :auto-load="true" id-col="id.value" @successful-request="test"></smart-table></div>',
@@ -261,33 +223,27 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       }
     }).$mount()
   })
-  it('should set the id to the dot notation \'id.SSN\' even when it is null', (done) => {
+  xit('should set the id to the dot notation \'id.SSN\' even when it is null', (done) => {
     Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {
-            request
+    Vue.http.interceptors.unshift((req, next) => {
+      next({
+        data: {
+          'body': [{
+            id: {
+              name: '',
+              value: null
+            },
+            gender: 'male',
+            name: 'john'
+          }],
+          info: {
+            results: 1,
+            page: 1
           }
-          response.data = {
-            'body': [{
-              id: {
-                name: '',
-                value: null
-              },
-              gender: 'male',
-              name: 'john'
-            }],
-            info: {
-              results: 1,
-              page: 1
-            }
-          }
-          response.status = 200
-          return response
-        }
-        return request
-      }
+        },
+        status: 200,
+        statusText: 'Ok'
+      })
     })
     const vm = new Vue({
       template: '<div><smart-table :auto-load="true" id-col="id.value" @successful-request="test"></smart-table></div>',

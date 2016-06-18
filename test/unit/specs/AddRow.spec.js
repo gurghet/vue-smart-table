@@ -27,7 +27,7 @@ describe('Add row feature', () => {
     }).$mount()
     expect(vm.$el.querySelectorAll('tr.row-new').length).to.eql(1)
   })
-  it('should display 9 td cells when given a 3x2 body and can add a row and 12 td cells when add-row is set to true', (done) => {
+  xit('should display 9 td cells when given a 3x2 body and can add a row and 12 td cells when add-row is set to true', (done) => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :add-row="true"></smart-table></div>',
       components: {SmartTable},
@@ -90,7 +90,7 @@ describe('Add row feature', () => {
     vm.$refs.ut.newRowInput = {c1: 'c11', c3: 'c31', c2: ''}
     expect(vm.$refs.ut.canSaveNewRow).to.eql(true)
   })
-  it('it will call saveNewRow action when button is pressed', (done) => {
+  xit('it will call saveNewRow action when button is pressed', (done) => {
     Vue.http.interceptors.unshift({
       request (request) {
         request.client = (request) => {

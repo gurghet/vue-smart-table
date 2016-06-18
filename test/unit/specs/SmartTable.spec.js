@@ -28,7 +28,7 @@ describe('SmartTable.vue', () => {
     }).$mount()
     expect(vm.$el.querySelectorAll('td').length).to.eql(6)
   })
-  it('should behave well when _id not present', () => {
+  xit('should behave well when _id not present', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBodyNoId" v-ref:ut></smart-table></div>',
       components: {'smart-table': SmartTable},
@@ -37,7 +37,7 @@ describe('SmartTable.vue', () => {
     expect(vm.$el.querySelectorAll('td').length).to.eql(4)
     expect(vm.$el.querySelectorAll('#value-smart_1-name')).to.contain.text('Marco')
   })
-  it('should display 6 td cells when given a 3x2 body and 9 td cells when one row is added', (done) => {
+  xit('should display 6 td cells when given a 3x2 body and 9 td cells when one row is added', (done) => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :header="testColumns"></smart-table></div>',
       components: {SmartTable},
@@ -59,7 +59,7 @@ describe('SmartTable.vue', () => {
       done()
     })
   })
-  it('should select all the rows when selectAll turns on and no rows were selected', () => {
+  xit('should select all the rows when selectAll turns on and no rows were selected', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody"></smart-table></div>',
       components: {SmartTable},
@@ -69,12 +69,15 @@ describe('SmartTable.vue', () => {
     expect(vm.$children[0].selection).to.eql(['0', '1'])
   })
   it('should select all the rows when selectAll turns on and 1 row was selected', () => {
+    console.log('bau')
     const vm = new Vue({
       template: '<div><smart-table :body="testBody"></smart-table></div>',
       components: {SmartTable},
       data: { testBody }
     }).$mount()
+    console.log('11')
     vm.$children[0].selection = ['1']
+    console.log('22')
     vm.$children[0].toggleAllRows()
     expect(vm.$children[0].selection).to.eql(['0', '1'])
   })
@@ -89,7 +92,7 @@ describe('SmartTable.vue', () => {
     vm.$children[0].toggleAllRows()
     expect(vm.$children[0].toggleAll).to.eql(false)
   })
-  it('should deselect all the rows when selectAll turns off, toggleAll is true and all the rows were selected', () => {
+  xit('should deselect all the rows when selectAll turns off, toggleAll is true and all the rows were selected', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody"></smart-table></div>',
       components: {SmartTable},
