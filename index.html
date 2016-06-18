@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>vuesmarttable</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/semantic.css" />
+    <style>
+      .smart-table {
+        margin: 25px;
+      }
+    </style>
   </head>
   <body>
    <smart-table
     :auto-load="true"
-    body-field="results"
+    body-path="results"
     id-col="id.value"
     endpoint="http://api.randomuser.me/?page=1&results=20&seed=abc"
     :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"

@@ -90,7 +90,8 @@
   </div>
 </template>
 
-<script type="module">
+<script lang="babel">
+  /* global CSS */
   import Modal from './Modal'
   import ModalEdit from './ModalEdit'
   import PlainText from './PlainText'
@@ -137,9 +138,9 @@
       footer: {
         required: false
       },
-      bodyField: {
+      bodyPath: {
         type: String,
-        default: "body"
+        default: 'body'
       },
       body: {
         type: Array,
@@ -252,6 +253,10 @@
         }
       },
       processedSmartBody () {
+        function getDataFromDotNotation (d, row) {
+          return d.split('.').reduce((o, i) => o[i], row)
+        }
+
         if (this.body === undefined) {
           this.body = []
         }
@@ -259,9 +264,9 @@
         // at least 1 row has id undefined, add them where it's not present
         let counter = 0
         this.body.forEach(row => {
-          let idValue = this.idCol.split('.').reduce((o,i)=>o[i], row)
+          let idValue = getDataFromDotNotation(this.idCol, row)
           if ((idValue === undefined || idValue === null) && (row[this.idCol] === undefined || row[this.idCol] === null)) {
-            row[this.idCol] = "smart_" + counter++
+            row[this.idCol] = 'smart_' + counter++
           }
         })
 
@@ -282,56 +287,51 @@
               let realColValue = {}
               if (/\+/.test(col)) {
                 // it's a composite column will return an object
-                col.split('+').forEach(d=>{
-                  realColValue[d] = d.split('.').reduce((o,i)=>o[i], row)
+                col.split('+').forEach(d => {
+                  realColValue[d] = getDataFromDotNotation(d, row)
                 })
               } else {
-                realColValue = col.split('.').reduce((o,i)=>o[i], row)
+                realColValue = getDataFromDotNotation(col, row)
               }
               finalRow[col] = realColValue
             })
-            let idValue = this.idCol.split('.').reduce((o,i)=>o[i], row)
+            let idValue = getDataFromDotNotation(this.idCol, row)
             let altIdValue = row[this.idCol]
             finalRow._id = String(idValue || altIdValue)
             smartBody.push(finalRow)
           }
         })
 
+        let vmThis = this
+        function numericCompare (row1, row2) {
+          let valA = row1[vmThis.orderKey]
+          var valB = row2[vmThis.orderKey]
+          if (valA === undefined || valB === undefined) {
+            return 0
+          }
+          return (valA - valB) * (vmThis.reverseOrder ? -1 : 1)
+        }
+        function lexicographicCompare (row1, row2) {
+          let valA = row1[vmThis.orderKey]
+          var valB = row2[vmThis.orderKey]
+          if (valA === undefined || valB === undefined) {
+            return 0
+          }
+          var r = (valA > valB) ? 1 : -1
+          return r * (vmThis.reverseOrder ? -1 : 1)
+        }
+
         if (this.orderKey !== undefined &&
           Object.keys(this.tableHeader).indexOf(this.orderKey) !== -1 &&
         Object.keys(this.orderBy).indexOf(this.orderKey) !== -1) {
-          let _this = this
-          function numericCompare(row1, row2) {
-            let valA = row1[_this.orderKey]
-            var valB = row2[_this.orderKey]
-            if (valA === undefined || valB === undefined) {
-              return 0
-            }
-            return (valA - valB) * (_this.reverseOrder ? -1 : 1)
-          }
-          function lexicographicCompare(row1, row2) {
-            let valA = row1[_this.orderKey]
-            var valB = row2[_this.orderKey]
-            if (valA === undefined || valB === undefined) {
-              return 0
-            }
-            var r = (valA > valB) ? 1 : -1
-            return r * (_this.reverseOrder ? -1 : 1)
-          }
-
-          var lexicographical = this.orderBy[this.orderKey].lexicographical;
-          function isNumeric (n) {
-            return !isNaN(parseFloat(n)) && isFinite(n)
-          }
-          let everyRowIsNonNumeric = smartBody.every(r => !isNumeric(r[this.orderKey]))
+          var lexicographical = this.orderBy[this.orderKey].lexicographical
+          let everyRowIsNonNumeric = smartBody.every(r => !this.isNumeric(r[this.orderKey]))
           if (lexicographical === true || everyRowIsNonNumeric) {
             smartBody.sort(lexicographicCompare)
           } else {
             smartBody.sort(numericCompare)
           }
         }
-
-
         return smartBody
       },
       shouldShowId () {
@@ -343,13 +343,13 @@
     },
     beforeCompile () {
       if ((this.body === undefined || this.body.lenght < 1) && this.autoLoad === false) {
-        console.warn("Body passed is empty, if you want to load data set auto-load to true")
+        console.warn('Body passed is empty, if you want to load data set auto-load to true')
       }
 
       // if orderBy is not an object turn it into one
       if (Array.isArray(this.orderBy)) {
         var orderByObj = {}
-        this.orderBy.forEach((el) => orderByObj[el] = {})
+        this.orderBy.forEach(el => { orderByObj[el] = {} })
         this.orderBy = orderByObj
       }
       if (this.orderBy === undefined) {
@@ -359,7 +359,7 @@
       // if actions is not an object, it doesn't have labels
       if (Array.isArray(this.actions)) {
         var actionsObj = {}
-        this.actions.forEach((el) => actionsObj[el] = el)
+        this.actions.forEach(el => (actionsObj[el] = el))
         this.actions = actionsObj
       }
       if (this.actions === undefined) {
@@ -369,7 +369,7 @@
       // initialize filters
       if (Array.isArray(this.canFilterBy)) {
         let acc = {}
-        this.canFilterBy.forEach(col => acc[col] = {open: false, model: ''} )
+        this.canFilterBy.forEach(col => (acc[col] = {open: false, model: ''}))
         this.filters = acc
       }
     },
@@ -387,7 +387,7 @@
       }
     },
     methods: {
-      tdClasses(col, id) {
+      tdClasses (col, id) {
         let acc = ''
         if (this.isEditable(col)) {
           acc += 'selectable '
@@ -398,18 +398,19 @@
         if (this.additionalTdClasses[col][id] === undefined) {
           this.additionalTdClasses[col][id] = []
         }
-        this.additionalTdClasses[col][id].forEach(additionalTdClass => acc += ' ' + additionalTdClass)
+        this.additionalTdClasses[col][id].forEach(additionalTdClass => (acc += ' ' + additionalTdClass))
         return acc
       },
       refresh () {
+        this.$dispatch('before-request')
         this.$http.get(this.endpoint).then((response) => {
-          let body = ''
-          if (this.bodyField.length === 0) {
-            body = response.data
+          let retBody = []
+          if (this.bodyPath.length === 0) {
+            retBody = response.data
           } else {
-            body = response.data[this.bodyField]
+            retBody = response.data[this.bodyPath]
           }
-          this.$set('body', body)
+          Vue.set(this, 'body', retBody)
           this.$set('footer', response.data.footer)
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
@@ -496,11 +497,14 @@
           .forEach(col => {
             this.$el.querySelectorAll('.cell-' + CSS.escape(col)).forEach(cell => {
               let PlainTextConstructor = Vue.extend(PlainText)
-              let plainText = new PlainTextConstructor()
+              let plainText = new PlainTextConstructor({
+                parent: this
+              })
               let rowId = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
               let row = this.processedSmartBody.find(byId(rowId))
               plainText.$mount('#' + CSS.escape(cell.id) + ' div')
-              Vue.set(plainText.$data, 'value', row[col])
+              Vue.set(plainText, 'value', row[col])
+              Vue.set(plainText, 'editable', this.isEditable(col))
             })
           })
       },
@@ -517,15 +521,15 @@
         var actionKey = this.action
         var actionLabel = this.actions[this.action]
         var selectionKeyLabel = this.selection.map(rowId => {
-          let selectedRow = this.processedSmartBody.filter((row => row._id === rowId))[0]
+          let selectedRow = this.processedSmartBody.filter(row => row._id === rowId)[0]
           if (selectedRow !== undefined) {
-            let rowLabel = selectedRow[this.mainCol];
-              return {key: rowId, label: rowLabel}
+            let rowLabel = selectedRow[this.mainCol]
+            return {key: rowId, label: rowLabel}
           } else {
             return null
           }
         }).filter(a => a !== null)
-        var commandToBeConfirmed = { action: { key: actionKey, label: actionLabel}, selection: selectionKeyLabel }
+        var commandToBeConfirmed = { action: { key: actionKey, label: actionLabel }, selection: selectionKeyLabel }
         this.$broadcast('command', commandToBeConfirmed)
       },
       doCommand (command) {
@@ -533,118 +537,50 @@
 
         // special case
         if (/^(_remove|_delete)$/i.test(command.action)) {
-          this.$http.delete(this.endpoint, command).then(onSuccess, onFailure)
+          this.$http.delete(this.endpoint, command).then(this.onSuccess, this.onFailure)
         } else {
-          this.$http.get(this.endpoint, command).then(onSuccess, onFailure)
-        }
-
-        function onSuccess(response) {
-          let body = ''
-          if (this.bodyField.length === 0) {
-            body = response.data
-          } else {
-            body = response.data[this.bodyField]
-          }
-          if (body !== undefined || body === {}) {
-            this.$set('body', body)
-            this.$set('footer', response.data.footer)
-          }
-          this.$dispatch('successful-request')
-          this.$dispatch('after-request')
-          this.$set('error', false)
-          this.maybeRefresh()
-        }
-
-        function onFailure(response) {
-          this.$set('error', { status: response.status, data: response.data.error })
-          this.$dispatch('failed-request')
-          this.$dispatch('after-request')
+          this.$http.get(this.endpoint, command).then(this.onSuccess, this.onFailure)
         }
       },
       remove (id) {
         this.$dispatch('before-request')
 
-        this.$http.delete(this.endpoint + '/' + id).then(onSuccess, onFailure)
-
-        function onSuccess(response) {
-          let body = ''
-          if (this.bodyField.length === 0) {
-            body = response.data
-          } else {
-            body = response.data[this.bodyField]
-          }
-          if (body !== undefined || body === {}) {
-            this.$set('body', body)
-            this.$set('footer', response.data.footer)
-          }
-          this.$dispatch('successful-request')
-          this.$dispatch('after-request')
-          this.$set('error', false)
-          this.maybeRefresh()
-        }
-
-        function onFailure(response) {
-          this.$set('error', { status: response.status, data: response.data.error })
-          this.$dispatch('failed-request')
-          this.$dispatch('after-request')
-        }
+        this.$http.delete(this.endpoint + '/' + id).then(this.onSuccess, this.onFailure)
       },
       // this field, if visible, should be editable and present in the new row
       isEditable (col) {
-        // console.log(JSON.stringify(col), 'is', this.editable.indexOf(col) !== -1, 'editable, (editables are', JSON.stringify(this.editable), ')')
-        return this.editable.indexOf(col) !== -1;
+        return this.editable.indexOf(col) !== -1
       },
-      valueClick (id, col) {
-        if (!this.isEditable(col)) {
-          return
-        }
-        if (this.modalEdit === undefined) {
-          const rowObj = this.processedSmartBody.filter(row => row._id === id)[0];
-          if (rowObj === undefined) {
-            let possibleId = rowObj._id
-            let maybeBit = possibleId ? '\nMaybe you meant '+JSON.stringify(possibleId) : ''
-            // console.error('Cannot find row with id '+JSON.stringify(id)+maybeBit)
-            return
-          }
-          this.modalEdit = {
-            id: id,
-            col: col,
-            currentValue: rowObj[col],
-            previousValue: rowObj[col]
-          }
-          this.$broadcast('modalEdit', this.modalEdit)
-        }
-      },
-      doEdit (modalEdit) {
+      doEdit (resource) {
         this.$dispatch('before-request')
-        this.$http.put(this.endpoint + '/' + modalEdit.id + '/' + modalEdit.col, {
+        this.$http.put(this.endpoint + '/' + resource.id + '/' + resource.col, {
           action: 'edit',
-          value: modalEdit.currentValue
+          value: resource.value
         }).then((response) => {
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
           this.$set('error', false)
           this.maybeRefresh()
         }, (response) => {
-          this.$set('error', { status: response.status, data: response.data.error})
+          this.$set('error', {status: response.status, data: response.data.error})
           this.$dispatch('failed-request')
           this.$dispatch('after-request')
         })
       },
-      isPlainObject ( obj ) {
+      isPlainObject (obj) {
         return obj !== null && typeof obj === 'object'
       },
       isMandatoryField (col) {
         if (this.mandatory[col] === false) {
           // console.log(col + 'is explicitly non mandatory')
-          return false;
+          return false
         }
         return this.mandatory[col] || this.isEditable(col)
         // todo: subject to change
       },
       doOrderBy (col) {
         if (this.canOrderBy(col)) {
-          return;
+          return
         }
         if (this.orderKey === col) {
           this.reverseOrder = !this.reverseOrder
@@ -667,6 +603,35 @@
       },
       closedModalEdit () {
         this.modalEdit = undefined
+      },
+      isNumeric (n) {
+        return !!(+('1' + n) || +(n + '1')) && !Array.isArray(n) && isFinite(n) && (n !== '')
+      },
+      onFailure (response) {
+        this.$set('error', {status: response.status, data: response.data.error})
+        this.$dispatch('failed-request')
+        this.$dispatch('after-request')
+      },
+      onSuccess (response) {
+        let body = ''
+        if (this.bodyPath.length === 0) {
+          body = response.data
+        } else {
+          body = response.data[this.bodyPath]
+        }
+        if (body !== undefined || body === {}) {
+          this.$set('body', body)
+          this.$set('footer', response.data.footer)
+        }
+        this.$dispatch('successful-request')
+        this.$dispatch('after-request')
+        this.$set('error', false)
+        this.maybeRefresh()
+      }
+    },
+    events: {
+      'save-value' () {
+        console.log('@@@@')
       }
     }
   }
