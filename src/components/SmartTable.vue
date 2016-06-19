@@ -497,6 +497,7 @@
               }
               Vue.set(child, 'id', id)
               Vue.set(child, 'col', col)
+              Vue.set(child, 'mode', 'readOnly')
               Vue.set(child, 'value', row[col])
               Vue.set(child, 'editable', father.isEditable(col))
               Vue.set(child, 'mandatory', father.isMandatoryField(col))

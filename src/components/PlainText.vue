@@ -1,14 +1,14 @@
 <template>
   <div :class="classes" @click="edit">
     <input
-      v-if="mode === 'edit' || mode === 'saving'"
+      v-show="mode === 'edit' || mode === 'saving'"
       type="text" v-model="newValue"
       @blur="save"
       @keyup.13="save"
       @keyup.27="cancel"
       :disabled="mode === 'saving'"
     >
-    <span v-if="mode === 'readOnly'">{{value}}</span>
+    <span v-show="mode === 'readOnly'">{{value}}</span>
   </div>
 </template>
 
