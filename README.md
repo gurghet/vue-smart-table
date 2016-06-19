@@ -1,6 +1,7 @@
 # vue-smart-table
 
 [![Join the chat at https://gitter.im/gurghet/vue-smart-table](https://badges.gitter.im/gurghet/vue-smart-table.svg)](https://gitter.im/gurghet/vue-smart-table?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![npm](https://img.shields.io/npm/dt/vue-smart-table.svg?maxAge=2592000)](https://www.npmjs.com/package/vue-smart-table)
 
 > A vue table with dynamic components
 
@@ -112,6 +113,12 @@ npm run ~unit
 * [ ] Filtering
   * [ ] Client side
   * [ ] Server side
+
+## Similar Components
+
+Here is a list of similar components that also display a table:
+
+- [vue-table](https://github.com/ratiw/vue-table)
 
 ##Changelog
 
