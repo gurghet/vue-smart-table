@@ -186,7 +186,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       }
     }).$mount()
   })
-  xit('should set the id to the dot notation \'id.SSN\' passed parameter', (done) => {
+  it('should set the id to the dot notation \'id.SSN\' passed parameter', (done) => {
     Vue.http.interceptors.shift()
     Vue.http.interceptors.unshift((req, next) => {
       next({
@@ -223,7 +223,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       }
     }).$mount()
   })
-  xit('should set the id to the dot notation \'id.SSN\' even when it is null', (done) => {
+  it('should set the id to the dot notation \'id.SSN\' even when it is null', (done) => {
     Vue.http.interceptors.shift()
     Vue.http.interceptors.unshift((req, next) => {
       next({

@@ -341,7 +341,7 @@
       }
     },
     beforeCompile () {
-      if ((this.body === undefined || this.body.lenght < 1) && this.autoLoad === false) {
+      if ((this.body === undefined || this.body.length < 1) && this.autoLoad === false) {
         console.warn('Body passed is empty, if you want to load data set auto-load to true')
       }
 
@@ -471,14 +471,14 @@
         columns
           .forEach(col => {
             var escapedCol = CSS.escape(col)
-            console.log(escapedCol)
             father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
               let child
               let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
+              let row = father.processedSmartBody.find(byId(id))
               if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
                 child = customChildrenByCol[col][id]
               } else {
-                console.log('no custom child component in col ' + col + ' with id that matches ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
+                // no custom component default on built-in PlainText
                 let PlainTextConstructor = Vue.extend(PlainText)
                 child = new PlainTextConstructor({
                   parent: father
@@ -495,8 +495,6 @@
                 console.error('no child component found for id ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
                 return
               }
-              console.log('mounted component in ' + '#' + cell.id + ' div')
-              let row = father.processedSmartBody.find(byId(id))
               Vue.set(child, 'id', id)
               Vue.set(child, 'col', col)
               Vue.set(child, 'value', row[col])
@@ -510,11 +508,9 @@
           })
       },
       toggleAllRows () {
-        console.log('1')
         if (this.toggleAll === false) {
           this.toggleAll = true
           this.selection = this.processedSmartBody.map(r => r._id)
-          console.log('2', this.selection)
         } else {
           this.toggleAll = false
           this.selection = []

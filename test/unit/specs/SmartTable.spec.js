@@ -28,16 +28,20 @@ describe('SmartTable.vue', () => {
     }).$mount()
     expect(vm.$el.querySelectorAll('td').length).to.eql(6)
   })
-  xit('should behave well when _id not present', () => {
+  it('should behave well when _id not present', (done) => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBodyNoId" v-ref:ut></smart-table></div>',
       components: {'smart-table': SmartTable},
       data: { testBodyNoId }
     }).$mount()
     expect(vm.$el.querySelectorAll('td').length).to.eql(4)
-    expect(vm.$el.querySelectorAll('#value-smart_1-name')).to.contain.text('Marco')
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelector('#value-smart_0-name')).to.contain.text('Gennaro')
+      expect(vm.$el.querySelector('#value-smart_1-name')).to.contain.text('Marco')
+      done()
+    })
   })
-  xit('should display 6 td cells when given a 3x2 body and 9 td cells when one row is added', (done) => {
+  it('should display 6 td cells when given a 3x2 body and 9 td cells when one row is added', (done) => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :header="testColumns"></smart-table></div>',
       components: {SmartTable},
@@ -46,20 +50,22 @@ describe('SmartTable.vue', () => {
         testColumns: ['C1', 'C2', 'C3']
       }
     }).$mount()
-    expect(vm.$el.querySelector('#value-0-c1').textContent).to.contain('c11')
     expect(vm.$el.querySelectorAll('td').length).to.eql(6)
-    vm.testBody = [
-      {_id: 0, c1: 'toredo', c2: 'c21', c3: 'c31'},
-      {_id: 1, c1: 'c12', c2: 'c22', c3: 'c32'},
-      {_id: 2, c1: 'c13', c2: 'c23', c3: 'c33'}
-    ]
     vm.$nextTick(() => {
-      expect(vm.$el.querySelector('#value-0-c1').textContent).to.contain('toredo')
-      expect(vm.$el.querySelectorAll('td').length).to.eql(9)
-      done()
+      expect(vm.$el.querySelector('#value-0-c1').textContent).to.contain('c11')
+      Vue.set(vm, 'testBody', [
+        {_id: 0, c1: 'toredo', c2: 'c21', c3: 'c31'},
+        {_id: 1, c1: 'c12', c2: 'c22', c3: 'c32'},
+        {_id: 2, c1: 'c13', c2: 'c23', c3: 'c33'}
+      ])
+      vm.$nextTick(() => {
+        expect(vm.$el.querySelectorAll('td').length).to.eql(9)
+        expect(vm.$el.querySelector('#value-0-c1').textContent).to.contain('toredo')
+        done()
+      })
     })
   })
-  xit('should select all the rows when selectAll turns on and no rows were selected', () => {
+  it('should select all the rows when selectAll turns on and no rows were selected', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody"></smart-table></div>',
       components: {SmartTable},
@@ -92,7 +98,7 @@ describe('SmartTable.vue', () => {
     vm.$children[0].toggleAllRows()
     expect(vm.$children[0].toggleAll).to.eql(false)
   })
-  xit('should deselect all the rows when selectAll turns off, toggleAll is true and all the rows were selected', () => {
+  it('should deselect all the rows when selectAll turns off, toggleAll is true and all the rows were selected', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody"></smart-table></div>',
       components: {SmartTable},
@@ -267,20 +273,15 @@ describe('SmartTable.vue', () => {
     expect(a.selection).to.eql([{key: '1', label: 'Marco'}])
   })
   it('should perform an http request with action and selection (and update the body) when confirm is received', (done) => {
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = {request: request}
-          response.status = 200
-          response.data = {}
-          response.data.body = [{_id: 1, name: 'maciccio', age: 88}]
-          expect(request.params.action).to.eql('foo')
-          expect(request.params.selection).to.eql([1, 3])
-          Vue.http.interceptors.shift()
-          return response
-        }
-        return request
-      }
+    Vue.http.interceptors.shift()
+    Vue.http.interceptors.unshift((req, next) => {
+      expect(req.params.action).to.eql('foo')
+      expect(req.params.selection).to.eql([1, 3])
+      next({
+        data: {body: [{_id: 1, name: 'maciccio', age: 88}]},
+        status: 200,
+        statusText: 'Ok'
+      })
     })
     const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
     const SmartTableWithMock = inject({
@@ -302,17 +303,12 @@ describe('SmartTable.vue', () => {
   })
   it('should set an error after requesting an action that returns 500', (done) => {
     Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift({
-      request (request) {
-        request.client = (request) => {
-          var response = new Error()
-          response.data = {}
-          response.data.error = 'error data'
-          response.status = 500
-          return response
-        }
-        return request
-      }
+    Vue.http.interceptors.unshift((req, next) => {
+      next({
+        data: {error: 'error data'},
+        status: 500,
+        statusText: 'Nope'
+      })
     })
     const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
     const SmartTableWithMock = inject({
@@ -387,7 +383,9 @@ describe('SmartTable.vue', () => {
       }
     }).$mount()
     expect(vm.$el.querySelectorAll('td').length).to.eql(4)
-    expect(vm.$el.querySelector('#value-1-age').textContent).to.contain('34')
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelector('#value-1-age').textContent).to.contain('34')
+    })
   })
   it('should choose an appropriate label in case _id is not in the header', () => {
     const vm = new Vue({
@@ -516,7 +514,8 @@ describe('SmartTable.vue', () => {
    done()
    }, {deep: true})
    }) */
-  it('should not go in edit mode if the field is not editable', (/* done */) => {
+  // todo: move tests in PlainText component
+  xit('should not go in edit mode if the field is not editable', (/* done */) => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :actions="[\'mela\']" :editable="[\'name\']" v-ref:ut></smart-table></div>',
       components: {SmartTable},
@@ -527,7 +526,7 @@ describe('SmartTable.vue', () => {
     vm.$children[0].valueClick('1', 'name')
     expect(vm.$refs.ut.modalEdit).to.not.equal(undefined)
   })
-  it('should not go in edit mode if the entire table is not editable', () => {
+  xit('should not go in edit mode if the entire table is not editable', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody2" :actions="[\'mela\']" v-ref:ut></smart-table></div>',
       components: {SmartTable},
@@ -618,7 +617,8 @@ describe('SmartTable.vue', () => {
     expect(vm.$el.querySelectorAll('.smart-control-bar').length).to.eql(0)
     expect(vm.$el.querySelectorAll('input[type="checkbox="]').length).to.eql(0)
   })
-  it('should put into edit mode even if cell is empty', () => {
+  // todo: move into PlainTextComponent
+  xit('should put into edit mode even if cell is empty', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :editable="[\'name\']" v-ref:ut></smart-table></div>',
       components: {SmartTable},
@@ -636,14 +636,16 @@ describe('SmartTable.vue', () => {
         testBody2
       }
     }).$mount()
-    const headerCells = vm.$el.querySelectorAll('th')
-    expect(headerCells.length).to.eql(2)
-    expect(headerCells[0].textContent).to.contain('Età')
-    expect(headerCells[1].textContent).to.contain('Nome')
-    const firstRowCells = vm.$el.querySelectorAll('.row-1 td')
-    expect(firstRowCells.length).to.eql(2)
-    expect(firstRowCells[0].textContent).to.contain('34')
-    expect(firstRowCells[1].textContent).to.contain('Gennaro')
+    vm.$nextTick(() => {
+      const headerCells = vm.$el.querySelectorAll('th')
+      expect(headerCells.length).to.eql(2)
+      expect(headerCells[0].textContent).to.contain('Età')
+      expect(headerCells[1].textContent).to.contain('Nome')
+      const firstRowCells = vm.$el.querySelectorAll('.row-1 td')
+      expect(firstRowCells.length).to.eql(2)
+      expect(firstRowCells[0].textContent).to.contain('34')
+      expect(firstRowCells[1].textContent).to.contain('Gennaro')
+    })
   })
   it('should detect if the footer is an array and it should display 3 columns specified', () => {
     const vm = new Vue({
