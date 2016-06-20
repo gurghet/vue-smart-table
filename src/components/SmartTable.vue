@@ -95,6 +95,7 @@
   import ModalEdit from './ModalEdit'
   import PlainText from './PlainText'
   import Vue from 'vue'
+  Vue.component('plain-text', PlainText)
   export default {
     components: { Modal, ModalEdit },
     data () {
@@ -480,16 +481,16 @@
               } else {
                 // no custom component default on built-in PlainText
                 let PlainTextConstructor = Vue.extend(PlainText)
+                let escapedId = CSS.escape(cell.id)
                 child = new PlainTextConstructor({
+                  el: father.$el.querySelector('#' + escapedId + ' div'),
+                  // having father in the argument ensures that this works even if smart table is not mounted in the DOM
                   parent: father
                 })
-                var escapedId = CSS.escape(cell.id)
                 if (father.$el.querySelector('#' + escapedId + ' div') === undefined) {
                   console.error('could not find element "#' + cell.id + ' div"')
                   return
                 }
-                // having father in the argument ensures that this works even if smart table is not mounted in the DOM
-                child.$mount(father.$el.querySelector('#' + escapedId + ' div'))
               }
               if (child === undefined) {
                 console.error('no child component found for id ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
@@ -569,6 +570,7 @@
             value: resource.value
           }).then((response) => {
             Vue.set(child, 'mode', 'readOnly')
+            Vue.set(child, 'value', resource.value)
             this.$dispatch('successful-request')
             this.$dispatch('after-request')
             this.$set('error', false)
@@ -641,11 +643,6 @@
         this.$dispatch('after-request')
         this.$set('error', false)
         this.maybeRefresh()
-      }
-    },
-    events: {
-      'save-value' () {
-        console.log('@@@@')
       }
     }
   }

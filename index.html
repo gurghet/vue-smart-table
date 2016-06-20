@@ -19,8 +19,13 @@
     endpoint="http://api.randomuser.me/?page=1&results=20&seed=abc"
     :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
     :order-by="['name.first', 'name.last']"
-    :editable="['name.last']"
+    :editable="['name.first', 'name.last']"
     >
+   <plain-text slot="name.first" :multiline="true"></plain-text>  
+   <!-- this component is used implicitly
+        you can write it if you want to tweak
+        its configuration -->
+        
    <src2img slot="picture.thumbnail"></src2img>
    <!-- this component will read the image
         address inside the nested json
@@ -33,17 +38,17 @@
         component is just a <p> tag and some
         styling -->
 
+   <fontawesome slot="gender"></fontawesome>
+   <!-- this last component is pretty self
+        explanatory, it will turn the string
+        into the specified icon -->
+        
    <nationality slot="nat"></nationality>
    <!-- this component will take the country
         iso code from the json, query
         a web service and overwrite itself with
         the full country name! -->
-
-   <fontawesome slot="gender"></fontawesome>
-   <!-- this last component is pretty self
-        explanatory, it will turn the string
-        into the specified icon -->
   </smart-table>
-    <!-- built files will be auto injected -->
+  <!-- built files will be auto injected -->
   </body>
 </html>
