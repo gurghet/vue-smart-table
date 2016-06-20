@@ -48,7 +48,7 @@
         >
           <div id="value-{{row._id}}-{{col}}">
             <slot :name="col">
-              &#9888;
+              {{placeholder}}
             </slot>
           </div>
         </td><!-- todo: when upgrading to 2.x.x put a th here for the mainCol -->
@@ -63,7 +63,7 @@
           id="edit-new-{{col.key}}"
         >
           <slot :name="col">
-            &#9888;
+            {{placeholder}}
           </slot>
         </td>
         <td v-if="delete"></td>
@@ -159,6 +159,13 @@
       }
     },
     computed: {
+      placeholder () {
+        if (this.autoLoad) {
+          return '...'
+        } else {
+          return '&#9888'
+        }
+      },
       tableClassesProcessed () {
         if (this.orderBy !== {}) {
           return 'sortable ' + this.tableClasses
@@ -382,7 +389,6 @@
           var r = (valA > valB) ? 1 : -1
           return r * (reverse ? -1 : 1)
         }
-        
         let child = this.$children.find(c => c.col === sortKey)
         if (child.sortFunction !== undefined && typeof child.sortFunction === 'function') {
           smartBody.sort(child.sortFunction)
@@ -488,6 +494,15 @@
         columns
           .forEach(col => {
             var escapedCol = CSS.escape(col.key)
+            father.$el.querySelectorAll('.row-new').children.forEach(editCell => {
+              let child
+              child = father.$children.find(c => c.$el.parentElement.id === editCell.id)
+              if (child === undefined) {
+                console.error('no child component found for id ' + editCell.id)
+                return
+              }
+              // yadda yadda add more classes to the new row
+            })
             father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
               let child
               let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
