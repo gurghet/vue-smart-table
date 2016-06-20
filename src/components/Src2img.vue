@@ -1,16 +1,15 @@
 <template>
-  <img :src="value">
+  <div>
+    <img v-if="mode === 'readOnly'" :src="value" @click="enterEditMode">
+    <input v-if="mode === 'edit'" type="file">
+  </div>
 </template>
 
 <script>
-  let inputTemplate = `
-    <p>You gimme input. You gimme input nao!</p>
-  `
   export default {
     data () {
       return {
-        value: '',
-        inputTemplate
+        value: ''
       }
     }
   }

@@ -533,12 +533,32 @@
               let child
               let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
               let row = father.processedSmartBody.find(byId(id))
+              let escapedId = CSS.escape(cell.id)
               if (customChildrenByCol[col.key] !== undefined && customChildrenByCol[col.key][id] !== undefined) {
                 child = customChildrenByCol[col.key][id]
+                let myOpt = {}
+                Object.assign(myOpt, child.$options)
+                child.$destroy()
+                let mix = {
+                  methods: {
+                    enterEditMode () {
+                      console.log('ciao')
+                    }
+                  }
+                }
+                let options = Object.assign({}, child.$options, {
+                  mixins: [mix],
+                  el () {
+                    return father.$el.querySelector('#' + escapedId + ' div')
+                  }
+                })
+                let Constru = Vue.extend(options)
+                child = new Constru({
+                  parent: father
+                })
               } else {
                 // no custom component default on built-in PlainText
                 let PlainTextConstructor = Vue.extend(PlainText)
-                let escapedId = CSS.escape(cell.id)
                 child = new PlainTextConstructor({
                   el: father.$el.querySelector('#' + escapedId + ' div'),
                   // having father in the argument ensures that this works even if smart table is not mounted in the DOM
@@ -553,6 +573,7 @@
                 console.error('no child component found for id ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
                 return
               }
+              Vue.set(child, '$options.methods.enterEditMode', function enterEditMode () { console.log('hi') })
               Vue.set(child, 'id', id)
               Vue.set(child, 'col', col.key)
               Vue.set(child, 'mode', 'readOnly')
@@ -721,9 +742,13 @@
           }
         }
       },
-      'enter-edit-mode' ({id, col}) {
+      'enterEditMode' ({id, col}) {
         let child = this.$children.find(c => c.id === id && c.col === col)
-        if (child.editable && child.mode === 'readOnly') {
+        if (child.mode === 'readOnly') {
+          if (!child.editable) {
+            console.log('Clicked non-editable field ' + col + '-' + id + '. Ignoring.')
+            return
+          }
           child.mode = 'edit'
           child.newValue = child.value
         }
