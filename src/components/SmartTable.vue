@@ -7,11 +7,11 @@
         <th v-if="actionsArePresent">
           <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
         </th>
-        <th v-for="(column, label) in tableHeader" class="col-{{column}} col-cell {{canOrderBy(column) ? 'ord' : ''}} {{orderClass(column)}}" @click="doOrderBy(column)">
-          {{label}}
-          <div v-if="filters[column]" class="{{column}}-filter-cue click-cue fa fa-filter" @click="openFilter(column)"></div>
-          <div v-if="filters[column] && filters[column].open" class="{{column}}-filter-input">
-            <input type="text" v-model="filters[column].model"/>
+        <th v-for="column in tableHeader" class="col-{{column.key}} col-cell {{canOrderBy(column.key) ? 'ord' : ''}} {{orderClass(column.key)}}" @click="doOrderBy(column.key)">
+          {{column.label || column.key}}
+          <div v-if="filters[column.key]" class="{{column.key}}-filter-cue click-cue fa fa-filter" @click="openFilter(column.key)"></div>
+          <div v-if="filters[column.key] && filters[column.key].open" class="{{column.key}}-filter-input">
+            <input type="text" v-model="filters[column.key].model"/>
           </div>
         </th>
         <th v-if="delete">
@@ -37,48 +37,34 @@
       </tr>
       </tfoot>
       <tbody>
-      <tr v-for="entry in processedSmartBody" class="row-{{entry._id}}" track-by="_id">
+      <tr v-for="row in smartBody" class="row-{{row._id}}" track-by="_id">
         <td v-if="actionsArePresent">
-          <input id="toggle-{{entry._id}}" value="{{entry._id}}" type="checkbox" v-model="selection"/>
+          <input id="toggle-{{row._id}}" value="{{row._id}}" type="checkbox" v-model="selection"/>
         </td>
         <td
-          v-for="(col, value) in entry"
-          v-if="col !== '_id'"
-          id="cell-{{entry._id}}-{{col}}"
-          :class="tdClasses(col, entry._id) + 'cell-' + col"
+          v-for="col in row.cols"
+          id="cell-{{row._id}}-{{col}}"
+          :class="tdClasses(col, row._id) + 'cell-' + col"
         >
-          <div id="value-{{entry._id}}-{{col}}">
+          <div id="value-{{row._id}}-{{col}}">
             <slot :name="col">
-              {{value}}
+              &#9888;
             </slot>
           </div>
-        </td>
-        <th
-          v-for="(col, value) in entry"
-          id="cell-{{entry._id}}-{{col}}"
-          class="cell-{{col}}"
-          scope="row"
-          v-if="col === '_id' && shouldShowId"
-        >
-          <div id="value-{{entry._id}}-_id">
-            <slot name="_id">
-              {{value}}
-            </slot>
-          </div>
-        </th>
+        </td><!-- todo: when upgrading to 2.x.x put a th here for the mainCol -->
         <td v-if="delete">
-          <button id="delete-{{entry._id}}" @click="remove(entry._id)">Delete</button>
+          <button id="delete-{{row._id}}" @click="remove(row._id)">Delete</button>
         </td>
       </tr>
       <tr v-if="addRow" class="row-new">
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td
-          v-for="(col, label) in tableHeader"
-          id="edit-new-{{col}}"
+          v-for="col in tableHeader"
+          id="edit-new-{{col.key}}"
         >
-          <div :class="'ui input' + (isMandatoryField(col) ? ' required field' : '')">
-            <input v-if="isEditable(col)" type="text" v-model="newRowInput[col]" placeholder="{{tableHeader[col]}}"/>
-          </div>
+          <slot :name="col">
+            &#9888;
+          </slot>
         </td>
         <td v-if="delete"></td>
       </tr>
@@ -124,8 +110,13 @@
       autoLoad: Boolean,
       autoRefresh: Boolean,
       canFilterBy: Array,
-      header: [Object, Array],
-      orderBy: [Array, Object],
+      header: {
+        type: Array,
+        default () {
+          return []
+        }
+      },
+      orderBy: Array,
       idCol: {
         type: String,
         required: false,
@@ -194,7 +185,7 @@
       mandatoryFields () {
         // console.log('tableHeader(of which mandatory fields are always a subset) is: ' + JSON.stringify(Object.keys(this.tableHeader)) + '\n' +
         // 'their mandatoriness is ' + JSON.stringify(Object.keys(this.tableHeader).map(h => this.isMandatoryField(h))))
-        return Object.keys(this.tableHeader).filter(col => this.isMandatoryField(col))
+        return this.tableHeader.filter(col => this.isMandatoryField(col.key))
       },
       canSaveNewRow () {
         // console.log('mandatory fields are: ' + JSON.stringify(this.mandatoryFields) + '\n' +
@@ -203,7 +194,7 @@
       },
       // fields that right now are visible and editable and should present themselves in the new row if present
       editableFields () {
-        return Object.keys(this.tableHeader).filter(col => this.isEditable(col))
+        return this.tableHeader.filter(col => this.isEditable(col.key))
       },
       actionsArePresent () {
         if (Array.isArray(this.actions) && this.actions.length > 0) {
@@ -217,40 +208,55 @@
       tableHeader () {
         // WARNING: must not (and cannot) depend on processedSmartBody!
 
-        if (this.body === undefined) {
-          this.body = []
-        }
-        // if object return object
-        if (this.header !== undefined && !Array.isArray(this.header)) {
+        // if not every column is a string return as is
+        if (!this.header.every(col => typeof col === 'string' || col instanceof String)) {
           return this.header
         }
-        // the header is either an array or undefined
-        var bodyKeys = Object.keys(this.body)
-        if (bodyKeys.length < 1) {
-          return {}
+        // else, the header is an array of strings, build one
+        // 1. check that the header has the same number of columns as the body
+        let body = this.body
+        if (this.body === undefined) {
+          body = []
         }
-        var header = {}
-        let columns = [...new Set([].concat.apply([], this.body.map(row => Object.keys(row))))]
-        // filter hidden columns (columns that start with underscore)
+        // columns is the set of all the columns in the body
+        let columns = [...new Set([].concat.apply([], body.map(row => Object.keys(row))))]
+        // filter hidden columns (columns with keys that start with underscore)
         columns = columns.filter(col => !/^_/.test(col))
+        let header = []
+        if (this.header.length < 1) {
+          header = columns
+        } else {
+          header = this.header
+        }
+        if (header.length !== columns.length) {
+          console.error('[Smart Table Error] The number of columns specified ' +
+          header.length +
+          ' does not match the number of columns in the body ' + columns.length)
+        }
         // build the tableHeader object
-        columns.forEach((colKey, i) => {
-          if (this.header === undefined) {
-            header[colKey] = colKey
-          } else {
-            header[colKey] = this.header[i]
-          }
+        let finalHeader = []
+        header.forEach((colLabel, i) => {
+          finalHeader[i] = {key: columns[i], label: header[i]}
         })
 
-        return header
+        return finalHeader
       },
       mainCol () {
         // choose an appropriate default label column
-        if (Object.keys(this.tableHeader).indexOf(this.labelCol) === -1) {
-          return Object.keys(this.tableHeader)[0]
+        if (this.tableHeader.find(col => col.key === this.labelCol) === undefined) {
+          return this.tableHeader[0].key
         } else {
           return this.labelCol
         }
+      },
+      smartBody () {
+        return this.processedSmartBody.map(row => {
+          let cols = Object.keys(row)
+          cols = cols
+            .filter(col => row[col] !== undefined)
+            .filter(col => col !== '_id' || this.shouldShowId)
+          return {_id: row._id, cols}
+        })
       },
       processedSmartBody () {
         function getDataFromDotNotation (d, row) {
@@ -270,75 +276,43 @@
           }
         })
 
-        // filter body using gui filters
         let smartBody = []
 
-        // filter unwanted rows
         this.body.forEach(row => {
-          if (Object.keys(row).every(col =>
-            Object.keys(this.filters).every(filter =>
-              (filter !== col) ||
-              (JSON.stringify(row[col]).toLowerCase().indexOf(this.filters[filter].model.toLowerCase()) !== -1)
-            )
-          )) {
-            // filter unwanted columns
-            let finalRow = {}
-            Object.keys(this.tableHeader).forEach(col => {
-              let realColValue = {}
-              if (/\+/.test(col)) {
-                // it's a composite column will return an object
-                col.split('+').forEach(d => {
-                  realColValue[d] = getDataFromDotNotation(d, row)
-                })
-              } else {
-                realColValue = getDataFromDotNotation(col, row)
-              }
-              finalRow[col] = realColValue
-            })
-            let idValue = getDataFromDotNotation(this.idCol, row)
-            let altIdValue = row[this.idCol]
-            finalRow._id = String(idValue || altIdValue)
-            smartBody.push(finalRow)
-          }
+          // filter unwanted columns
+          let finalRow = {}
+          this.tableHeader.forEach(col => {
+            let realColValue = {}
+            if (/\+/.test(col.key)) {
+              // it's a composite column will return an object
+              col.key.split('+').forEach(d => {
+                realColValue[d] = getDataFromDotNotation(d, row)
+              })
+            } else {
+              realColValue = getDataFromDotNotation(col.key, row)
+            }
+            finalRow[col.key] = realColValue
+          })
+          let idValue = getDataFromDotNotation(this.idCol, row)
+          let altIdValue = row[this.idCol]
+          finalRow._id = String(idValue || altIdValue)
+          smartBody.push(finalRow)
         })
-
-        let vmThis = this
-        function numericCompare (row1, row2) {
-          let valA = row1[vmThis.orderKey]
-          var valB = row2[vmThis.orderKey]
-          if (valA === undefined || valB === undefined) {
-            return 0
-          }
-          return (valA - valB) * (vmThis.reverseOrder ? -1 : 1)
-        }
-        function lexicographicCompare (row1, row2) {
-          let valA = row1[vmThis.orderKey]
-          var valB = row2[vmThis.orderKey]
-          if (valA === undefined || valB === undefined) {
-            return 0
-          }
-          var r = (valA > valB) ? 1 : -1
-          return r * (vmThis.reverseOrder ? -1 : 1)
+        // filter body using gui filters
+        // todo: if filterable bla bla smartBody = filterRows(smartBody)
+        if (this.orderKey !== undefined) {
+        // this.tableHeader.find(col => col.key === this.sortKey) &&
+        // Object.keys(this.orderBy).indexOf(this.sortKey) !== -1) {
+          smartBody = this.sortRows(smartBody, this.orderKey, this.reverseOrder)
         }
 
-        if (this.orderKey !== undefined &&
-          Object.keys(this.tableHeader).indexOf(this.orderKey) !== -1 &&
-        Object.keys(this.orderBy).indexOf(this.orderKey) !== -1) {
-          var lexicographical = this.orderBy[this.orderKey].lexicographical
-          let everyRowIsNonNumeric = smartBody.every(r => !this.isNumeric(r[this.orderKey]))
-          if (lexicographical === true || everyRowIsNonNumeric) {
-            smartBody.sort(lexicographicCompare)
-          } else {
-            smartBody.sort(numericCompare)
-          }
-        }
         return smartBody
       },
       shouldShowId () {
-        return Object.keys(this.tableHeader).indexOf('_id') !== -1
+        return this.tableHeader.find(col => col.key === '_id') !== undefined
       },
       span () {
-        return Object.keys(this.tableHeader).length + 1 + (this.delete ? 1 : 0)
+        return this.tableHeader.length + 1 + (this.delete ? 1 : 0)
       }
     },
     beforeCompile () {
@@ -387,6 +361,48 @@
       }
     },
     methods: {
+      filterRows (smartBody, filterText, filterCol) {
+        return smartBody.filter(row => true)
+      },
+      sortRows (smartBody, sortKey, reverse) {
+        function numericCompare (row1, row2) {
+          let valA = row1[sortKey]
+          var valB = row2[sortKey]
+          if (valA === undefined || valB === undefined) {
+            return 0
+          }
+          return (valA - valB) * (reverse ? -1 : 1)
+        }
+        function lexicographicCompare (row1, row2) {
+          let valA = row1[sortKey]
+          var valB = row2[sortKey]
+          if (valA === undefined || valB === undefined) {
+            return 0
+          }
+          var r = (valA > valB) ? 1 : -1
+          return r * (reverse ? -1 : 1)
+        }
+        
+        let child = this.$children.find(c => c.col === sortKey)
+        if (child.sortFunction !== undefined && typeof child.sortFunction === 'function') {
+          smartBody.sort(child.sortFunction)
+          return smartBody
+        }
+        let forceLexicographic = false
+        if (child.sortFunction !== undefined && typeof child.sortFunction === 'string') {
+          if (child.sortFunction === 'lexicographic') {
+            forceLexicographic = true
+          }
+        }
+
+        let everyRowIsNonNumeric = smartBody.every(r => !this.isNumeric(r[sortKey]))
+        if (everyRowIsNonNumeric | forceLexicographic) {
+          smartBody.sort(lexicographicCompare)
+        } else {
+          smartBody.sort(numericCompare)
+        }
+        return smartBody
+      },
       tdClasses (col, id) {
         let acc = ''
         if (this.isEditable(col)) {
@@ -453,7 +469,7 @@
       updateInjectedValues () {
         let father = this
         let customChildrenByCol = {}
-        let columns = Object.keys(father.tableHeader)
+        let columns = father.tableHeader
         father.$children.forEach(c => {
           if (typeof c.$el.getAttribute === 'function' && c.$el.getAttribute('slot') !== null) {
             let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
@@ -471,13 +487,13 @@
         }
         columns
           .forEach(col => {
-            var escapedCol = CSS.escape(col)
+            var escapedCol = CSS.escape(col.key)
             father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
               let child
               let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
               let row = father.processedSmartBody.find(byId(id))
-              if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
-                child = customChildrenByCol[col][id]
+              if (customChildrenByCol[col.key] !== undefined && customChildrenByCol[col.key][id] !== undefined) {
+                child = customChildrenByCol[col.key][id]
               } else {
                 // no custom component default on built-in PlainText
                 let PlainTextConstructor = Vue.extend(PlainText)
@@ -497,14 +513,14 @@
                 return
               }
               Vue.set(child, 'id', id)
-              Vue.set(child, 'col', col)
-              Vue.set(child, 'value', row[col])
-              Vue.set(child, 'editable', father.isEditable(col))
-              Vue.set(child, 'mandatory', father.isMandatoryField(col))
-              if (father.additionalTdClasses[col] === undefined) {
-                father.additionalTdClasses[col] = []
+              Vue.set(child, 'col', col.key)
+              Vue.set(child, 'value', row[col.key])
+              Vue.set(child, 'editable', father.isEditable(col.key))
+              Vue.set(child, 'mandatory', father.isMandatoryField(col.key))
+              if (father.additionalTdClasses[col.key] === undefined) {
+                father.additionalTdClasses[col.key] = []
               }
-              father.additionalTdClasses[col][id] = child.tdClasses || []
+              father.additionalTdClasses[col.key][id] = child.tdClasses || []
             })
           })
       },
@@ -595,7 +611,7 @@
         // todo: subject to change
       },
       doOrderBy (col) {
-        if (this.canOrderBy(col)) {
+        if (!this.canOrderBy(col)) {
           return
         }
         if (this.orderKey === col) {
@@ -615,7 +631,7 @@
         return ''
       },
       canOrderBy (col) {
-        return Object.keys(this.orderBy).indexOf(col) === -1
+        return Object.keys(this.orderBy).indexOf(col) !== -1
       },
       closedModalEdit () {
         this.modalEdit = undefined

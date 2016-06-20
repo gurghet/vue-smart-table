@@ -9,7 +9,7 @@
       @keyup.27="cancel"
       :disabled="mode === 'saving'"
     >
-    <textarea 
+    <textarea
       v-show="(mode === 'edit' || mode === 'saving') && multiline === true"
       v-model="newValue"
       @keyup.27="cancel"
@@ -39,7 +39,8 @@
         newValue: undefined,
         id: undefined,
         col: undefined,
-        editable: true,
+        editable: false,
+        sortFunction: undefined,
         mode: 'readOnly'
       }
     },
@@ -47,6 +48,15 @@
       multiline: {
         type: Boolean,
         default: false
+      },
+      lexicographicalOrdering: {
+        type: Boolean,
+        default: false
+      }
+    },
+    beforeCompile () {
+      if (this.lexicographicalOrdering === true) {
+        this.sortFunction = 'lexicographic'
       }
     },
     computed: {
