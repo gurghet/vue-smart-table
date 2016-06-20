@@ -91,32 +91,20 @@
     },
     methods: {
       cancel () {
-        if (this.mode === 'edit') {
-          setTimeout(() => {
-            if (this.mode === 'edit') {
-              this.mode = 'readOnly'
-              this.newValue = undefined
-            }
-          }, 120)
-        }
+        this.$dispatch('cancel', {id: this.id, col: this.col})
       },
       save () {
-        if (this.mode === 'edit') {
-          this.$parent.put({value: this.newValue, id: this.id, col: this.col})
-        }
+        this.$dispatch('save-new-value', {id: this.id, col: this.col})
       },
       edit () {
-        if (this.editable && this.mode === 'readOnly') {
-          this.mode = 'edit'
-          this.newValue = this.value
-          this.$nextTick(() => {
-            if (this.multiline) {
-              this.$el.querySelector('textarea').focus()
-            } else {
-              this.$el.querySelector('input').focus()
-            }
-          })
-        }
+        this.$dispatch('enter-edit-mode', {id: this.id, col: this.col})
+        this.$nextTick(() => {
+          if (this.multiline) {
+            this.$el.querySelector('textarea').focus()
+          } else {
+            this.$el.querySelector('input').focus()
+          }
+        })
       }
     }
   }

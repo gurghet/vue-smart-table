@@ -60,11 +60,15 @@
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td
           v-for="col in tableHeader"
-          id="edit-new-{{col.key}}"
         >
-          <slot :name="col">
-            {{placeholder}}
-          </slot>
+          <div
+            id="edit-new-{{col.key}}"
+            class="add-row"
+            >
+            <slot :name="col">
+
+            </slot>
+          </div>
         </td>
         <td v-if="delete"></td>
       </tr>
@@ -494,15 +498,37 @@
         columns
           .forEach(col => {
             var escapedCol = CSS.escape(col.key)
-            father.$el.querySelectorAll('.row-new').children.forEach(editCell => {
-              let child
-              child = father.$children.find(c => c.$el.parentElement.id === editCell.id)
-              if (child === undefined) {
-                console.error('no child component found for id ' + editCell.id)
-                return
-              }
-              // yadda yadda add more classes to the new row
-            })
+            if (this.addRow === true) {
+              father.$el.querySelectorAll('.add-row').forEach(editCell => {
+                let child = father.$children.find(c => {
+                  return c.$el.getAttribute === 'function' &&
+                  c.$el.getAttribute('slot') !== null &&
+                  c.$el.parentElement.id === editCell.id
+                })
+                let col = editCell.id.match(/^edit-new-([a-zA-Z0-9.+]+)$/)[1]
+                if (this.isMandatoryField(col) || this.isEditable(col)) {
+                  if (child === undefined) {
+                    // no custom component, default on built-in PlainText
+                    let PlainTextConstructor = Vue.extend(PlainText)
+                    let escapeCol = CSS.escape(col)
+                    child = new PlainTextConstructor({
+                      el: father.$el.querySelector('#' + 'edit-new-' + escapeCol),
+                      // having father in the argument ensures that this works even if smart table is not mounted in the DOM
+                      parent: father
+                    })
+                    if (father.$el.querySelector('#' + 'edit-new-' + escapeCol) === undefined) {
+                      console.error('could not find element "#' + editCell.id + ' div"')
+                      return
+                    }
+                  }
+                  Vue.set(child, 'id', '____add-row')
+                  Vue.set(child, 'col', col.key)
+                  Vue.set(child, 'mode', 'edit')
+                  Vue.set(child, 'mandatory', father.isMandatoryField(col.key))
+                }
+              })
+            }
+
             father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
               let child
               let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
@@ -529,9 +555,10 @@
               }
               Vue.set(child, 'id', id)
               Vue.set(child, 'col', col.key)
+              Vue.set(child, 'mode', 'readOnly')
               Vue.set(child, 'value', row[col.key])
+              Vue.set(child, 'newVale', row[col.key])
               Vue.set(child, 'editable', father.isEditable(col.key))
-              Vue.set(child, 'mandatory', father.isMandatoryField(col.key))
               if (father.additionalTdClasses[col.key] === undefined) {
                 father.additionalTdClasses[col.key] = []
               }
@@ -614,6 +641,13 @@
           })
         }
       },
+      post (resource, httpRESTreq = true) {
+        setTimeout(() => {
+          // 1) sends request
+          // 2) receive reply
+          // 3) if ok add row to body and reset new row
+        }, 1000)
+      },
       isPlainObject (obj) {
         return obj !== null && typeof obj === 'object'
       },
@@ -674,6 +708,39 @@
         this.$dispatch('after-request')
         this.$set('error', false)
         this.maybeRefresh()
+      }
+    },
+    events: {
+      'save-new-value' ({id, col}) {
+        let child = this.$children.find(c => c.id === id && c.col === col)
+        if (id === '____add-row') {
+          this.newRowInput[col] = child.newValue
+        } else {
+          if (child.mode === 'edit') {
+            this.put({value: child.newValue, id, col})
+          }
+        }
+      },
+      'enter-edit-mode' ({id, col}) {
+        let child = this.$children.find(c => c.id === id && c.col === col)
+        if (child.editable && child.mode === 'readOnly') {
+          child.mode = 'edit'
+          child.newValue = child.value
+        }
+      },
+      'cancel' ({id, col}) {
+        if (id === '____add-row') {
+          return
+        }
+        let child = this.$children.find(c => c.id === id && c.col === col)
+        if (child.mode === 'edit') {
+          setTimeout(() => {
+            if (child.mode === 'edit') {
+              child.mode = 'readOnly'
+              child.newValue = undefined
+            }
+          }, 120)
+        }
       }
     }
   }
