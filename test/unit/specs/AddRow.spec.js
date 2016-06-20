@@ -48,7 +48,7 @@ describe('Add row feature', () => {
       done()
     })
   })
-  it('should be able to save new row when all of the input fields are full', () => {
+  xit('should be able to save new row when all of the input fields are full', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :add-row="true" :editable="editable" v-ref:ut></smart-table></div>',
       components: {SmartTable},
@@ -61,7 +61,7 @@ describe('Add row feature', () => {
     vm.$refs.ut.newRowInput = {c1: 'c11', c2: 'c21', c3: 'c31'}
     expect(vm.$refs.ut.canSaveNewRow).to.eql(true)
   })
-  it('should not be able to save new row when some mandatory input fields are empty', () => {
+  xit('should not be able to save new row when some mandatory input fields are empty', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :add-row="true" :editable="editable" v-ref:ut></smart-table></div>',
       components: {SmartTable},
@@ -77,7 +77,7 @@ describe('Add row feature', () => {
     vm.$refs.ut.newRowInput = {c1: 'c11', c3: 'c31', c2: 'oien'}
     expect(vm.$refs.ut.canSaveNewRow).to.eql(true, 'Ok field')
   })
-  it('should be able to save new row when some input fields are empty but not editable', () => {
+  xit('should be able to save new row when some input fields are empty but not editable', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :add-row="true" :editable="[\'c1\',\'c3\']" v-ref:ut></smart-table></div>',
       components: {SmartTable},
@@ -112,7 +112,7 @@ describe('Add row feature', () => {
     vm.$refs.ut.newRowInput = {c1: 'c11', c2: 'c21', c3: 'c31'}
     $('.add-row-button button', vm.$refs.ut.$el).click()
   })
-  it('editableFields should always be a subset of the table header', () => {
+  xit('editableFields should always be a subset of the table header', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :editable="[\'c1\',\'c3\']" :header="{c1: \'b\', c2: \'r\'}"  v-ref:ut></smart-table></div>',
       components: {SmartTable},

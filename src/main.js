@@ -17,4 +17,16 @@ new Vue({
   components: { SmartTable, Src2img, Contacts, Nationality, Fontawesome, ExampleComponent }
 })
 
+Vue.http.interceptors.unshift((request, next) => {
+  if (request.method === 'PUT') {
+    setTimeout(() => {
+      next({
+        data: {status: 'Ok', message: 'no message'},
+        status: 200
+      }) }, 500)
+  } else {
+    next()
+  }
+})
+
 Vue.http.options.xhr = {withCredentials: false}

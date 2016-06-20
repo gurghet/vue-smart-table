@@ -1,14 +1,33 @@
 <template>
   <div :class="classes" @click="edit">
     <input
-      v-show="mode === 'edit' || mode === 'saving'"
-      type="text" v-model="newValue"
+      v-show="(mode === 'edit' || mode === 'saving') && multiline === false"
+      type="text"
+      v-model="newValue"
       @blur="save"
       @keyup.13="save"
       @keyup.27="cancel"
       :disabled="mode === 'saving'"
     >
-    <span v-show="mode === 'readOnly'">{{value}}</span>
+    <textarea
+      v-show="(mode === 'edit' || mode === 'saving') && multiline === true"
+      v-model="newValue"
+      @keyup.27="cancel"
+      :disabled="mode === 'saving'"
+    ></textarea>
+    <button
+      v-show="(mode === 'edit' || mode == 'saving') && multiline === true"
+      @click="save"
+      :disabled="mode === 'saving'"
+      class="ui icon button btn"
+      >&#10003;</button><!-- todo: conditional fa -->
+    <button
+      v-show="(mode === 'edit' || mode == 'saving') && multiline === true"
+      @click="cancel"
+      :disabled="mode === 'saving'"
+      class="ui icon button btn"
+      >&#10007;</button><!-- todo: conditional fa -->
+    <span v-show="mode === 'readOnly'">{{{processedText}}}</span>
   </div>
 </template>
 
@@ -20,11 +39,43 @@
         newValue: undefined,
         id: undefined,
         col: undefined,
-        editable: true,
+        editable: false,
+        sortFunction: undefined,
         mode: 'readOnly'
       }
     },
+    props: {
+      multiline: {
+        type: Boolean,
+        default: false
+      },
+      lexicographicalOrdering: {
+        type: Boolean,
+        default: false
+      }
+    },
+    beforeCompile () {
+      if (this.lexicographicalOrdering === true) {
+        this.sortFunction = 'lexicographic'
+      }
+    },
     computed: {
+      processedText () {
+        let entityMap = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          '\'': '&#39;',
+          '/': '&#x2F;'
+        }
+        function escapeHtml (string) {
+          return String(string).replace(/[&<>"'\/]/g, function (s) {
+            return entityMap[s]
+          })
+        }
+        return escapeHtml(this.value).replace(/\n/g, '<br/>')
+      },
       classes () {
         let acc = []
         if (this.editable && this.mode === 'readOnly') {
@@ -41,8 +92,12 @@
     methods: {
       cancel () {
         if (this.mode === 'edit') {
-          this.mode = 'readOnly'
-          this.newValue = undefined
+          setTimeout(() => {
+            if (this.mode === 'edit') {
+              this.mode = 'readOnly'
+              this.newValue = undefined
+            }
+          }, 120)
         }
       },
       save () {
@@ -51,11 +106,15 @@
         }
       },
       edit () {
-        if (this.editable) {
+        if (this.editable && this.mode === 'readOnly') {
           this.mode = 'edit'
           this.newValue = this.value
           this.$nextTick(() => {
-            this.$el.querySelector('input').focus()
+            if (this.multiline) {
+              this.$el.querySelector('textarea').focus()
+            } else {
+              this.$el.querySelector('input').focus()
+            }
           })
         }
       }
