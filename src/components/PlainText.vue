@@ -40,7 +40,7 @@
         id: undefined,
         col: undefined,
         editable: false,
-        sortFunction: undefined,
+        sortFunction: 3,
         mode: 'readOnly'
       }
     },
@@ -54,7 +54,7 @@
         default: false
       }
     },
-    beforeCompile () {
+    compiled () {
       if (this.lexicographicalOrdering === true) {
         this.sortFunction = 'lexicographic'
       }

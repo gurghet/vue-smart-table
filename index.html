@@ -26,7 +26,7 @@
     {key: 'nat', label: 'nationality'}
     ]"
     :order-by="['name.first', 'name.last']"
-    :editable="['name.first', 'name.last']"
+    :editable="['name.first', 'name.last', 'picture.thumbnail']"
     >
    <plain-text slot="name.first" :multiline="true"></plain-text>
    <!-- this component is used implicitly
@@ -55,6 +55,10 @@
         iso code from the json, query
         a web service and overwrite itself with
         the full country name! -->
+  </smart-table>
+  <smart-table
+  :body="[{hello:'world'},{world:'hello'}]"
+    >
   </smart-table>
   <!-- built files will be auto injected -->
   </body>

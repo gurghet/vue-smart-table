@@ -739,10 +739,12 @@ describe('SmartTable.vue', () => {
     }).$mount()
     // check that there is not a filter gui
     expect(vm.$refs.ut.processedSmartBody[0].age).to.equal('34')
-    vm.$refs['ut'].doOrderBy('age')
     vm.$nextTick(() => {
-      expect(vm.$refs.ut.processedSmartBody[0].age).to.equal('220')
-      done()
+      vm.$refs.ut.doOrderBy('age')
+      vm.$nextTick(() => {
+        expect(vm.$refs.ut.processedSmartBody[0].age).to.equal('220')
+        done()
+      })
     })
   })
   xit('should report the total', () => {

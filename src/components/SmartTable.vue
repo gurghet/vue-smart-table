@@ -262,9 +262,8 @@
       },
       smartBody () {
         return this.processedSmartBody.map(row => {
-          let cols = Object.keys(row)
+          let cols = this.tableHeader.map(col => col.key)
           cols = cols
-            .filter(col => row[col] !== undefined)
             .filter(col => col !== '_id' || this.shouldShowId)
           return {_id: row._id, cols}
         })
@@ -394,12 +393,15 @@
           return r * (reverse ? -1 : 1)
         }
         let child = this.$children.find(c => c.col === sortKey)
+        console.log('child with col === ' + sortKey + ': ' + child.$options.name)
+        console.log('child.sortFunction = ' + child.sortFunction)
         if (child.sortFunction !== undefined && typeof child.sortFunction === 'function') {
           smartBody.sort(child.sortFunction)
           return smartBody
         }
         let forceLexicographic = false
         if (child.sortFunction !== undefined && typeof child.sortFunction === 'string') {
+          console.log('the child sortfunction is a string')
           if (child.sortFunction === 'lexicographic') {
             forceLexicographic = true
           }
@@ -536,13 +538,21 @@
               let escapedId = CSS.escape(cell.id)
               if (customChildrenByCol[col.key] !== undefined && customChildrenByCol[col.key][id] !== undefined) {
                 child = customChildrenByCol[col.key][id]
-                let myOpt = {}
-                Object.assign(myOpt, child.$options)
-                child.$destroy()
+                let initialProps = child.$options.props
+                if (child._props !== undefined) {
+                  let propKeys = Object.keys(child._props)
+                  let propValues = {}
+                  propKeys.forEach(k => (propValues[k] = child[k]))
+                  let additionalFunctions = propKeys.map(k => function coerce () { return child[k] })
+                  Object.keys(initialProps).forEach((p, i) => (initialProps[p].coerce = additionalFunctions[i]))
+                }
                 let mix = {
                   methods: {
                     enterEditMode () {
-                      console.log('ciao')
+                      this.$dispatch('enterEditMode', {id: this.id, col: this.col})
+                    },
+                    saveNewValue () {
+                      this.$dispatch('saveNewValue', {id: this.id, col: this.col})
                     }
                   }
                 }
@@ -550,9 +560,11 @@
                   mixins: [mix],
                   el () {
                     return father.$el.querySelector('#' + escapedId + ' div')
-                  }
+                  },
+                  props: initialProps
                 })
                 let Constru = Vue.extend(options)
+                child.$destroy()
                 child = new Constru({
                   parent: father
                 })
@@ -573,7 +585,6 @@
                 console.error('no child component found for id ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
                 return
               }
-              Vue.set(child, '$options.methods.enterEditMode', function enterEditMode () { console.log('hi') })
               Vue.set(child, 'id', id)
               Vue.set(child, 'col', col.key)
               Vue.set(child, 'mode', 'readOnly')
@@ -732,7 +743,7 @@
       }
     },
     events: {
-      'save-new-value' ({id, col}) {
+      'saveNewValue' ({id, col}) {
         let child = this.$children.find(c => c.id === id && c.col === col)
         if (id === '____add-row') {
           this.newRowInput[col] = child.newValue
