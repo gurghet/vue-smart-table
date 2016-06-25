@@ -65,8 +65,7 @@
             id="edit-new-{{col.key}}"
             class="add-row"
             >
-            <slot :name="col">
-
+            <slot :name="col.key">
             </slot>
           </div>
         </td>
@@ -393,15 +392,12 @@
           return r * (reverse ? -1 : 1)
         }
         let child = this.$children.find(c => c.col === sortKey)
-        console.log('child with col === ' + sortKey + ': ' + child.$options.name)
-        console.log('child.sortFunction = ' + child.sortFunction)
         if (child.sortFunction !== undefined && typeof child.sortFunction === 'function') {
           smartBody.sort(child.sortFunction)
           return smartBody
         }
         let forceLexicographic = false
         if (child.sortFunction !== undefined && typeof child.sortFunction === 'string') {
-          console.log('the child sortfunction is a string')
           if (child.sortFunction === 'lexicographic') {
             forceLexicographic = true
           }
@@ -481,17 +477,25 @@
       updateInjectedValues () {
         let father = this
         let customChildrenByCol = {}
+        let customEditChildrenByCol = {}
         let columns = father.tableHeader
         father.$children.forEach(c => {
           if (typeof c.$el.getAttribute === 'function' && c.$el.getAttribute('slot') !== null) {
-            let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
-            let col = c.$el.parentElement.id.match(/^value-[a-zA-Z0-9 ._-]+-([a-zA-Z0-9.+]+)$/)[1]
-            if (customChildrenByCol[col] === undefined) {
-              customChildrenByCol[col] = {}
+            if (/^edit/.test(c.$el.parentElement.id)) {
+              let col = c.$el.parentElement.id.match(/^edit-new-([a-zA-Z0-9.+]+)/)[1]
+              customEditChildrenByCol[col] = c
             }
-            customChildrenByCol[col][id] = c
+            if (/^value/.test(c.$el.parentElement.id)) {
+              let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
+              let col = c.$el.parentElement.id.match(/^value-[a-zA-Z0-9 ._-]+-([a-zA-Z0-9.+]+)$/)[1]
+              if (customChildrenByCol[col] === undefined) {
+                customChildrenByCol[col] = {}
+              }
+              customChildrenByCol[col][id] = c
+            }
           }
         })
+        let elsByColId = {}
         function byId (id) {
           return function (row) {
             return row._id === id
@@ -499,7 +503,7 @@
         }
         columns
           .forEach(col => {
-            var escapedCol = CSS.escape(col.key)
+            let escapedCol = CSS.escape(col.key)
             if (this.addRow === true) {
               father.$el.querySelectorAll('.add-row').forEach(editCell => {
                 let child = father.$children.find(c => {
@@ -512,13 +516,12 @@
                   if (child === undefined) {
                     // no custom component, default on built-in PlainText
                     let PlainTextConstructor = Vue.extend(PlainText)
-                    let escapeCol = CSS.escape(col)
                     child = new PlainTextConstructor({
-                      el: father.$el.querySelector('#' + 'edit-new-' + escapeCol),
+                      el: father.$el.querySelector('#edit-new-' + escapedCol),
                       // having father in the argument ensures that this works even if smart table is not mounted in the DOM
                       parent: father
                     })
-                    if (father.$el.querySelector('#' + 'edit-new-' + escapeCol) === undefined) {
+                    if (father.$el.querySelector('#edit-new-' + escapedCol) === undefined) {
                       console.error('could not find element "#' + editCell.id + ' div"')
                       return
                     }
@@ -530,12 +533,17 @@
                 }
               })
             }
-
-            father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
+            if (elsByColId[col.key] === undefined) {
+              elsByColId[col.key] = {}
+              father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
+                let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
+                elsByColId[col.key][id] = cell
+              })
+            }
+            Object.keys(elsByColId[col.key]).forEach(id => {
               let child
-              let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
               let row = father.processedSmartBody.find(byId(id))
-              let escapedId = CSS.escape(cell.id)
+              let escapedId = '#' + CSS.escape('value-' + id + '-' + col.key)
               if (customChildrenByCol[col.key] !== undefined && customChildrenByCol[col.key][id] !== undefined) {
                 child = customChildrenByCol[col.key][id]
                 let initialProps = child.$options.props
@@ -559,7 +567,7 @@
                 let options = Object.assign({}, child.$options, {
                   mixins: [mix],
                   el () {
-                    return father.$el.querySelector('#' + escapedId + ' div')
+                    return father.$el.querySelector(escapedId)
                   },
                   props: initialProps
                 })
@@ -572,17 +580,17 @@
                 // no custom component default on built-in PlainText
                 let PlainTextConstructor = Vue.extend(PlainText)
                 child = new PlainTextConstructor({
-                  el: father.$el.querySelector('#' + escapedId + ' div'),
+                  el: father.$el.querySelector(escapedId),
                   // having father in the argument ensures that this works even if smart table is not mounted in the DOM
                   parent: father
                 })
-                if (father.$el.querySelector('#' + escapedId + ' div') === undefined) {
-                  console.error('could not find element "#' + cell.id + ' div"')
+                if (father.$el.querySelector(escapedId) === undefined) {
+                  console.error('could not find element "' + escapedId + '"')
                   return
                 }
               }
               if (child === undefined) {
-                console.error('no child component found for id ' + cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
+                console.error('no child component found for id ' + id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
                 return
               }
               Vue.set(child, 'id', id)
