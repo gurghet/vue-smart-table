@@ -12,10 +12,17 @@ Basically you write this
 ```html
 <smart-table
     :auto-load="true"
-    body-field="results"
+    body-path="results"
     id-col="id.value"
     endpoint="http://api.randomuser.me/?page=1&results=20"
-    :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
+    :header="[
+    {key: 'name.first', label: 'name'},
+    {key: 'name.last', label: 'surname'},
+    {key: 'gender'},
+    {key: 'phone+cell', label: 'contacts'},
+    {key: 'picture.thumbnail', label: 'avatar'}
+    {key: 'nat', label: 'nationality'}
+    ]"
     :order-by="['name.first', 'name.last']"
     >
    <src2img slot="picture.thumbnail"></src2img><!-- renders pictures -->
