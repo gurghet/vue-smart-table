@@ -1,0 +1,69 @@
+{
+  "excludeFiles": ["node_modules/**"],
+  "fileExtensions": [".js"],
+
+  "esnext": true,
+
+  "requireCurlyBraces": [
+    "if",
+    "else",
+    "for",
+    "while",
+    "do",
+    "try",
+    "catch"
+  ],
+  "requireSpaceAfterKeywords": [
+    "if",
+    "else",
+    "for",
+    "while",
+    "do",
+    "switch",
+    "case",
+    "return",
+    "try",
+    "catch",
+    "function",
+    "typeof"
+  ],
+  "requireSpaceBeforeBlockStatements": true,
+  "requireParenthesesAroundIIFE": true,
+  "requireSpacesInConditionalExpression": true,
+  "requireSpacesInFunction": {
+    "beforeOpeningRoundBrace": true,
+    "beforeOpeningCurlyBrace": true
+  },
+  "disallowSpacesInCallExpression": true,
+  "disallowMultipleVarDecl": true,
+  "requireBlocksOnNewline": 1,
+  "disallowEmptyBlocks": true,
+  "disallowSpaceAfterObjectKeys": true,
+  "requireSpaceBeforeObjectValues": true,
+  "requireCommaBeforeLineBreak": true,
+  "requireOperatorBeforeLineBreak": true,
+  "disallowSpaceAfterPrefixUnaryOperators": true,
+  "disallowSpaceBeforePostfixUnaryOperators": true,
+  "requireSpaceBeforeBinaryOperators": true,
+  "requireSpaceAfterBinaryOperators": true,
+  "disallowImplicitTypeConversion": [
+    "binary",
+    "numeric",
+    "string"
+  ],
+  "requireCamelCaseOrUpperCaseIdentifiers": "ignoreProperties",
+  "disallowKeywords": ["with"],
+  "disallowMixedSpacesAndTabs": true,
+  "disallowTrailingWhitespace": true,
+  "disallowTrailingComma": true,
+  "requireKeywordsOnNewLine": ["else"],
+  "requireLineFeedAtFileEnd": true,
+  "requireCapitalizedConstructors": true,
+  "disallowYodaConditions": true,
+  "requireSpaceAfterLineComment": true,
+  "disallowNewlineBeforeBlockStatements": true,
+  "validateLineBreaks": "LF",
+  "validateIndentation": 2,
+  "validateParameterSeparator": ", ",
+  "safeContextKeyword": ["self"]
+}
