@@ -44,7 +44,7 @@
         <td
           v-for="col in row.cols"
           id="cell-{{row._id}}-{{col}}"
-          :class="tdClasses(col, row._id) + 'cell-' + col"
+          :class="tdClasses(col, row._id) + ' cell-' + col"
         >
           <div id="value-{{row._id}}-{{col}}">
             <slot :name="col">
@@ -60,6 +60,8 @@
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td
           v-for="col in tableHeader"
+          id="edit-cell-{{col.key}}"
+          :class="tdClasses(col.key, '__edit') + ' edit-cell'"
         >
           <div
             id="edit-new-{{col.key}}"
@@ -101,7 +103,9 @@
         orderKey: undefined,
         reverseOrder: false,
         additionalTdClasses: [], // [col][id][class1, class2...]
-        mandatory: [] // [col]true|false
+        mandatory: [], // [col]true|false
+        customEditChildrenByCol: {},
+        addRowCompiled: {}
         // totals: undefined // footer line with totals
       }
     },
@@ -474,16 +478,79 @@
         return (value !== undefined && value !== '')
         // todo: more complex validation
       },
+      injectEditComponentForCol (col) {
+        let father = this
+        let child
+        let escapedEditCol = CSS.escape('edit-new-' + col)
+        if (father.customEditChildrenByCol[col] === undefined) {
+          if (!father.isMandatoryField(col) && !father.isEditable(col)) {
+            this.addRowCompiled[col] = true
+            return
+          }
+          // no component for column, default on built-in PlainText
+          Object.keys(PlainText.props).forEach(p => (PlainText.props[p].coerce = undefined))
+          let PlainTextConstructor = Vue.extend(PlainText)
+          child = new PlainTextConstructor({
+            el: father.$el.querySelector('#' + escapedEditCol),
+            parent: father
+          })
+        } else {
+          child = father.customEditChildrenByCol[col]
+          if (!father.isMandatoryField(col) && !father.isEditable(col)) {
+            if (child !== undefined) {
+              child.$destroy(true)
+              father.customEditChildrenByCol[col] = undefined
+              this.addRowCompiled[col] = true
+              return
+            }
+          }
+          let initialProps = child.$options.props
+          if (child._props !== undefined) {
+            let propKeys = Object.keys(child._props)
+            let propValues = {}
+            propKeys.forEach(k => (propValues[k] = child[k]))
+            let additionalFunctions = propKeys.map(k => function coerce () { return child[k] })
+            Object.keys(initialProps).forEach((p, i) => (initialProps[p].coerce = additionalFunctions[i]))
+          }
+          let mix = {
+            methods: {
+              enterEditMode () {
+                this.$dispatch('enterEditMode', {id: this.id, col: this.col})
+              },
+              saveNewValue () {
+                this.$dispatch('saveNewValue', {id: this.id, col: this.col})
+              }
+            }
+          }
+          let options = Object.assign({}, child.$options, {
+            mixins: [mix],
+            el () {
+              return father.$el.querySelector('#' + escapedEditCol)
+            },
+            props: initialProps
+          })
+          let Constru = Vue.extend(options)
+          child.$destroy()
+          child = new Constru({
+            parent: father
+          })
+        }
+        Vue.set(child, 'id', '____add-row')
+        Vue.set(child, 'col', col)
+        Vue.set(child, 'mode', 'edit')
+        Vue.set(child, 'mandatory', this.isMandatoryField(col))
+        this.addRowCompiled[col] = true
+      },
       updateInjectedValues () {
         let father = this
         let customChildrenByCol = {}
-        let customEditChildrenByCol = {}
-        let columns = father.tableHeader
         father.$children.forEach(c => {
           if (typeof c.$el.getAttribute === 'function' && c.$el.getAttribute('slot') !== null) {
             if (/^edit/.test(c.$el.parentElement.id)) {
-              let col = c.$el.parentElement.id.match(/^edit-new-([a-zA-Z0-9.+]+)/)[1]
-              customEditChildrenByCol[col] = c
+              let col = c.$el.parentElement.id.match(/^edit-(?:new|cell)-([a-zA-Z0-9.+]+)/)[1]
+              if (this.customEditChildrenByCol[col] === undefined) {
+                this.customEditChildrenByCol[col] = c
+              }
             }
             if (/^value/.test(c.$el.parentElement.id)) {
               let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
@@ -501,51 +568,25 @@
             return row._id === id
           }
         }
-        columns
+        father.tableHeader.map(c => c.key)
           .forEach(col => {
-            let escapedCol = CSS.escape(col.key)
-            if (this.addRow === true) {
-              father.$el.querySelectorAll('.add-row').forEach(editCell => {
-                let child = father.$children.find(c => {
-                  return c.$el.getAttribute === 'function' &&
-                  c.$el.getAttribute('slot') !== null &&
-                  c.$el.parentElement.id === editCell.id
-                })
-                let col = editCell.id.match(/^edit-new-([a-zA-Z0-9.+]+)$/)[1]
-                if (this.isMandatoryField(col) || this.isEditable(col)) {
-                  if (child === undefined) {
-                    // no custom component, default on built-in PlainText
-                    let PlainTextConstructor = Vue.extend(PlainText)
-                    child = new PlainTextConstructor({
-                      el: father.$el.querySelector('#edit-new-' + escapedCol),
-                      // having father in the argument ensures that this works even if smart table is not mounted in the DOM
-                      parent: father
-                    })
-                    if (father.$el.querySelector('#edit-new-' + escapedCol) === undefined) {
-                      console.error('could not find element "#' + editCell.id + ' div"')
-                      return
-                    }
-                  }
-                  Vue.set(child, 'id', '____add-row')
-                  Vue.set(child, 'col', col.key)
-                  Vue.set(child, 'mode', 'edit')
-                  Vue.set(child, 'mandatory', father.isMandatoryField(col.key))
-                }
-              })
+            let escapedCol = CSS.escape(col)
+            if (father.addRow === true && (father.addRowCompiled[col] === false || father.addRowCompiled[col] === undefined)) {
+              father.injectEditComponentForCol(col)
             }
-            if (elsByColId[col.key] === undefined) {
-              elsByColId[col.key] = {}
+            if (elsByColId[col] === undefined) {
+              elsByColId[col] = {}
               father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
                 let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
-                elsByColId[col.key][id] = cell
+                elsByColId[col][id] = cell
               })
             }
-            Object.keys(elsByColId[col.key]).forEach(id => {
+            Object.keys(elsByColId[col]).forEach(id => {
               let child
               let row = father.processedSmartBody.find(byId(id))
-              let escapedId = '#' + CSS.escape('value-' + id + '-' + col.key)
-              if (customChildrenByCol[col.key] !== undefined && customChildrenByCol[col.key][id] !== undefined) {
-                child = customChildrenByCol[col.key][id]
+              let escapedId = '#' + CSS.escape('value-' + id + '-' + col)
+              if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
+                child = customChildrenByCol[col][id]
                 let initialProps = child.$options.props
                 if (child._props !== undefined) {
                   let propKeys = Object.keys(child._props)
@@ -578,6 +619,7 @@
                 })
               } else {
                 // no custom component default on built-in PlainText
+                Object.keys(PlainText.props).forEach(p => (PlainText.props[p].coerce = undefined))
                 let PlainTextConstructor = Vue.extend(PlainText)
                 child = new PlainTextConstructor({
                   el: father.$el.querySelector(escapedId),
@@ -594,15 +636,15 @@
                 return
               }
               Vue.set(child, 'id', id)
-              Vue.set(child, 'col', col.key)
+              Vue.set(child, 'col', col)
               Vue.set(child, 'mode', 'readOnly')
-              Vue.set(child, 'value', row[col.key])
-              Vue.set(child, 'newVale', row[col.key])
-              Vue.set(child, 'editable', father.isEditable(col.key))
-              if (father.additionalTdClasses[col.key] === undefined) {
-                father.additionalTdClasses[col.key] = []
+              Vue.set(child, 'value', row[col])
+              // Vue.set(child, 'newValue', row[col])
+              Vue.set(child, 'editable', father.isEditable(col))
+              if (father.additionalTdClasses[col] === undefined) {
+                father.additionalTdClasses[col] = []
               }
-              father.additionalTdClasses[col.key][id] = child.tdClasses || []
+              father.additionalTdClasses[col][id] = child.tdClasses || []
             })
           })
       },

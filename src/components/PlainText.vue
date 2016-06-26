@@ -16,13 +16,13 @@
       :disabled="mode === 'saving'"
     ></textarea>
     <button
-      v-show="(mode === 'edit' || mode == 'saving') && multiline === true"
+      v-show="(mode === 'edit' || mode == 'saving') && multiline === true && id !== '____add-row'"
       @click="save"
       :disabled="mode === 'saving'"
       class="ui icon button btn"
       >&#10003;</button><!-- todo: conditional fa -->
     <button
-      v-show="(mode === 'edit' || mode == 'saving') && multiline === true"
+      v-show="(mode === 'edit' || mode == 'saving') && multiline === true && id !== '____add-row'"
       @click="cancel"
       :disabled="mode === 'saving'"
       class="ui icon button btn"
@@ -94,10 +94,10 @@
         this.$dispatch('cancel', {id: this.id, col: this.col})
       },
       save () {
-        this.$dispatch('save-new-value', {id: this.id, col: this.col})
+        this.$dispatch('saveNewValue', {id: this.id, col: this.col})
       },
       edit () {
-        this.$dispatch('enter-edit-mode', {id: this.id, col: this.col})
+        this.$dispatch('enterEditMode', {id: this.id, col: this.col})
         this.$nextTick(() => {
           if (this.multiline) {
             this.$el.querySelector('textarea').focus()

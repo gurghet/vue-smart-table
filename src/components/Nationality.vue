@@ -7,7 +7,7 @@
     data () {
       return {
         value: '',
-        fullnat: '...'
+        fullnat: '..'
       }
     },
     watch: {
