@@ -110,7 +110,7 @@ npm run ~unit
   * [ ] Server side
 * [x] Inline editing
   * [ ] Inline adding
-  * [ ] Inline balidation
+  * [ ] Inline validation
 * [ ] Drag row to reorder
 * [ ] Filtering
   * [ ] Client side

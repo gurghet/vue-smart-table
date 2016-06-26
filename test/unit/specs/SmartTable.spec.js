@@ -511,27 +511,6 @@ describe('SmartTable.vue', () => {
    done()
    }, {deep: true})
    }) */
-  // todo: move tests in PlainText component
-  xit('should not go in edit mode if the field is not editable', (/* done */) => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :actions="[\'mela\']" :editable="[\'name\']" v-ref:ut></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody }
-    }).$mount()
-    vm.$children[0].valueClick('1', 'age')
-    expect(vm.$refs.ut.modalEdit).to.equal(undefined)
-    vm.$children[0].valueClick('1', 'name')
-    expect(vm.$refs.ut.modalEdit).to.not.equal(undefined)
-  })
-  xit('should not go in edit mode if the entire table is not editable', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2" :actions="[\'mela\']" v-ref:ut></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody2 }
-    }).$mount()
-    vm.$children[0].valueClick('1', 'name')
-    expect(vm.$refs.ut.modalEdit).to.eql(undefined)
-  })
   it('main col should set age as main col when age is set and present in first row', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody2" label-col="age"></smart-table></div>',

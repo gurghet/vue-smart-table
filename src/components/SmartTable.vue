@@ -83,19 +83,17 @@
 <script lang="babel">
   /* global CSS */
   import Modal from './Modal'
-  import ModalEdit from './ModalEdit'
   import PlainText from './PlainText'
   import Vue from 'vue'
   Vue.component('plain-text', PlainText)
   export default {
-    components: { Modal, ModalEdit },
+    components: { Modal },
     data () {
       return {
         toggleAll: false,
         action: undefined,
         selection: [],
         error: false,
-        modalEdit: undefined,
         backMatrix: {},
         newRowInput: {},
         scrolledPast: false,
@@ -519,6 +517,9 @@
               },
               saveNewValue () {
                 this.$dispatch('saveNewValue', {id: this.id, col: this.col})
+              },
+              cancel () {
+                this.$dispatch('cancel', {id: this.id, col: this.col})
               }
             }
           }
@@ -602,6 +603,9 @@
                     },
                     saveNewValue () {
                       this.$dispatch('saveNewValue', {id: this.id, col: this.col})
+                    },
+                    cancel () {
+                      this.$dispatch('cancel', {id: this.id, col: this.col})
                     }
                   }
                 }
@@ -763,9 +767,6 @@
       },
       canOrderBy (col) {
         return Object.keys(this.orderBy).indexOf(col) !== -1
-      },
-      closedModalEdit () {
-        this.modalEdit = undefined
       },
       isNumeric (n) {
         return !!(+('1' + n) || +(n + '1')) && !Array.isArray(n) && isFinite(n) && (n !== '')

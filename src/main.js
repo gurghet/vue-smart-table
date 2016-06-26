@@ -1,8 +1,8 @@
 import Vue from 'vue'
+import VueResource from 'vue-resource'
 import './vue-smart-table.js'
 let SmartTable = window.SmartTable
 import Src2img from './components/Src2img'
-import VueResource from 'vue-resource'
 import Contacts from './components/Contacts'
 import Nationality from './components/Nationality'
 import Fontawesome from './components/Fontawesome'
