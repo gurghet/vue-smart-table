@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <title>Vue-smart-table by gurghet</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/semantic.min.css" media="all">
     <style>
+        #app {
+            display: flex;
+            justify-content: center;
+        }
         .smart-table {
-            max-width: 600px;
             margin: 20px;
         }
     </style>
@@ -18,8 +18,9 @@
 <body>
 <div id="app">
     <smart-table
+            table-classes="ui celled table unstackable"
             :auto-load="true"
-            body-field="results"
+            body-path="results"
             id-col="id.value"
             endpoint="http://api.randomuser.me/?page=1&results=20"
             :header="[
@@ -69,10 +70,10 @@
 
     Vue.component('contacts', {
         template: `
-  <div>
-    tel. {{value.phone}}<br/>
-    cell. {{value.cell}}
-  </div>`
+    <div>
+        tel. {{value ? value.phone : ''}}<br/>
+        cell. {{value ? value.cell : ''}}
+    </div>`
     })
 
     Vue.component('src2img', {
@@ -83,6 +84,7 @@
         template: `<p>{{value}}</p>`,
         watch: {
             'value' (val) {
+                if (val.length !== 2) { return }
                 this.$http.get('https://restcountries.eu/rest/v1/alpha/' + val)
                         .then(res => this.$set('value', res.data.name))
             }
@@ -96,11 +98,11 @@
                 return
             }
         }
-        let head = document.getElementsByTagName('head')[0]
-        let link = document.createElement('link')
+        var head = document.getElementsByTagName('head')[0]
+        var link = document.createElement('link')
         link.rel = 'stylesheet'
         link.type = 'text/css'
-        let href = 'https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css'
+        var href = 'https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css'
         link.href = href
         head.appendChild(link)
     }
