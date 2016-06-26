@@ -1,8 +1,8 @@
 <template>
   <div>
-    <span class="label">tel.</span>
+    <span class="label_">tel.</span>
     <span class="phone">{{value.phone}}</span>
-    <span class="label">cell.</span>
+    <span class="label_">cell.</span>
     <span class="cell">{{value.cell}}</span>
   </div>
 </template>
@@ -19,7 +19,7 @@
 
 <style scoped>
 div {
-  width: 160px;
+  width: 13em;
   font-family: monospace;
 }
 .phone {
@@ -34,7 +34,7 @@ div {
   display: block;
 }
 
-.label {
+.label_ {
   float: left;
   clear: left;
   display: block;

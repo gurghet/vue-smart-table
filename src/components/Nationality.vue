@@ -1,18 +1,19 @@
 <template>
-  <p>{{value}}</p>
+  <p>{{fullnat}}</p>
 </template>
 
-<script>
+<script lang="babel">
   export default {
     data () {
       return {
-        value: ''
+        value: '',
+        fullnat: '..'
       }
     },
     watch: {
       'value' (val) {
         this.$http.get('https://restcountries.eu/rest/v1/alpha/' + val)
-          .then(res => this.$set('value', res.data.name))
+          .then(res => this.$set('fullnat', res.data.name))
       }
     }
   }

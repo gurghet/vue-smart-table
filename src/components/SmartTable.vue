@@ -1,31 +1,17 @@
 <template>
-  <div class="smart-table">
+  <div class="smart-table table-responsive">
     <modal @confirm="doCommand"></modal>
-    <modal-edit @confirm="doEdit" @close="closedModalEdit"></modal-edit>
-    <table class="persist-area">
-      <thead v-show="scrolledPast" class="floating-header">
-      <th v-if="actionsArePresent">
-        <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
-      </th>
-      <th v-for="(column, label) in tableHeader" class="col-{{column}} col-cell {{canOrderBy(column) ? 'ord' : ''}} {{orderClass(column)}}" @click="doOrderBy(column)">
-        {{label}}
-        <div v-if="filters[column]" class="{{column}}-filter-cue click-cue fa fa-filter" @click="openFilter(column)"></div>
-        <div v-if="filters[column] && filters[column].open" class="{{column}}-filter-input">
-          <input type="text" v-model="filters[column].model"/>
-        </div>
-      </th>
-      <th v-if="delete">
-      </thead>
-      <thead class="regular-header" :class="{ transparent: scrolledPast }">
+    <table :class="tableClassesProcessed">
+      <thead>
       <tr>
         <th v-if="actionsArePresent">
           <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
         </th>
-        <th v-for="(column, label) in tableHeader" class="col-{{column}} col-cell {{canOrderBy(column) ? 'ord' : ''}} {{orderClass(column)}}" @click="doOrderBy(column)">
-          {{label}}
-          <div v-if="filters[column]" class="{{column}}-filter-cue click-cue fa fa-filter" @click="openFilter(column)"></div>
-          <div v-if="filters[column] && filters[column].open" class="{{column}}-filter-input">
-            <input type="text" v-model="filters[column].model"/>
+        <th v-for="column in tableHeader" class="col-{{column.key}} col-cell {{canOrderBy(column.key) ? 'ord' : ''}} {{orderClass(column.key)}}" @click="doOrderBy(column.key)">
+          {{column.label || column.key}}
+          <div v-if="filters[column.key]" class="{{column.key}}-filter-cue click-cue fa fa-filter" @click="openFilter(column.key)"></div>
+          <div v-if="filters[column.key] && filters[column.key].open" class="{{column.key}}-filter-input">
+            <input type="text" v-model="filters[column.key].model"/>
           </div>
         </th>
         <th v-if="delete">
@@ -33,12 +19,6 @@
       </tr>
       </thead>
       <tfoot>
-      <!--tr v-if="totals" class="totals-row">
-        <td v-if="actionsArePresent"><!-- to match the toggle checkboxes -/-></td>
-        <td v-for="(col, totalCell) in totals" id="value-total-{{col}}" track-by="$index">
-          {{totalCell}}
-        </td>
-      </tr-->
       <tr v-for="footerRow in processedFooter" class="footer-row">
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td v-for="footerCell in footerRow" track-by="$index">
@@ -57,76 +37,91 @@
       </tr>
       </tfoot>
       <tbody>
-      <tr v-for="entry in processedSmartBody" class="row-{{entry._id}}">
+      <tr v-for="row in smartBody" class="row-{{row._id}}" track-by="_id">
         <td v-if="actionsArePresent">
-          <input id="toggle-{{entry._id}}" value="{{entry._id}}" type="checkbox" v-model="selection"/>
+          <input id="toggle-{{row._id}}" value="{{row._id}}" type="checkbox" v-model="selection"/>
         </td>
         <td
-          v-for="(col, value) in entry"
-          v-if="(col !== '_id' || shouldShowId)"
-          id="cell-{{entry._id}}-{{col}}"
-          class="cell-{{col}}"
-          @dblclick="valueClick(entry._id, col)"
+          v-for="col in row.cols"
+          id="cell-{{row._id}}-{{col}}"
+          :class="tdClasses(col, row._id) + ' cell-' + col"
         >
-          <div id="value-{{entry._id}}-{{col}}">
+          <div id="value-{{row._id}}-{{col}}">
             <slot :name="col">
-              {{value}}
+              {{placeholder}}
             </slot>
           </div>
-        </td>
+        </td><!-- todo: when upgrading to 2.x.x put a th here for the mainCol -->
         <td v-if="delete">
-          <button id="delete-{{entry._id}}" @click="remove(entry._id)">Delete</button>
+          <button id="delete-{{row._id}}" @click="remove(row._id)">Delete</button>
         </td>
       </tr>
       <tr v-if="addRow" class="row-new">
         <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td
-          v-for="(col, value) in tableHeader"
-          id="edit-new-{{col}}"
+          v-for="col in tableHeader"
+          id="edit-cell-{{col.key}}"
+          :class="tdClasses(col.key, '__edit') + ' edit-cell'"
         >
-          <input v-if="isEditable(col) && editType(col) !== 'select'" :type="editType(col)" v-model="newRow[col]"/>
-          <select v-if="isEditable(col) && editType(col) === 'select'" v-model="newRow[col]">
-            <option v-for="(value, label) in inputList[col]" value="{{value}}" class="input-label">{{label}}</option>
-          </select>
+          <div
+            id="edit-new-{{col.key}}"
+            class="add-row"
+            >
+            <slot :name="col.key">
+            </slot>
+          </div>
         </td>
         <td v-if="delete"></td>
       </tr>
       </tbody>
     </table>
-    <div class="add-row-button" v-show="canSaveNewRow"><button @click="saveNewRow">Add Row</button></div>
+    <div class="add-row-button" v-show="canSaveNewRow"><button class="ui button" @click="saveNewRow">Add Row</button></div>
     <div class="error-panel" v-show="error">{{error | json}}</div>
   </div>
 </template>
 
-<script type="module">
+<script lang="babel">
+  /* global CSS */
   import Modal from './Modal'
-  import ModalEdit from './ModalEdit'
+  import PlainText from './PlainText'
+  import Vue from 'vue'
+  Vue.component('plain-text', PlainText)
   export default {
-    components: { Modal, ModalEdit },
+    components: { Modal },
     data () {
       return {
         toggleAll: false,
         action: undefined,
         selection: [],
         error: false,
-        modalEdit: undefined,
         backMatrix: {},
-        newRow: {},
-        canSaveNewRow: false,
+        newRowInput: {},
         scrolledPast: false,
         filters: {},
         orderKey: undefined,
-        reverseOrder: false
+        reverseOrder: false,
+        additionalTdClasses: [], // [col][id][class1, class2...]
+        mandatory: [], // [col]true|false
+        customEditChildrenByCol: {},
+        addRowCompiled: {}
         // totals: undefined // footer line with totals
       }
     },
     props: {
+      tableClasses: {
+        type: String,
+        default: 'ui celled table'
+      },
       autoLoad: Boolean,
       autoRefresh: Boolean,
       canFilterBy: Array,
-      useTextAreaFor: Array,
-      header: [Object, Array],
-      orderBy: [Array, Object],
+      header: {
+        type: Array,
+        default () {
+          return []
+        }
+      },
+      orderBy: Array,
       idCol: {
         type: String,
         required: false,
@@ -139,14 +134,9 @@
       footer: {
         required: false
       },
-      inputList: {
-        type: Object,
-        required: false,
-        default: undefined
-      },
-      bodyField: {
+      bodyPath: {
         type: String,
-        default: "body"
+        default: 'body'
       },
       body: {
         type: Array,
@@ -163,18 +153,31 @@
         default: 'name'
       },
       editable: {
-        default: true
+        type: Array,
+        default () {
+          return []
+        }
       },
       addRow: {
         type: Boolean,
         default: false
-      },
-      /* sum: {
-        type: Array,
-        default: () => []
-      }*/
+      }
     },
     computed: {
+      placeholder () {
+        if (this.autoLoad) {
+          return '...'
+        } else {
+          return '&#9888'
+        }
+      },
+      tableClassesProcessed () {
+        if (this.orderBy !== {}) {
+          return 'sortable ' + this.tableClasses
+        } else {
+          return this.tableClasses
+        }
+      },
       processedFooter () {
         if (this.footer === undefined) {
           return []
@@ -191,37 +194,19 @@
           return this.footer
         }
       },
-      canSaveNewRow () {
-        if (Object.keys(this.newRow).length === 0) {
-          return false
-        }
-        var retVal = true
-        this.editableFields.forEach((col) => {
-          if (!this.newRow.hasOwnProperty(col)) {
-            retVal = false
-          } else {
-            if (this.newRow[col] === undefined || this.doesNotPassValidation(col, this.newRow[col])) {
-              retVal = false
-            }
-          }
-        })
-        return retVal
+      mandatoryFields () {
+        // console.log('tableHeader(of which mandatory fields are always a subset) is: ' + JSON.stringify(Object.keys(this.tableHeader)) + '\n' +
+        // 'their mandatoriness is ' + JSON.stringify(Object.keys(this.tableHeader).map(h => this.isMandatoryField(h))))
+        return this.tableHeader.filter(col => this.isMandatoryField(col.key))
       },
+      canSaveNewRow () {
+        // console.log('mandatory fields are: ' + JSON.stringify(this.mandatoryFields) + '\n' +
+        // 'their values are: ' + JSON.stringify(this.mandatoryFields.map(c => this.newRowInput[c])))
+        return this.mandatoryFields.every(col => this.validate(col, this.newRowInput[col])) && this.addRow
+      },
+      // fields that right now are visible and editable and should present themselves in the new row if present
       editableFields () {
-        const tableCols = Object.keys(this.tableHeader)
-        if (this.editable === true) {
-          return tableCols
-        }
-        if (this.editable === false) {
-          return []
-        }
-        if (Array.isArray(this.editable) && this.editable.length > 0) {
-          return this.editable.filter((el) => tableCols.indexOf(el) !== -1)
-        }
-        if (this.isPlainObject(this.editable) && Object.keys(this.editable) > 0) {
-          return Object.keys(this.editable).filter((el) => tableCols.indexOf(el) !== -1)
-        }
-        return []
+        return this.tableHeader.filter(col => this.isEditable(col.key))
       },
       actionsArePresent () {
         if (Array.isArray(this.actions) && this.actions.length > 0) {
@@ -235,42 +220,60 @@
       tableHeader () {
         // WARNING: must not (and cannot) depend on processedSmartBody!
 
-        if (this.body === undefined) {
-          this.body = []
-        }
-        // if object return object
-        if (this.header !== undefined && !Array.isArray(this.header)) {
+        // if not every column is a string return as is
+        if (!this.header.every(col => typeof col === 'string' || col instanceof String)) {
           return this.header
         }
-        // the header is either an array or undefined
-        var bodyKeys = Object.keys(this.body)
-        if (bodyKeys.length < 1) {
-          return {}
+        // else, the header is an array of strings, build one
+        // 1. check that the header has the same number of columns as the body
+        let body = this.body
+        if (this.body === undefined) {
+          body = []
         }
-        var header = {}
-        let columns = [...new Set([].concat.apply([], this.body.map(row => Object.keys(row))))]
-        // filter hidden columns (columns that start with underscore)
+        // columns is the set of all the columns in the body
+        let columns = [...new Set([].concat.apply([], body.map(row => Object.keys(row))))]
+        // filter hidden columns (columns with keys that start with underscore)
         columns = columns.filter(col => !/^_/.test(col))
+        let header = []
+        if (this.header.length < 1) {
+          header = columns
+        } else {
+          header = this.header
+        }
+        if (header.length !== columns.length) {
+          console.error('[Smart Table Error] The number of columns specified ' +
+          header.length +
+          ' does not match the number of columns in the body ' + columns.length)
+        }
         // build the tableHeader object
-        columns.forEach((colKey, i) => {
-          if (this.header === undefined) {
-            header[colKey] = colKey
-          } else {
-            header[colKey] = this.header[i]
-          }
+        let finalHeader = []
+        header.forEach((colLabel, i) => {
+          finalHeader[i] = {key: columns[i], label: header[i]}
         })
 
-        return header
+        return finalHeader
       },
       mainCol () {
         // choose an appropriate default label column
-        if (Object.keys(this.tableHeader).indexOf(this.labelCol) === -1) {
-          return Object.keys(this.tableHeader)[0]
+        if (this.tableHeader.find(col => col.key === this.labelCol) === undefined) {
+          return this.tableHeader[0].key
         } else {
           return this.labelCol
         }
       },
+      smartBody () {
+        return this.processedSmartBody.map(row => {
+          let cols = this.tableHeader.map(col => col.key)
+          cols = cols
+            .filter(col => col !== '_id' || this.shouldShowId)
+          return {_id: row._id, cols}
+        })
+      },
       processedSmartBody () {
+        function getDataFromDotNotation (d, row) {
+          return d.split('.').reduce((o, i) => o[i], row)
+        }
+
         if (this.body === undefined) {
           this.body = []
         }
@@ -278,109 +281,60 @@
         // at least 1 row has id undefined, add them where it's not present
         let counter = 0
         this.body.forEach(row => {
-          let idValue = this.idCol.split('.').reduce((o,i)=>o[i], row)
+          let idValue = getDataFromDotNotation(this.idCol, row)
           if ((idValue === undefined || idValue === null) && (row[this.idCol] === undefined || row[this.idCol] === null)) {
-            row[this.idCol] = "smart_" + counter++
+            row[this.idCol] = 'smart_' + counter++
           }
         })
 
-        // filter body using gui filters
         let smartBody = []
 
-        // filter unwanted rows
         this.body.forEach(row => {
-          if (Object.keys(row).every(col =>
-            Object.keys(this.filters).every(filter =>
-              (filter !== col) ||
-              (JSON.stringify(row[col]).toLowerCase().indexOf(this.filters[filter].model.toLowerCase()) !== -1)
-            )
-          )) {
-            // filter unwanted columns
-            let finalRow = {}
-            Object.keys(this.tableHeader).forEach(col => {
-              let realColValue = {}
-              if (/\+/.test(col)) {
-                // it's a composite column will return an object
-                col.split('+').forEach(d=>{
-                  realColValue[d] = d.split('.').reduce((o,i)=>o[i], row)
-                })
-              } else {
-                realColValue = col.split('.').reduce((o,i)=>o[i], row)
-              }
-              finalRow[col] = realColValue
-            })
-            let idValue = this.idCol.split('.').reduce((o,i)=>o[i], row)
-            let altIdValue = row[this.idCol]
-            finalRow._id = String(idValue || altIdValue)
-            smartBody.push(finalRow)
-          }
-        })
-
-        // compute the requested totals
-        /*if (this.sum.length > 0) {
-          var addAsNumbers = (a, b) => Number(a) + Number(b) // otherwise they might be interpreted as strings
-          this.totals = R.mapObjIndexed((v, k) => {
-            if (R.contains(k, this.sum)) {
-              return R.reduce(addAsNumbers, 0, R.values(R.map(r => r[k], retVal))).toFixed(2)
+          // filter unwanted columns
+          let finalRow = {}
+          this.tableHeader.forEach(col => {
+            let realColValue = {}
+            if (/\+/.test(col.key)) {
+              // it's a composite column will return an object
+              col.key.split('+').forEach(d => {
+                realColValue[d] = getDataFromDotNotation(d, row)
+              })
             } else {
-              return ''
+              realColValue = getDataFromDotNotation(col.key, row)
             }
-          }, R.values(retVal)[0])
-        }*/
-
-        if (this.orderKey !== undefined &&
-          Object.keys(this.tableHeader).indexOf(this.orderKey) !== -1 &&
-        Object.keys(this.orderBy).indexOf(this.orderKey) !== -1) {
-          let _this = this
-          function numericCompare(row1, row2) {
-            let valA = row1[_this.orderKey]
-            var valB = row2[_this.orderKey]
-            if (valA === undefined || valB === undefined) {
-              return 0
-            }
-            return (valA - valB) * (_this.reverseOrder ? -1 : 1)
-          }
-          function lexicographicCompare(row1, row2) {
-            let valA = row1[_this.orderKey]
-            var valB = row2[_this.orderKey]
-            if (valA === undefined || valB === undefined) {
-              return 0
-            }
-            var r = (valA > valB) ? 1 : -1
-            return r * (_this.reverseOrder ? -1 : 1)
-          }
-
-          var lexicographical = this.orderBy[this.orderKey].lexicographical;
-          function isNumeric (n) {
-            return !isNaN(parseFloat(n)) && isFinite(n)
-          }
-          let everyRowIsNonNumeric = smartBody.every(r => !isNumeric(r[this.orderKey]))
-          if (lexicographical === true || everyRowIsNonNumeric) {
-            smartBody.sort(lexicographicCompare)
-          } else {
-            smartBody.sort(numericCompare)
-          }
+            finalRow[col.key] = realColValue
+          })
+          let idValue = getDataFromDotNotation(this.idCol, row)
+          let altIdValue = row[this.idCol]
+          finalRow._id = String(idValue || altIdValue)
+          smartBody.push(finalRow)
+        })
+        // filter body using gui filters
+        // todo: if filterable bla bla smartBody = filterRows(smartBody)
+        if (this.orderKey !== undefined) {
+        // this.tableHeader.find(col => col.key === this.sortKey) &&
+        // Object.keys(this.orderBy).indexOf(this.sortKey) !== -1) {
+          smartBody = this.sortRows(smartBody, this.orderKey, this.reverseOrder)
         }
-
 
         return smartBody
       },
       shouldShowId () {
-        Object.keys(this.tableHeader).indexOf('_id') !== -1
+        return this.tableHeader.find(col => col.key === '_id') !== undefined
       },
       span () {
-        return Object.keys(this.tableHeader).length + 1 + (this.delete ? 1 : 0)
+        return this.tableHeader.length + 1 + (this.delete ? 1 : 0)
       }
     },
     beforeCompile () {
-      if ((this.body === undefined || this.body.lenght < 1) && this.autoLoad === false) {
-        console.warn("Body passed is empty, if you want to load data set auto-load to true")
+      if ((this.body === undefined || this.body.length < 1) && this.autoLoad === false) {
+        console.warn('Body passed is empty, if you want to load data set auto-load to true')
       }
 
       // if orderBy is not an object turn it into one
       if (Array.isArray(this.orderBy)) {
         var orderByObj = {}
-        this.orderBy.forEach((el) => orderByObj[el] = {})
+        this.orderBy.forEach(el => { orderByObj[el] = {} })
         this.orderBy = orderByObj
       }
       if (this.orderBy === undefined) {
@@ -390,7 +344,7 @@
       // if actions is not an object, it doesn't have labels
       if (Array.isArray(this.actions)) {
         var actionsObj = {}
-        this.actions.forEach((el) => actionsObj[el] = el)
+        this.actions.forEach(el => (actionsObj[el] = el))
         this.actions = actionsObj
       }
       if (this.actions === undefined) {
@@ -400,7 +354,7 @@
       // initialize filters
       if (Array.isArray(this.canFilterBy)) {
         let acc = {}
-        this.canFilterBy.forEach(col => acc[col] = {open: false, model: ''} )
+        this.canFilterBy.forEach(col => (acc[col] = {open: false, model: ''}))
         this.filters = acc
       }
     },
@@ -412,24 +366,77 @@
         this.updateInjectedValues()
       }
     },
-    ready () {
-      window.addEventListener('scroll', this.refreshTableHeader)
-    },
     watch: {
-      'processedSmartBody' () {
+      'body' () {
         this.updateInjectedValues()
       }
     },
     methods: {
-      refresh () {
-        this.$http.get(this.endpoint).then((response) => {
-          let body = ''
-          if (this.bodyField.length === 0) {
-            body = response.data
-          } else {
-            body = response.data[this.bodyField]
+      filterRows (smartBody, filterText, filterCol) {
+        return smartBody.filter(row => true)
+      },
+      sortRows (smartBody, sortKey, reverse) {
+        function numericCompare (row1, row2) {
+          let valA = row1[sortKey]
+          var valB = row2[sortKey]
+          if (valA === undefined || valB === undefined) {
+            return 0
           }
-          this.$set('body', body)
+          return (valA - valB) * (reverse ? -1 : 1)
+        }
+        function lexicographicCompare (row1, row2) {
+          let valA = row1[sortKey]
+          var valB = row2[sortKey]
+          if (valA === undefined || valB === undefined) {
+            return 0
+          }
+          var r = (valA > valB) ? 1 : -1
+          return r * (reverse ? -1 : 1)
+        }
+        let child = this.$children.find(c => c.col === sortKey)
+        if (child.sortFunction !== undefined && typeof child.sortFunction === 'function') {
+          smartBody.sort(child.sortFunction)
+          return smartBody
+        }
+        let forceLexicographic = false
+        if (child.sortFunction !== undefined && typeof child.sortFunction === 'string') {
+          if (child.sortFunction === 'lexicographic') {
+            forceLexicographic = true
+          }
+        }
+
+        let everyRowIsNonNumeric = smartBody.every(r => !this.isNumeric(r[sortKey]))
+        if (everyRowIsNonNumeric | forceLexicographic) {
+          smartBody.sort(lexicographicCompare)
+        } else {
+          smartBody.sort(numericCompare)
+        }
+        return smartBody
+      },
+      tdClasses (col, id) {
+        let acc = ''
+        if (this.isEditable(col)) {
+          acc += 'selectable '
+        }
+        if (this.additionalTdClasses[col] === undefined) {
+          this.additionalTdClasses[col] = []
+        }
+        if (this.additionalTdClasses[col][id] === undefined) {
+          this.additionalTdClasses[col][id] = []
+        }
+        this.additionalTdClasses[col][id].forEach(additionalTdClass => (acc += ' ' + additionalTdClass))
+        return acc
+      },
+      refresh () {
+        this.$dispatch('before-request')
+        this.$http.get(this.endpoint).then((response) => {
+          let retBody = []
+          if (this.bodyPath.length === 0) {
+            retBody = response.data
+          } else {
+            retBody = response.data[this.bodyPath]
+          }
+          Vue.set(this, 'body', retBody)
           this.$set('footer', response.data.footer)
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
@@ -448,15 +455,11 @@
       },
       openFilter (column) {
         this.filters[column].open = true
-        this.$nextTick(() => {
-          // todo: this doesn't work
-          // $('.' + column + '-filter-input > input')[1].focus()
-        })
       },
       saveNewRow () {
         if (this.canSaveNewRow) {
           this.$dispatch('before-request')
-          this.$http.post(this.endpoint, {action: 'addRow', resource: this.newRow}).then((response) => {
+          this.$http.post(this.endpoint, {action: 'addRow', resource: this.newRowInput}).then((response) => {
             this.$set('error', false)
             this.$set('body', response.data.body)
             this.$dispatch('successful-request')
@@ -469,78 +472,190 @@
           })
         }
       },
-      doesNotPassValidation (col, value) {
-        return !this.passesValidation(col, value)
+      validate (col, value) {
+        return (value !== undefined && value !== '')
+        // todo: more complex validation
       },
-      passesValidation (col, value) {
-        if (value) {
-          return true
+      injectEditComponentForCol (col) {
+        let father = this
+        let child
+        let escapedEditCol = CSS.escape('edit-new-' + col)
+        if (father.customEditChildrenByCol[col] === undefined) {
+          if (!father.isMandatoryField(col) && !father.isEditable(col)) {
+            this.addRowCompiled[col] = true
+            return
+          }
+          // no component for column, default on built-in PlainText
+          Object.keys(PlainText.props).forEach(p => (PlainText.props[p].coerce = undefined))
+          let PlainTextConstructor = Vue.extend(PlainText)
+          child = new PlainTextConstructor({
+            el: father.$el.querySelector('#' + escapedEditCol),
+            parent: father
+          })
         } else {
-          return false
-        }
-      },
-      refreshTableHeader () {
-        const persistAreas = [].slice.call(this.$el.getElementsByClassName('persist-area'))
-        const offset = persistAreas.map( (persistArea) => {
-          var offsetTop = 0
-            do {
-              if ( !isNaN( persistArea.offsetTop ) ) {
-                offsetTop += persistArea.offsetTop;
-              }
-            } while( persistArea = persistArea.offsetParent );
-           return offsetTop;
-        })[0]
-        const offsetLeft = persistAreas.map( (persistArea) => {
-          var offsetLeft = 0
-            do {
-              if ( !isNaN( persistArea.offsetLeft ) ) {
-                offsetLeft += persistArea.offsetLeft;
-              }
-            } while( persistArea = persistArea.offsetParent );
-           return offsetLeft;
-        })[0]
-        const scrollTop = window.scrollY
-        const scrollLeft = window.scrollX
-        const scrolledDown = (scrollTop > offset)
-        const notScrolledAway = (scrollTop < offset + persistAreas[0].offsetHeight)
-        this.scrolledPast = scrolledDown && notScrolledAway
-        // init
-        const floatingHeader = this.$el.getElementsByClassName('floating-header')[0]
-        const regularHeader = this.$el.getElementsByClassName('regular-header')[0]
-        floatingHeader.style.left = offsetLeft - scrollLeft
-        floatingHeader.style.zIndex = 3
-        const rths = [].slice.call(regularHeader.getElementsByTagName('th'))
-        const fths = [].slice.call(floatingHeader.getElementsByTagName('th'))
-        fths.forEach((fth, i) => {
-          fth.style.width = rths[i].offsetWidth + "px"
-        })
-      },
-      updateInjectedValues () {
-        let children = this.$children
-        let columns = Object.keys(this.tableHeader)
-        children.forEach( (child) => {
-          let col = (typeof child.$el.getAttribute === 'function') ? child.$el.getAttribute('slot') : null
-          if (col !== null && columns.indexOf(col) !== -1) {
-            let rowId = child.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
-            function findById(row) {
-              return row._id === rowId
-            }
-            let row = this.processedSmartBody.filter(findById)[0]
-            child.value = row[col]
-            if (this.addRow && child.inputTemplate !== undefined) {
-              let addRowId = 'edit-new-' + col
-              child.inputTemplate
-              // 1. mount the input sub-component
-              // 2. add watcher for known value inside sub-component
-              // 3. link said value to newRow[col]
+          child = father.customEditChildrenByCol[col]
+          if (!father.isMandatoryField(col) && !father.isEditable(col)) {
+            if (child !== undefined) {
+              child.$destroy(true)
+              father.customEditChildrenByCol[col] = undefined
+              this.addRowCompiled[col] = true
+              return
             }
           }
-        });
+          let initialProps = child.$options.props
+          if (child._props !== undefined) {
+            let propKeys = Object.keys(child._props)
+            let propValues = {}
+            propKeys.forEach(k => (propValues[k] = child[k]))
+            let additionalFunctions = propKeys.map(k => function coerce () { return child[k] })
+            Object.keys(initialProps).forEach((p, i) => (initialProps[p].coerce = additionalFunctions[i]))
+          }
+          let mix = {
+            methods: {
+              enterEditMode () {
+                this.$dispatch('enterEditMode', {id: this.id, col: this.col})
+              },
+              saveNewValue () {
+                this.$dispatch('saveNewValue', {id: this.id, col: this.col})
+              },
+              cancel () {
+                this.$dispatch('cancel', {id: this.id, col: this.col})
+              }
+            }
+          }
+          let options = Object.assign({}, child.$options, {
+            mixins: [mix],
+            el () {
+              return father.$el.querySelector('#' + escapedEditCol)
+            },
+            props: initialProps
+          })
+          let Constru = Vue.extend(options)
+          child.$destroy()
+          child = new Constru({
+            parent: father
+          })
+        }
+        Vue.set(child, 'id', '____add-row')
+        Vue.set(child, 'col', col)
+        Vue.set(child, 'mode', 'edit')
+        Vue.set(child, 'mandatory', this.isMandatoryField(col))
+        this.addRowCompiled[col] = true
+      },
+      updateInjectedValues () {
+        let father = this
+        let customChildrenByCol = {}
+        father.$children.forEach(c => {
+          if (typeof c.$el.getAttribute === 'function' && c.$el.getAttribute('slot') !== null) {
+            if (/^edit/.test(c.$el.parentElement.id)) {
+              let col = c.$el.parentElement.id.match(/^edit-(?:new|cell)-([a-zA-Z0-9.+]+)/)[1]
+              if (this.customEditChildrenByCol[col] === undefined) {
+                this.customEditChildrenByCol[col] = c
+              }
+            }
+            if (/^value/.test(c.$el.parentElement.id)) {
+              let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
+              let col = c.$el.parentElement.id.match(/^value-[a-zA-Z0-9 ._-]+-([a-zA-Z0-9.+]+)$/)[1]
+              if (customChildrenByCol[col] === undefined) {
+                customChildrenByCol[col] = {}
+              }
+              customChildrenByCol[col][id] = c
+            }
+          }
+        })
+        let elsByColId = {}
+        function byId (id) {
+          return function (row) {
+            return row._id === id
+          }
+        }
+        father.tableHeader.map(c => c.key)
+          .forEach(col => {
+            let escapedCol = CSS.escape(col)
+            if (father.addRow === true && (father.addRowCompiled[col] === false || father.addRowCompiled[col] === undefined)) {
+              father.injectEditComponentForCol(col)
+            }
+            if (elsByColId[col] === undefined) {
+              elsByColId[col] = {}
+              father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
+                let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
+                elsByColId[col][id] = cell
+              })
+            }
+            Object.keys(elsByColId[col]).forEach(id => {
+              let child
+              let row = father.processedSmartBody.find(byId(id))
+              let escapedId = '#' + CSS.escape('value-' + id + '-' + col)
+              if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
+                child = customChildrenByCol[col][id]
+                let initialProps = child.$options.props
+                if (child._props !== undefined) {
+                  let propKeys = Object.keys(child._props)
+                  let propValues = {}
+                  propKeys.forEach(k => (propValues[k] = child[k]))
+                  let additionalFunctions = propKeys.map(k => function coerce () { return child[k] })
+                  Object.keys(initialProps).forEach((p, i) => (initialProps[p].coerce = additionalFunctions[i]))
+                }
+                let mix = {
+                  methods: {
+                    enterEditMode () {
+                      this.$dispatch('enterEditMode', {id: this.id, col: this.col})
+                    },
+                    saveNewValue () {
+                      this.$dispatch('saveNewValue', {id: this.id, col: this.col})
+                    },
+                    cancel () {
+                      this.$dispatch('cancel', {id: this.id, col: this.col})
+                    }
+                  }
+                }
+                let options = Object.assign({}, child.$options, {
+                  mixins: [mix],
+                  el () {
+                    return father.$el.querySelector(escapedId)
+                  },
+                  props: initialProps
+                })
+                let Constru = Vue.extend(options)
+                child.$destroy()
+                child = new Constru({
+                  parent: father
+                })
+              } else {
+                // no custom component default on built-in PlainText
+                Object.keys(PlainText.props).forEach(p => (PlainText.props[p].coerce = undefined))
+                let PlainTextConstructor = Vue.extend(PlainText)
+                child = new PlainTextConstructor({
+                  el: father.$el.querySelector(escapedId),
+                  // having father in the argument ensures that this works even if smart table is not mounted in the DOM
+                  parent: father
+                })
+                if (father.$el.querySelector(escapedId) === undefined) {
+                  console.error('could not find element "' + escapedId + '"')
+                  return
+                }
+              }
+              if (child === undefined) {
+                console.error('no child component found for id ' + id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
+                return
+              }
+              Vue.set(child, 'id', id)
+              Vue.set(child, 'col', col)
+              Vue.set(child, 'mode', 'readOnly')
+              Vue.set(child, 'value', row[col])
+              // Vue.set(child, 'newValue', row[col])
+              Vue.set(child, 'editable', father.isEditable(col))
+              if (father.additionalTdClasses[col] === undefined) {
+                father.additionalTdClasses[col] = []
+              }
+              father.additionalTdClasses[col][id] = child.tdClasses || []
+            })
+          })
       },
       toggleAllRows () {
         if (this.toggleAll === false) {
           this.toggleAll = true
-          this.selection = Object.keys(this.processedSmartBody)
+          this.selection = this.processedSmartBody.map(r => r._id)
         } else {
           this.toggleAll = false
           this.selection = []
@@ -550,15 +665,15 @@
         var actionKey = this.action
         var actionLabel = this.actions[this.action]
         var selectionKeyLabel = this.selection.map(rowId => {
-          let selectedRow = this.processedSmartBody.filter((row => row._id === rowId))[0]
+          let selectedRow = this.processedSmartBody.filter(row => row._id === rowId)[0]
           if (selectedRow !== undefined) {
-            let rowLabel = selectedRow[this.mainCol];
-              return {key: rowId, label: rowLabel}
+            let rowLabel = selectedRow[this.mainCol]
+            return {key: rowId, label: rowLabel}
           } else {
             return null
           }
         }).filter(a => a !== null)
-        var commandToBeConfirmed = { action: { key: actionKey, label: actionLabel}, selection: selectionKeyLabel }
+        var commandToBeConfirmed = { action: { key: actionKey, label: actionLabel }, selection: selectionKeyLabel }
         this.$broadcast('command', commandToBeConfirmed)
       },
       doCommand (command) {
@@ -566,125 +681,73 @@
 
         // special case
         if (/^(_remove|_delete)$/i.test(command.action)) {
-          this.$http.delete(this.endpoint, command).then(onSuccess, onFailure)
+          this.$http.delete(this.endpoint, command).then(this.onSuccess, this.onFailure)
         } else {
-          this.$http.get(this.endpoint, command).then(onSuccess, onFailure)
-        }
-
-        function onSuccess(response) {
-          let body = ''
-          if (this.bodyField.length === 0) {
-            body = response.data
-          } else {
-            body = response.data[this.bodyField]
-          }
-          if (body !== undefined || body === {}) {
-            this.$set('body', body)
-            this.$set('footer', response.data.footer)
-          }
-          this.$dispatch('successful-request')
-          this.$dispatch('after-request')
-          this.$set('error', false)
-          this.maybeRefresh()
-        }
-
-        function onFailure(response) {
-          this.$set('error', { status: response.status, data: response.data.error })
-          this.$dispatch('failed-request')
-          this.$dispatch('after-request')
+          this.$http.get(this.endpoint, command).then(this.onSuccess, this.onFailure)
         }
       },
       remove (id) {
         this.$dispatch('before-request')
 
-        this.$http.delete(this.endpoint + '/' + id).then(onSuccess, onFailure)
-
-        function onSuccess(response) {
-          let body = ''
-          if (this.bodyField.length === 0) {
-            body = response.data
-          } else {
-            body = response.data[this.bodyField]
-          }
-          if (body !== undefined || body === {}) {
-            this.$set('body', body)
-            this.$set('footer', response.data.footer)
-          }
-          this.$dispatch('successful-request')
-          this.$dispatch('after-request')
-          this.$set('error', false)
-          this.maybeRefresh()
-        }
-
-        function onFailure(response) {
-          this.$set('error', { status: response.status, data: response.data.error })
-          this.$dispatch('failed-request')
-          this.$dispatch('after-request')
-        }
+        this.$http.delete(this.endpoint + '/' + id).then(this.onSuccess, this.onFailure)
       },
+      // this field, if visible, should be editable and present in the new row
       isEditable (col) {
-        if (this.editable === false) {
-          return false
-        }
-        if (Array.isArray(this.editable)) {
-          if (this.editable.indexOf(col) === -1) {
-            return false
-          }
-        }
-        return true
+        return this.editable.indexOf(col) !== -1
       },
-      isNotEditable (col) {
-        return !this.isEditable(col)
-      },
-      valueClick (id, col) {
-        if (this.isNotEditable(col)) {
+      /**
+       *
+       * @param resource {value, id, col}
+       * @param httpRESTreq if false will not propagate PUT request
+         */
+      put (resource, httpRESTreq = true) {
+        this.$dispatch('before-request')
+        let child = this.$children.find(c => c.id === resource.id && c.col === resource.col)
+        if (child === undefined) {
+          console.error('Children with id ' + resource.id + ' was not found')
           return
         }
-        if (this.modalEdit === undefined) {
-          this.modalEdit = {
-            id: id,
-            col: col,
-            currentValue: this.processedSmartBody.filter((row => row._id === id))[0][col],
-            previousValue: this.processedSmartBody.filter((row => row._id === id))[0][col],
-            type: this.editType(col)
-          }
-          this.$broadcast('modalEdit', this.modalEdit)
+        Vue.set(child, 'mode', 'saving')
+        if (httpRESTreq) {
+          this.$http.put(this.endpoint + '/' + resource.id + '/' + resource.col, {
+            action: 'edit',
+            value: resource.value
+          }).then((response) => {
+            Vue.set(child, 'mode', 'readOnly')
+            Vue.set(child, 'value', resource.value)
+            this.$dispatch('successful-request')
+            this.$dispatch('after-request')
+            this.$set('error', false)
+            this.maybeRefresh()
+          }, (response) => {
+            Vue.set(child, 'mode', 'readOnly')
+            this.$set('error', {status: response.status, data: response.data.error})
+            this.$dispatch('failed-request')
+            this.$dispatch('after-request')
+          })
         }
       },
-      editType (col) {
-        if (this.inputList !== undefined &&
-          this.inputList[col] !== undefined) {
-          return 'select'
-        }
-        if (this.useTextAreaFor !== undefined &&
-          this.useTextAreaFor.indexOf(col) !== undefined) {
-          return 'textarea'
-        }
-        return 'text'
+      post (resource, httpRESTreq = true) {
+        setTimeout(() => {
+          // 1) sends request
+          // 2) receive reply
+          // 3) if ok add row to body and reset new row
+        }, 1000)
       },
-      doEdit (modalEdit) {
-        this.$dispatch('before-request')
-        this.$http.put(this.endpoint + '/' + modalEdit.id + '/' + modalEdit.col, {
-          action: 'edit',
-          value: modalEdit.currentValue
-        }).then((response) => {
-          // this.setUndo(modalEdit.id, modalEdit.col, modalEdit.previousValue)
-          this.$dispatch('successful-request')
-          this.$dispatch('after-request')
-          this.$set('error', false)
-          this.maybeRefresh()
-        }, (response) => {
-          this.$set('error', { status: response.status, data: response.data.error})
-          this.$dispatch('failed-request')
-          this.$dispatch('after-request')
-        })
-      },
-      isPlainObject ( obj ) {
+      isPlainObject (obj) {
         return obj !== null && typeof obj === 'object'
       },
+      isMandatoryField (col) {
+        if (this.mandatory[col] === false) {
+          // console.log(col + 'is explicitly non mandatory')
+          return false
+        }
+        return this.mandatory[col] || this.isEditable(col)
+        // todo: subject to change
+      },
       doOrderBy (col) {
-        if (this.canOrderBy(col)) {
-          return;
+        if (!this.canOrderBy(col)) {
+          return
         }
         if (this.orderKey === col) {
           this.reverseOrder = !this.reverseOrder
@@ -695,94 +758,82 @@
       },
       orderClass (col) {
         if (this.orderKey === col && this.reverseOrder === false) {
-          return 'ordered-asc'
+          return 'sorted ascending'
         }
         if (this.orderKey === col && this.reverseOrder === true) {
-          return 'ordered-desc'
+          return 'sorted descending'
         }
         return ''
       },
       canOrderBy (col) {
-        return Object.keys(this.orderBy).indexOf(col) === -1
+        return Object.keys(this.orderBy).indexOf(col) !== -1
       },
-      // setUndo (id, col, value) {
-      // this.backMatrix[id][col] = value
-      // },
-      closedModalEdit () {
-        this.modalEdit = undefined
+      isNumeric (n) {
+        return !!(+('1' + n) || +(n + '1')) && !Array.isArray(n) && isFinite(n) && (n !== '')
+      },
+      onFailure (response) {
+        this.$set('error', {status: response.status, data: response.data.error})
+        this.$dispatch('failed-request')
+        this.$dispatch('after-request')
+      },
+      onSuccess (response) {
+        let body = ''
+        if (this.bodyPath.length === 0) {
+          body = response.data
+        } else {
+          body = response.data[this.bodyPath]
+        }
+        if (body !== undefined || body === {}) {
+          this.$set('body', body)
+          this.$set('footer', response.data.footer)
+        }
+        this.$dispatch('successful-request')
+        this.$dispatch('after-request')
+        this.$set('error', false)
+        this.maybeRefresh()
       }
-      // undo (id, col) {
-      // this.doEdit({id: id, col: col, currentValue: this.backMatrix[id][col], previousValue: null})
-      // },
-      // hasUndo (id, col) {
-      // return this.backMatrix[id] !== undefined && this.backMatrix[id][col] !== undefined
-      // }
-      // undo button to add later
-      // <span
-      //      id="back-{{id}}-{{col}}"
-      //    class="undo-button"
-      //  @click="undo(id, col)"
-      //  v-show="hasUndo(id,col)"
-      //    >
-      //    &#223;</span>
+    },
+    events: {
+      'saveNewValue' ({id, col}) {
+        let child = this.$children.find(c => c.id === id && c.col === col)
+        if (id === '____add-row') {
+          this.newRowInput[col] = child.newValue
+        } else {
+          if (child.mode === 'edit') {
+            this.put({value: child.newValue, id, col})
+          }
+        }
+      },
+      'enterEditMode' ({id, col}) {
+        let child = this.$children.find(c => c.id === id && c.col === col)
+        if (child.mode === 'readOnly') {
+          if (!child.editable) {
+            console.log('Clicked non-editable field ' + col + '-' + id + '. Ignoring.')
+            return
+          }
+          child.mode = 'edit'
+          child.newValue = child.value
+        }
+      },
+      'cancel' ({id, col}) {
+        if (id === '____add-row') {
+          return
+        }
+        let child = this.$children.find(c => c.id === id && c.col === col)
+        if (child.mode === 'edit') {
+          setTimeout(() => {
+            if (child.mode === 'edit') {
+              child.mode = 'readOnly'
+              child.newValue = undefined
+            }
+          }, 120)
+        }
+      }
     }
   }
 </script>
 
 <style>
-  .floating-header {
-    position: fixed;
-    top: 0;
-  }
-
-  .transparent {
-    opacity: 0;
-  }
-
-  .ordered-asc:after {
-    content: "▲";
-  }
-
-  .ordered-desc:after {
-    content: "▼";
-  }
-
-  .smart-table table {
-    font-family: "Helvetica neue", "Helvetica", sans-serif;
-    font-size: 13px;
-    text-align: left;
-    border-collapse: collapse;
-    color: #cfd2da;
-  }
-
-  .smart-table th {
-    height: 51px;
-    font-size: 13px;
-    font-weight: bold;
-    background: #252830;
-    border-top: 1px solid #434857;
-    border-bottom: 2px solid #434857;
-    color: #cfd2da;
-    padding: 2px 10px;
-    text-transform: capitalize;
-    box-sizing: border-box;
-  }
-
-  .smart-table td {
-    background: #252830;
-    border-bottom: 1px solid #434857;
-    color: #cfd2da;
-    padding: 2px 10px;
-  }
-
-  .smart-table .smart-control-bar {
-    background: #454850;
-  }
-
-  /*.smart-table tr:hover td {
-    background: hsla(210,29%,91%,1);
-    color: hsla(196,8%,31%,1);
-  }*/
 
   .bottom-right-corner {
     font-size: 42px;

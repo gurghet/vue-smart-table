@@ -1,5 +1,5 @@
 <template>
-  <a v-show="value !== ''" href="https://en.wikipedia.org/wiki/{{value}}#History" title="Go to the wikipedia page of {{value}} history">{{value}}</a>
+  <p>Hello</p>
 </template>
 
 <script>

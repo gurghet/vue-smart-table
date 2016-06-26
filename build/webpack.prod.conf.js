@@ -29,6 +29,10 @@ module.exports = merge(baseWebpackConfig, {
       extract: true
     })
   },
+  externals: {
+    'vue': 'Vue',
+    'vue-resource': 'VueResource'
+  },
   plugins: [
     // http://vuejs.github.io/vue-loader/workflow/production.html
     new webpack.DefinePlugin({

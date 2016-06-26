@@ -16,6 +16,7 @@ Basically you write this
     id-col="id.value"
     endpoint="http://api.randomuser.me/?page=1&results=20"
     :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
+    :order-by="['name.first', 'name.last']"
     >
    <src2img slot="picture.thumbnail"></src2img><!-- renders pictures -->
    <contacts slot="phone+cell"></contacts><!-- custom formatting -->
@@ -26,9 +27,9 @@ Basically you write this
 
 and you get this
 
-![vue smart table](http://s33.postimg.org/taf7s21sf/2016_06_09_19_15_33.png)
+![vue smart table](https://s32.postimg.org/55yu3qcb9/Schermata_2016_06_26_alle_02_56_51.png)
 
-[Demo](http://codepen.io/gurghet/pen/OXyeER)
+[Demo](http://codepen.io/gurghet/pen/qNZprz)
 
 ## Installation
 
@@ -49,9 +50,9 @@ Vue.component('smart-table', SmartTable)
 
 ``` html
 <!-- optional in your head -->
-<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.3.0/dist/static/vue-smart-table-default.css">
+<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.4.0-beta2/dist/static/vue-smart-table-default.css">
 <!-- at the end of your body -->
-<script src="https://npmcdn.com/vue-smart-table@2.3.0/dist/static/vue-smart-table.js"></script>
+<script src="https://npmcdn.com/vue-smart-table@2.4.0-beta2/dist/static/vue-smart-table.js"></script>
 ```
 
 That’s it! The component will register itself!
@@ -100,7 +101,7 @@ npm run ~unit
 
 ## Roadmap
 
-* [ ] Bootsrap/Flat/Semantic compatibility
+* [x] Bootsrap/Semantic compatibility
 * [x] Derived columns
 * [ ] Sorting
   * [x] Client side
@@ -108,7 +109,9 @@ npm run ~unit
 * [ ] Pagination
   * [ ] Client side
   * [ ] Server side
-* [ ] Inline editing/adding
+* [x] Inline editing
+  * [ ] Inline adding
+  * [ ] Inline validation
 * [ ] Drag row to reorder
 * [ ] Filtering
   * [ ] Client side
@@ -121,6 +124,13 @@ Here is a list of similar components that also display a table:
 - [vue-table](https://github.com/ratiw/vue-table)
 
 ##Changelog
+
+###2.4.0
+
+- [Feature] Inline edit capabilities with more advanced components
+- Breaking change: format of the `header` prop is changed (`:header="[{key: 'key1', label: 'label'}, {key: 'keyEqualsToLabel'}]"`
+- Breaking change: `body-field` => `body-path`
+- Bootstrap/Semantic compatibility
 
 ###2.3.1
 

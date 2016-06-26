@@ -18,7 +18,7 @@ var webpackConfig = merge(baseConfig, {
   devtool: '#inline-source-map',
   vue: {
     loaders: {
-      // js: 'isparta'
+      js: 'isparta'
     }
   },
   plugins: [
@@ -53,7 +53,7 @@ module.exports = function (config) {
     // 1. install corresponding karma launcher
     //    http://karma-runner.github.io/0.13/config/browsers.html
     // 2. add it to the `browsers` array below.
-    browsers: ['PhantomJS'],
+    browsers: ['Chrome'],
     frameworks: ['mocha', 'sinon-chai'],
     reporters: ['spec', 'coverage'],
     files: ['./index.js'],
