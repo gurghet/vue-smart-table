@@ -26,7 +26,7 @@ Basically you write this
 
 and you get this
 
-![vue smart table](http://s32.postimg.org/yavvy76it/2016_06_13_20_56_00.png)
+![vue smart table](https://s32.postimg.org/55yu3qcb9/Schermata_2016_06_26_alle_02_56_51.png)
 
 [Demo](http://codepen.io/gurghet/pen/qNZprz)
 
@@ -108,8 +108,9 @@ npm run ~unit
 * [ ] Pagination
   * [ ] Client side
   * [ ] Server side
-* [ ] Inline editing/adding
-  * [ ] Validation
+* [x] Inline editing
+  * [ ] Inline adding
+  * [ ] Inline balidation
 * [ ] Drag row to reorder
 * [ ] Filtering
   * [ ] Client side

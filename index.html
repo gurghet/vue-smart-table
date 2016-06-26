@@ -13,10 +13,10 @@
   </head>
   <body>
    <smart-table
-    :add-row="true"
     :auto-load="true"
     body-path="results"
     id-col="id.value"
+    table-classes="ui celled table unstackable"
     endpoint="http://api.randomuser.me/?page=1&results=2&seed=abc"
     :header="[
     {key: 'name.first', label: 'name'},
@@ -57,7 +57,7 @@
         a web service and overwrite itself with
         the full country name! -->
   </smart-table>
-  <!--smart-table
+  <smart-table
   :body="[{hello:'world'},{world:'hello'}]"
     >
   </smart-table>

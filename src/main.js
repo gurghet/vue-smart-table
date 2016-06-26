@@ -19,6 +19,7 @@ new Vue({
 
 Vue.http.interceptors.unshift((request, next) => {
   if (request.method === 'PUT') {
+    console.info('Simulating 200 - Ok response for the following request', request)
     setTimeout(() => {
       next({
         data: '{"status": "Ok", "message": "no message"}',
