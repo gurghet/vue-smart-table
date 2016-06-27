@@ -9,10 +9,6 @@
         </th>
         <th v-for="column in tableHeader" class="col-{{column.key}} col-cell {{canOrderBy(column.key) ? 'ord' : ''}} {{orderClass(column.key)}}" @click="doOrderBy(column.key)">
           {{column.label || column.key}}
-          <div v-if="filters[column.key]" class="{{column.key}}-filter-cue click-cue fa fa-filter" @click="openFilter(column.key)"></div>
-          <div v-if="filters[column.key] && filters[column.key].open" class="{{column.key}}-filter-input">
-            <input type="text" v-model="filters[column.key].model"/>
-          </div>
         </th>
         <th v-if="delete">
         </th>
@@ -37,7 +33,7 @@
       </tr>
       </tfoot>
       <tbody>
-      <tr v-for="row in smartBody" class="row-{{row._id}}" track-by="_id">
+      <tr v-for="row in smartBody" class="row-{{row._id}}" track-by="_id" v-show="filteredRowsById[row._id] !== true">
         <td v-if="actionsArePresent">
           <input id="toggle-{{row._id}}" value="{{row._id}}" type="checkbox" v-model="selection"/>
         </td>
@@ -103,7 +99,9 @@
         additionalTdClasses: [], // [col][id][class1, class2...]
         mandatory: [], // [col]true|false
         customEditChildrenByCol: {},
-        addRowCompiled: {}
+        addRowCompiled: {},
+        filterAll: '',
+        filteredRowsById: {}
         // totals: undefined // footer line with totals
       }
     },
@@ -114,7 +112,12 @@
       },
       autoLoad: Boolean,
       autoRefresh: Boolean,
-      canFilterBy: Array,
+      canFilterBy: {
+        type: Array,
+        default () {
+          return []
+        }
+      },
       header: {
         type: Array,
         default () {
@@ -311,6 +314,11 @@
         })
         // filter body using gui filters
         // todo: if filterable bla bla smartBody = filterRows(smartBody)
+        // filterAll
+        this.filteredRowsById = {}
+        this.canFilterBy.forEach(col => {
+          this.filterRows(smartBody, this.filterAll, col)
+        })
         if (this.orderKey !== undefined) {
         // this.tableHeader.find(col => col.key === this.sortKey) &&
         // Object.keys(this.orderBy).indexOf(this.sortKey) !== -1) {
@@ -373,7 +381,13 @@
     },
     methods: {
       filterRows (smartBody, filterText, filterCol) {
-        return smartBody.filter(row => true)
+        return smartBody.forEach(row => {
+          if (row[filterCol].toLowerCase().indexOf(filterText.toLowerCase()) === -1) {
+            this.filteredRowsById[row._id] = true && (this.filteredRowsById[row._id] !== false)
+          } else {
+            this.filteredRowsById[row._id] = false
+          }
+        })
       },
       sortRows (smartBody, sortKey, reverse) {
         function numericCompare (row1, row2) {
@@ -828,6 +842,9 @@
             }
           }, 120)
         }
+      },
+      'filterAll' (text) {
+        this.filterAll = text
       }
     }
   }

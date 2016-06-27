@@ -12,6 +12,7 @@
     </style>
   </head>
   <body>
+    <input type="text" v-model="search"/>
    <smart-table
     :auto-load="true"
     body-path="results"
@@ -28,7 +29,8 @@
     ]"
     :order-by="['name.first', 'name.last']"
     :editable="['name.first', 'name.last', 'picture.thumbnail']"
-    >
+    :can-filter-by="['name.first', 'name.last']"
+    v-ref:smart>
    <plain-text slot="name.first" :multiline="true"></plain-text>
    <!-- this component is used implicitly
         you can write it if you want to tweak
