@@ -25,7 +25,9 @@
     "grid",
     "smart"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "css.escape": "^1.5.0"
+  },
   "peerDependencies": {
     "vue": "1.0.24",
     "vue-resource": "^0.8.0"
