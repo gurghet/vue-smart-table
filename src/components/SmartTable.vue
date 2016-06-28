@@ -79,6 +79,7 @@
 <script lang="babel">
   /* global CSS */
   import Modal from './Modal'
+  import 'css.escape'
   import PlainText from './PlainText'
   import Vue from 'vue'
   Vue.component('plain-text', PlainText)
@@ -591,7 +592,7 @@
             }
             if (elsByColId[col] === undefined) {
               elsByColId[col] = {}
-              father.$el.querySelectorAll('.cell-' + escapedCol).forEach(cell => {
+              Array.from(father.$el.querySelectorAll('.cell-' + escapedCol)).forEach(cell => {
                 let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
                 elsByColId[col][id] = cell
               })

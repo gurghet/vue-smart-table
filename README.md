@@ -1,6 +1,7 @@
 # vue-smart-table
 
 [![Join the chat at https://gitter.im/gurghet/vue-smart-table](https://badges.gitter.im/gurghet/vue-smart-table.svg)](https://gitter.im/gurghet/vue-smart-table?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![npm](https://img.shields.io/npm/dt/vue-smart-table.svg?maxAge=2592000)](https://www.npmjs.com/package/vue-smart-table)
 
 > A vue table with dynamic components
 
@@ -11,10 +12,17 @@ Basically you write this
 ```html
 <smart-table
     :auto-load="true"
-    body-field="results"
+    body-path="results"
     id-col="id.value"
     endpoint="http://api.randomuser.me/?page=1&results=20"
-    :header="{'name.first': 'name', 'name.last': 'surname', gender: 'gender', 'phone+cell': 'contacts', 'picture.thumbnail': 'avatar', nat: 'nationality'}"
+    :header="[
+    {key: 'name.first', label: 'name'},
+    {key: 'name.last', label: 'surname'},
+    {key: 'gender'},
+    {key: 'phone+cell', label: 'contacts'},
+    {key: 'picture.thumbnail', label: 'avatar'}
+    {key: 'nat', label: 'nationality'}
+    ]"
     :order-by="['name.first', 'name.last']"
     >
    <src2img slot="picture.thumbnail"></src2img><!-- renders pictures -->
@@ -49,9 +57,9 @@ Vue.component('smart-table', SmartTable)
 
 ``` html
 <!-- optional in your head -->
-<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.4.0-beta2/dist/static/vue-smart-table-default.css">
+<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.4.0/dist/static/vue-smart-table-default.css">
 <!-- at the end of your body -->
-<script src="https://npmcdn.com/vue-smart-table@2.4.0-beta2/dist/static/vue-smart-table.js"></script>
+<script src="https://npmcdn.com/vue-smart-table@2.4.0/dist/static/vue-smart-table.js"></script>
 ```
 
 That’s it! The component will register itself!
@@ -116,10 +124,19 @@ npm run ~unit
   * [ ] Client side
   * [ ] Server side
 
+## Similar Components
+
+Here is a list of similar components that also display a table:
+
+- [vue-table](https://github.com/ratiw/vue-table)
+
 ##Changelog
 
-###2.4.0-beta2
+###2.4.0
 
+- [Feature] Inline edit capabilities with more advanced components
+- Breaking change: format of the `header` prop is changed (`:header="[{key: 'key1', label: 'label'}, {key: 'keyEqualsToLabel'}]"`
+- Breaking change: `body-field` => `body-path`
 - Bootstrap/Semantic compatibility
 
 ###2.3.1
