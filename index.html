@@ -65,7 +65,7 @@
 
     Vue.component('fontawesome', {
         template: ' <i class="fa fa-{{value}}" aria-hidden="true"></i>',
-        created () {injectFontAwesome()}
+        created: function () {injectFontAwesome()}
     })
 
     Vue.component('contacts', {
@@ -93,7 +93,7 @@
 
     function injectFontAwesome() {
         // avoid duplicates
-        for (let i = 0; i < document.styleSheets.length; i++) {
+        for (var i = 0; i < document.styleSheets.length; i++) {
             if (document.styleSheets[i].href === href) {
                 return
             }
