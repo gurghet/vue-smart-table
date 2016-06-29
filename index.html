@@ -69,11 +69,7 @@
     })
 
     Vue.component('contacts', {
-        template: `
-    <div>
-        tel. {{value ? value.phone : ''}}<br/>
-        cell. {{value ? value.cell : ''}}
-    </div>`
+        template: "<div>tel. {{value ? value.phone : ''}}<br/>cell. {{value ? value.cell : ''}}</div>"
     })
 
     Vue.component('src2img', {
@@ -81,7 +77,7 @@
     })
 
     Vue.component('nationality', {
-        template: `<p>{{value}}</p>`,
+        template: "<p>{{value}}</p>",
         watch: {
             'value' (val) {
                 if (val.length !== 2) { return }
