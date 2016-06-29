@@ -81,9 +81,8 @@
 </template>
 
 <script lang="babel">
-  /* global CSS */
   import Modal from './Modal'
-  import 'css.escape'
+  import cssesc from 'css.escape'
   import PlainText from './PlainText'
   import Vue from 'vue'
   Vue.component('plain-text', PlainText)
@@ -223,6 +222,10 @@
 
         // if not every column is a string return as is
         if (!this.header.every(col => typeof col === 'string' || col instanceof String)) {
+          if (this.header.some(col => typeof col === 'string' || col instanceof String)) {
+            console.error('[Smart Table Error] Some elements of the header are strings while other are not, cannot have a mixed header')
+            return
+          }
           return this.header
         }
         // else, the header is an array of strings, build one
@@ -265,8 +268,9 @@
       smartBody () {
         return this.processedSmartBody.map(row => {
           let cols = this.tableHeader.map(col => col.key)
-          cols = cols
-            .filter(col => col !== '_id' || this.shouldShowId)
+          // todo: _id should be already filtered if the table header is only strings
+          /* cols = cols
+            .filter(col => col !== '_id' || this.shouldShowId)*/
           return {_id: row._id, cols}
         })
       },
@@ -480,7 +484,7 @@
       injectEditComponentForCol (col) {
         let father = this
         let child
-        let escapedEditCol = CSS.escape('edit-new-' + col)
+        let escapedEditCol = cssesc('edit-new-' + col)
         if (father.customEditChildrenByCol[col] === undefined) {
           if (!father.isMandatoryField(col) && !father.isEditable(col)) {
             this.addRowCompiled[col] = true
@@ -572,7 +576,7 @@
         }
         father.tableHeader.map(c => c.key)
           .forEach(col => {
-            let escapedCol = CSS.escape(col)
+            let escapedCol = cssesc(col)
             if (father.addRow === true && (father.addRowCompiled[col] === false || father.addRowCompiled[col] === undefined)) {
               father.injectEditComponentForCol(col)
             }
@@ -586,7 +590,7 @@
             Object.keys(elsByColId[col]).forEach(id => {
               let child
               let row = father.processedSmartBody.find(byId(id))
-              let escapedId = '#' + CSS.escape('value-' + id + '-' + col)
+              let escapedId = '#' + cssesc('value-' + id + '-' + col)
               if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
                 child = customChildrenByCol[col][id]
                 let initialProps = child.$options.props
