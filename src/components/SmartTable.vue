@@ -565,21 +565,19 @@
         let father = this
         let customChildrenByCol = {}
         father.$children.forEach(c => {
-          if (typeof c.$el.getAttribute === 'function' && c.$el.getAttribute('slot') !== null) {
-            if (/^edit/.test(c.$el.parentElement.id)) {
-              let col = c.$el.parentElement.id.match(/^edit-(?:new|cell)-([a-zA-Z0-9.+]+)/)[1]
-              if (this.customEditChildrenByCol[col] === undefined) {
-                this.customEditChildrenByCol[col] = c
-              }
+          if (/^edit/.test(c.$el.parentElement.id)) {
+            let col = c.$el.parentElement.id.match(/^edit-(?:new|cell)-([a-zA-Z0-9.+]+)/)[1]
+            if (this.customEditChildrenByCol[col] === undefined) {
+              this.customEditChildrenByCol[col] = c
             }
-            if (/^value/.test(c.$el.parentElement.id)) {
-              let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
-              let col = c.$el.parentElement.id.match(/^value-[a-zA-Z0-9 ._-]+-([a-zA-Z0-9.+]+)$/)[1]
-              if (customChildrenByCol[col] === undefined) {
-                customChildrenByCol[col] = {}
-              }
-              customChildrenByCol[col][id] = c
+          }
+          if (/^value/.test(c.$el.parentElement.id)) {
+            let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
+            let col = c.$el.parentElement.id.match(/^value-[a-zA-Z0-9 ._-]+-([a-zA-Z0-9.+]+)$/)[1]
+            if (customChildrenByCol[col] === undefined) {
+              customChildrenByCol[col] = {}
             }
+            customChildrenByCol[col][id] = c
           }
         })
         let elsByColId = {}
