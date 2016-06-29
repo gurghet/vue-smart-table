@@ -132,6 +132,15 @@ Here is a list of similar components that also display a table:
 
 ##Changelog
 
+###2.4.2
+
+- [Fix] As a workaround for Safari, use explicitly CSS polyfill
+
+###2.4.1
+
+- [Fix] Added polyfill for CSS.escape
+- [Fix] Removed instances of HTMLNodelist.forEach
+
 ###2.4.0
 
 - [Feature] Inline edit capabilities with more advanced components
