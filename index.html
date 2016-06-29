@@ -86,7 +86,7 @@
             'value' (val) {
                 if (val.length !== 2) { return }
                 this.$http.get('https://restcountries.eu/rest/v1/alpha/' + val)
-                        .then(function(res) { this.$set('value', res.data.name) ] })
+                        .then(function(res) { this.$set('value', res.data.name) })
             }
         }
     })
