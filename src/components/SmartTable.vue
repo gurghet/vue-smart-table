@@ -198,13 +198,9 @@
         }
       },
       mandatoryFields () {
-        // console.log('tableHeader(of which mandatory fields are always a subset) is: ' + JSON.stringify(Object.keys(this.tableHeader)) + '\n' +
-        // 'their mandatoriness is ' + JSON.stringify(Object.keys(this.tableHeader).map(h => this.isMandatoryField(h))))
         return this.tableHeader.filter(col => this.isMandatoryField(col.key))
       },
       canSaveNewRow () {
-        // console.log('mandatory fields are: ' + JSON.stringify(this.mandatoryFields) + '\n' +
-        // 'their values are: ' + JSON.stringify(this.mandatoryFields.map(c => this.newRowInput[c])))
         return this.mandatoryFields.every(col => this.validate(col, this.newRowInput[col])) && this.addRow
       },
       // fields that right now are visible and editable and should present themselves in the new row if present
