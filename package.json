@@ -9,6 +9,8 @@
     "build": "node build/build.js",
     "unit": "karma start test/unit/karma.conf.js --single-run",
     "~unit": "karma start test/unit/karma.conf.js",
+    "funit": "karma start test/unit-functions/karma.conf.js --single-run",
+    "~funit": "karma start test/unit-functions/karma.conf.js",
     "e2e": "node test/e2e/runner.js",
     "test": "npm run unit && npm run e2e",
     "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"

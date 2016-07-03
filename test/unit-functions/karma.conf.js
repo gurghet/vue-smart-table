@@ -1,30 +1,75 @@
-/**
- * Created by gurghet on 29/06/16.
- */
+// This is a karma config file. For more details see
+//   http://karma-runner.github.io/0.13/config/configuration-file.html
+// we are also using it with karma-webpack
+//   https://github.com/webpack/karma-webpack
 
-module.exports = function(config) {
+var path = require('path')
+var merge = require('webpack-merge')
+var baseConfig = require('../../build/webpack.base.conf')
+var utils = require('../../build/utils')
+var webpack = require('webpack')
+var projectRoot = path.resolve(__dirname, '../../')
+
+var webpackConfig = merge(baseConfig, {
+  // use inline sourcemap for karma-sourcemap-loader
+  module: {
+    loaders: utils.styleLoaders()
+  },
+  devtool: '#inline-source-map',
+  vue: {
+    loaders: {
+      js: 'isparta'
+    }
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': require('../../config/test.env')
+    })
+  ]
+})
+
+// no need for app entry during tests
+delete webpackConfig.entry
+
+// make sure isparta loader is applied before eslint
+webpackConfig.module.preLoaders = webpackConfig.module.preLoaders || []
+webpackConfig.module.preLoaders.unshift({
+  test: /\.js$/,
+  loader: 'isparta',
+  include: path.resolve(projectRoot, 'src')
+})
+
+// only apply babel for test files when using isparta
+webpackConfig.module.loaders.some(function (loader, i) {
+  if (loader.loader === 'babel') {
+    loader.include = path.resolve(projectRoot, 'test/unit-functions')
+    return true
+  }
+})
+
+module.exports = function (config) {
   config.set({
-    basePath: '../..',
-    frameworks: ['mocha'],
-    files: ['test/unit-functions/specs/*.spec.js'],
+    // to run in additional browsers:
+    // 1. install corresponding karma launcher
+    //    http://karma-runner.github.io/0.13/config/browsers.html
+    // 2. add it to the `browsers` array below.
+    browsers: ['PhantomJS'],
+    frameworks: ['mocha', 'sinon-chai'],
+    reporters: ['spec', 'coverage'],
+    files: ['./specs/*.spec.js'],
     preprocessors: {
-      'src/**/*.js': ['babel'],
-      'test/**/*.js': ['babel']
+      './specs/*.spec.js': ['webpack', 'sourcemap']
     },
-    babelPreprocessor: {
-      //plugins: [
-      //  'transform-es2015-modules-umd'
-      //],
-      options: {
-        presets: ['es2015'],
-        sourceMap: 'inline'
-      },
-      filename: function (file) {
-        return file.originalPath.replace(/\.js$/, '.es5.js')
-      },
-      sourceFileName: function (file) {
-        return file.originalPath
-      }
+    webpack: webpackConfig,
+    webpackMiddleware: {
+      noInfo: true
+    },
+    coverageReporter: {
+      dir: './coverage',
+      reporters: [
+        { type: 'lcov', subdir: '.' },
+        { type: 'text-summary' }
+      ]
     }
   })
 }
