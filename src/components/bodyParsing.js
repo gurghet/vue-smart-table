@@ -3,7 +3,26 @@
  */
 
 function getDataFromDotNotation (d, row) {
-  return d.split('.').reduce((o, i) => o[i], row)
+  return d.split('.').reduce((o, i) => { if (o === undefined) { return undefined } else { return o[i] } }, row)
+}
+
+function derivedBody (body, cols) {
+  return body.map(row => {
+    let newRow = {}
+    cols.forEach(col => {
+      let realColValue = {}
+      if (/\+/.test(col)) {
+        // it's a composite column will return an object
+        col.split('+').forEach(d => {
+          realColValue[d] = getDataFromDotNotation(d, row)
+        })
+      } else {
+        realColValue = getDataFromDotNotation(col, row)
+      }
+      newRow[col] = realColValue
+    })
+    return newRow
+  })
 }
 
 /**
@@ -13,12 +32,12 @@ function getDataFromDotNotation (d, row) {
  *   ... ]
  * Columns can be omitted and _ids can be omitted too.
  */
-function bodyWithIds (rawBody, idColKey) {
+function bodyWithIds (body, idColKey) {
   let counter = 0
   let usedIds = []
-  rawBody.forEach(row => {
+  body.forEach(row => {
     let idValue = getDataFromDotNotation(idColKey, row)
-    if ((idValue === undefined || idValue === null) && (row[idColKey] === undefined || row[idColKey] === null)) {
+    if ((idValue === undefined || idValue === null) && (row[idColKey] === undefined)) {
       idValue = '_smart_' + counter++
     }
     if (usedIds.indexOf(idValue) !== -1) {
@@ -35,15 +54,15 @@ function bodyWithIds (rawBody, idColKey) {
       }
     })
   })
-  return rawBody
+  return body
 }
 
-function filteredBody (bodyWithIds, filter, colKey) {
+function filteredBody (body, filter, colKey) {
   if (typeof filter === 'function') {
     if (colKey === undefined) {
       throw new Error('[Smart Table Internal Error] Must scope filter with custom functions')
     }
-    return bodyWithIds.map(row => {
+    return body.map(row => {
       let val = getDataFromDotNotation(colKey, row)
       if (filter(val)) {
         return Object.assign(row, { _show: row._show !== false && true })
@@ -52,7 +71,7 @@ function filteredBody (bodyWithIds, filter, colKey) {
       }
     })
   } else if (typeof filter === 'string') {
-    return bodyWithIds.map(row => {
+    return body.map(row => {
       function someColumnContainsFilter () {
         return Object.keys(row).some(col => {
           return typeof row[col] === 'string' && row[col].indexOf(filter) !== -1 ||
@@ -75,7 +94,7 @@ function filteredBody (bodyWithIds, filter, colKey) {
   }
 }
 
-function sortedBody (filteredBody, colKey, desc, compareFunction) {
+function sortedBody (body, colKey, desc, compareFunction) {
   function numericCompare (row1, row2) {
     let valA = getDataFromDotNotation(colKey, row1)
     var valB = getDataFromDotNotation(colKey, row2)
@@ -103,22 +122,22 @@ function sortedBody (filteredBody, colKey, desc, compareFunction) {
   }
   if (compareFunction !== undefined && typeof compareFunction === 'string') {
     if (compareFunction === 'lexicographic') {
-      filteredBody.sort(lexicographicCompare)
+      body.sort(lexicographicCompare)
     }
   } else if (compareFunction !== undefined && typeof compareFunction === 'function') {
-    filteredBody.sort(scopedCompareFunction)
+    body.sort(scopedCompareFunction)
     if (desc) {
-      filteredBody.reverse()
+      body.reverse()
     }
   } else {
-    let everyRowIsNonNumeric = filteredBody.every(r => !isNumeric(getDataFromDotNotation(colKey, r)))
+    let everyRowIsNonNumeric = body.every(r => !isNumeric(getDataFromDotNotation(colKey, r)))
     if (everyRowIsNonNumeric) {
-      filteredBody.sort(lexicographicCompare)
+      body.sort(lexicographicCompare)
     } else {
-      filteredBody.sort(numericCompare)
+      body.sort(numericCompare)
     }
   }
-  return filteredBody
+  return body
 }
 
-export default { bodyWithIds, filteredBody, sortedBody }
+export default { derivedBody, bodyWithIds, filteredBody, sortedBody }

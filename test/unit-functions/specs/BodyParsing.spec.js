@@ -326,6 +326,22 @@ describe('sortedBody', () => {
     ])
   })
 
+  it('should sort numerically in descending order', () => {
+    let names = [
+      {_id: 1, _show: true, name: 'Dooty', age: 7},
+      {_id: 3, _show: true, name: 'Cooty', age: 3},
+      {_id: 2, _show: true, name: 'Sooty', age: 1},
+      {_id: 0, _show: true, name: 'Andy', age: 3}
+    ]
+    let result = bodyParsing.sortedBody(names, 'age', true)
+    result.should.eql([
+      {_id: 1, _show: true, name: 'Dooty', age: 7},
+      {_id: 3, _show: true, name: 'Cooty', age: 3},
+      {_id: 0, _show: true, name: 'Andy', age: 3},
+      {_id: 2, _show: true, name: 'Sooty', age: 1}
+    ])
+  })
+
   it('should sort numerically in a stable manner', () => {
     let names = [
       {_id: 1, _show: true, name: 'Dooty', age: 7},
@@ -433,6 +449,64 @@ describe('sortedBody', () => {
       {_id: 1, _show: true, sharpie: { color: 'blue' }},
       {_id: 2, _show: true, sharpie: { color: 'green' }},
       {_id: 0, _show: true, sharpie: { color: 'red' }}
+    ])
+  })
+})
+
+describe('derivedBody', () => {
+  it('should parse dot notation', () => {
+    let raw = [
+      { salutations: { hello: 'hi', to: 'world' } },
+      { erbs: 'rosmarine' },
+      { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
+    ]
+    let result = bodyParsing.derivedBody(raw, ['salutations.hello'])
+    result.should.eql([
+      { 'salutations.hello': 'hi' },
+      { 'salutations.hello': undefined },
+      { 'salutations.hello': undefined }
+    ])
+  })
+
+  it('should add derived columns', () => {
+    let raw = [
+      { salutations: { hello: 'hi', to: 'world' } },
+      { erbs: 'rosmarine' },
+      { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
+    ]
+    let result = bodyParsing.derivedBody(raw, ['salutations.hello+salutations.to'])
+    result.should.eql([
+      { 'salutations.hello+salutations.to': { 'salutations.hello': 'hi', 'salutations.to': 'world' } },
+      { 'salutations.hello+salutations.to': { 'salutations.hello': undefined, 'salutations.to': undefined } },
+      { 'salutations.hello+salutations.to': { 'salutations.hello': undefined, 'salutations.to': undefined } }
+    ])
+  })
+
+  it('should add derived columns 2', () => {
+    let raw = [
+      { salutations: { hello: 'hi', to: 'world' } },
+      { erbs: 'rosmarine' },
+      { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
+    ]
+    let result = bodyParsing.derivedBody(raw, ['erbs', 'erbs.light hearted'])
+    result.should.eql([
+      { erbs: undefined, 'erbs.light hearted': undefined },
+      { erbs: 'rosmarine', 'erbs.light hearted': undefined },
+      { erbs: { 'light hearted': 'lavander', hard: 'basil' }, 'erbs.light hearted': 'lavander' }
+    ])
+  })
+
+  it('should add derived columns 3', () => {
+    let raw = [
+      { salutations: { hello: 'hi', to: 'world' } },
+      { erbs: 'rosmarine' },
+      { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
+    ]
+    let result = bodyParsing.derivedBody(raw, ['salutations.hello+'])
+    result.should.eql([
+      { 'salutations.hello+': { 'salutations.hello': 'hi', '': undefined } },
+      { 'salutations.hello+': { 'salutations.hello': undefined, '': undefined } },
+      { 'salutations.hello+': { 'salutations.hello': undefined, '': undefined } }
     ])
   })
 })
