@@ -1,7 +1,7 @@
 /**
  * Created by gurghet on 30/06/16.
  */
-/* global describe, it, xit */
+/* global describe, it, expect */
 
 import bodyParsing from 'src/components/bodyParsing'
 
@@ -16,6 +16,11 @@ describe('bodyWithIds', () => {
     result.should.eql([{_id: 'my id', lol: 'wow'}])
   })
 
+  it('should overwrite _id if is already defined and is not the id column', () => {
+    let result = bodyParsing.bodyWithIds([{_id: 'false id', realId: 1}], 'realId')
+    result.should.eql([{_id: 1, realId: 1}])
+  })
+
   it('should add missing ids', () => {
     let swissCheese = [
       {name: 'camamber', id: '38'},
@@ -24,9 +29,9 @@ describe('bodyWithIds', () => {
     ]
     let result = bodyParsing.bodyWithIds(swissCheese, 'id')
     result.should.eql([
-      {name: 'camamber', id: '38'},
-      {colour: 'spotted', id: '_smart_0'},
-      {name: 'brie', nationality: 'from Brie', id: '389'}
+      {name: 'camamber', id: '38', _id: '38'},
+      {colour: 'spotted', _id: '_smart_0'},
+      {name: 'brie', nationality: 'from Brie', id: '389', _id: '389'}
     ])
   })
 
@@ -38,9 +43,9 @@ describe('bodyWithIds', () => {
     ]
     let result = bodyParsing.bodyWithIds(doubler, 'id')
     result.should.eql([
-      {id: '38'},
-      {id: '38-0'},
-      {id: '39'}
+      {id: '38', _id: '38'},
+      {id: '38', _id: '38-0'},
+      {id: '39', _id: '39'}
     ])
   })
 
@@ -52,9 +57,9 @@ describe('bodyWithIds', () => {
     ]
     let result = bodyParsing.bodyWithIds(doubler, 'id')
     result.should.eql([
-      {id: '38'},
-      {id: '38-0'},
-      {id: '38-0-0'}
+      {id: '38', _id: '38'},
+      {id: '38-0', _id: '38-0'},
+      {id: '38-0', _id: '38-0-0'}
     ])
   })
 
@@ -69,158 +74,159 @@ describe('bodyWithIds', () => {
       {_id: '0', 'bar-baz': 'robustus'}
     ])
   })
+
+  it('should set id with dot notation when the id is always not null', () => {
+    let foo = [
+      { id: { value: 1 } }
+    ]
+    let result = bodyParsing.bodyWithIds(foo, 'id.value')
+    result.should.eql([
+      { id: { value: 1 }, _id: 1 }
+    ])
+  })
+
+  it('should set the id with dot notation when the id is null', () => {
+    let foo = [
+      { id: { value: null } }
+    ]
+    let result = bodyParsing.bodyWithIds(foo, 'id.value')
+    result.should.eql([
+      { id: { value: null }, _id: '_smart_0' }
+    ])
+  })
 })
 
 describe('filteredBody', () => {
-  it('should perform a global filtering', () => {
+  it('should apply the same filtering function to more columns', () => {
+    // ____mut suppresses errors
     let tooMany = [
-      {_id: 0, name: 'aaa', surname: 'aaa'},
-      {_id: 1, name: 'bbb', surname: 'bbb'},
-      {_id: 2, name: 'aba', surname: 'ccc'},
-      {_id: 3, name: 'cab', surname: 'bac'}
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(tooMany, 'c')
-    result.should.eql([
-      {_id: 0, name: 'aaa', surname: 'aaa', _show: false},
-      {_id: 1, name: 'bbb', surname: 'bbb', _show: false},
-      {_id: 2, name: 'aba', surname: 'ccc', _show: true},
-      {_id: 3, name: 'cab', surname: 'bac', _show: true}
+    bodyParsing.filteredBody(tooMany, 'c', ['name', 'surname'])
+    tooMany.should.eql([
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
+    ])
+  })
+
+  it('should perform a global filtering case insensitive', () => {
+    let tooMany = [
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
+    ]
+    bodyParsing.filteredBody(tooMany, 'C', ['name', 'surname'])
+    tooMany.should.eql([
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ])
   })
 
   it('should perform a global filtering with numbers, converting the into text', () => {
     let numbers = [
-      {_id: 0, name: 'aaa', age: 34},
-      {_id: 1, name: 'bbb', age: 3}
+      {_id: 0, name: 'aaa', age: 34, _show: true, ____mut: ''},
+      {_id: 1, name: 'bbb', age: 3, _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(numbers, '3')
-    result.should.eql([
-      {_id: 0, name: 'aaa', age: 34, _show: true},
-      {_id: 1, name: 'bbb', age: 3, _show: true}
-    ])
-  })
-
-  xit('should detect when the scoped column is only numbers', () => {
-    let numbers = [
-      {_id: 0, name: 'aaa', age: 34},
-      {_id: 1, name: 'bbb', age: 3}
-    ]
-    let result = bodyParsing.filteredBody(numbers, '3')
-    result.should.eql([
-      {_id: 0, name: 'aaa', age: 34, _show: false},
-      {_id: 1, name: 'bbb', age: 3, _show: true}
-    ])
-  })
-
-  xit('should detect when the scoped column is only numbers even is some are strings', () => {
-    let numbers = [
-      {_id: 0, name: 'aaa', age: 34},
-      {_id: 1, name: 'bbb', age: '3'}
-    ]
-    let result = bodyParsing.filteredBody(numbers, '3')
-    result.should.eql([
-      {_id: 0, name: 'aaa', age: 34, _show: false},
-      {_id: 1, name: 'bbb', age: '3', _show: true}
-    ])
-  })
-
-  xit('should detect when the scoped column is not only numbers', () => {
-    let numbers = [
-      {_id: 0, name: 'aaa', age: 34},
-      {_id: 1, name: 'bbb', age: 'a3'}
-    ]
-    let result = bodyParsing.filteredBody(numbers, '3')
-    result.should.eql([
-      {_id: 0, name: 'aaa', age: 34, _show: true},
-      {_id: 1, name: 'bbb', age: 'a3', _show: true}
+    bodyParsing.filteredBody(numbers, '3', ['name', 'age'])
+    numbers.should.eql([
+      {_id: 0, name: 'aaa', age: 34, _show: true, ____mut: ''},
+      {_id: 1, name: 'bbb', age: 3, _show: true, ____mut: ''}
     ])
   })
 
   it('should perform scoped filtering', () => {
     let tooMany = [
-      {_id: 0, name: 'aaa', surname: 'aaa'},
-      {_id: 1, name: 'bbb', surname: 'bbb'},
-      {_id: 2, name: 'aba', surname: 'ccc'},
-      {_id: 3, name: 'cab', surname: 'bac'}
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(tooMany, 'c', 'name')
-    result.should.eql([
-      {_id: 0, name: 'aaa', surname: 'aaa', _show: false},
-      {_id: 1, name: 'bbb', surname: 'bbb', _show: false},
-      {_id: 2, name: 'aba', surname: 'ccc', _show: false},
-      {_id: 3, name: 'cab', surname: 'bac', _show: true}
+    bodyParsing.filteredBody(tooMany, 'c', 'name')
+    tooMany.should.eql([
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: false, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ])
   })
 
-  it('should perform a second pass of filtering', () => {
+  it('should not be cumulative', () => {
     let tooMany = [
-      {_id: 0, name: 'aaa', surname: 'aaa', _show: false},
-      {_id: 1, name: 'bbb', surname: 'bbb', _show: false},
-      {_id: 2, name: 'aba', surname: 'ccc', _show: false},
-      {_id: 3, name: 'cab', surname: 'bac', _show: true}
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: false, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(tooMany, 'c', 'surname')
-    result.should.eql([
-      {_id: 0, name: 'aaa', surname: 'aaa', _show: false},
-      {_id: 1, name: 'bbb', surname: 'bbb', _show: false},
-      {_id: 2, name: 'aba', surname: 'ccc', _show: false},
-      {_id: 3, name: 'cab', surname: 'bac', _show: true}
+    bodyParsing.filteredBody(tooMany, 'c', 'surname')
+    tooMany.should.eql([
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ])
   })
 
-  it('should perform filtering even with undefined columns', () => {
+  it('should perform filtering even with more than one column', () => {
     let missing = [
-      {_id: 0, name: 'aaa', surname: 'aaa'},
-      {_id: 1, surname: 'bbb'},
-      {_id: 2, name: 'aba', surname: 'ccc'},
-      {_id: 3, name: 'cab'}
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
+      {_id: 1, surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(missing, 'c')
-    result.should.eql([
-      {_id: 0, name: 'aaa', surname: 'aaa', _show: false},
-      {_id: 1, surname: 'bbb', _show: false},
-      {_id: 2, name: 'aba', surname: 'ccc', _show: true},
-      {_id: 3, name: 'cab', _show: true}
+    bodyParsing.filteredBody(missing, 'c', ['name', 'surname'])
+    missing.should.eql([
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', _show: true, ____mut: ''}
     ])
   })
 
   it('should perform filtering even with undefined columns are filtered specifically', () => {
     let missing = [
-      {_id: 0, name: 'aaa', surname: 'aaa'},
-      {_id: 1, surname: 'bbb'},
-      {_id: 2, name: 'aba', surname: 'ccc'},
-      {_id: 3, name: 'cab'}
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
+      {_id: 1, surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(missing, 'c', 'surname')
-    result.should.eql([
-      {_id: 0, name: 'aaa', surname: 'aaa', _show: false},
-      {_id: 1, surname: 'bbb', _show: false},
-      {_id: 2, name: 'aba', surname: 'ccc', _show: true},
-      {_id: 3, name: 'cab', _show: false}
+    bodyParsing.filteredBody(missing, 'c', 'surname')
+    missing.should.eql([
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', _show: false, ____mut: ''}
     ])
   })
 
   it('should accept dot notation for the scoped column', () => {
     let intricate = [
-      {_id: 0, name: { first: 'bob', last: 'marley' }},
-      {_id: 1, name: { first: 'bib', last: 'mirley' }}
+      {_id: 0, name: { first: 'bob', last: 'marley' }, _show: true, ____mut: ''},
+      {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(intricate, 'i', 'name.first')
-    result.should.eql([
-      {_id: 0, name: { first: 'bob', last: 'marley' }, _show: false},
-      {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true}
+    bodyParsing.filteredBody(intricate, 'i', 'name.first')
+    intricate.should.eql([
+      {_id: 0, name: { first: 'bob', last: 'marley' }, _show: false, ____mut: ''},
+      {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true, ____mut: ''}
     ])
   })
 
   it('should accept dot notation for the scoped column (missing col case)', () => {
     let intricateMissing = [
-      {_id: 0, name: { last: 'marley' }},
-      {_id: 1, name: { first: 'bib', last: 'mirley' }}
+      {_id: 0, name: { last: 'marley' }, _show: true, ____mut: ''},
+      {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(intricateMissing, 'i', 'name.first')
-    result.should.eql([
-      {_id: 0, name: { last: 'marley' }, _show: false},
-      {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true}
+    bodyParsing.filteredBody(intricateMissing, 'i', 'name.first')
+    intricateMissing.should.eql([
+      {_id: 0, name: { last: 'marley' }, _show: false, ____mut: ''},
+      {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true, ____mut: ''}
     ])
   })
 
@@ -229,36 +235,36 @@ describe('filteredBody', () => {
       return val > 2 && val < 4
     }
     let excel = [
-      {_id: 0, number: 1},
-      {_id: 1, number: 2},
-      {_id: 2, number: 3},
-      {_id: 3, number: 4}
+      {_id: 0, number: 1, _show: true, ____mut: ''},
+      {_id: 1, number: 2, _show: true, ____mut: ''},
+      {_id: 2, number: 3, _show: true, ____mut: ''},
+      {_id: 3, number: 4, _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(excel, filter, 'number')
-    result.should.eql([
-      {_id: 0, number: 1, _show: false},
-      {_id: 1, number: 2, _show: false},
-      {_id: 2, number: 3, _show: true},
-      {_id: 3, number: 4, _show: false}
+    bodyParsing.filteredBody(excel, filter, 'number')
+    excel.should.eql([
+      {_id: 0, number: 1, _show: false, ____mut: ''},
+      {_id: 1, number: 2, _show: false, ____mut: ''},
+      {_id: 2, number: 3, _show: true, ____mut: ''},
+      {_id: 3, number: 4, _show: false, ____mut: ''}
     ])
   })
 
-  it('should accept custom filter functions in a second pass', () => {
+  it('should not be cuulative with custom filter', () => {
     function filter (val) {
       return val > 2 && val < 4
     }
     let excel = [
-      {_id: 0, number: 1, _show: true},
-      {_id: 1, number: 2, _show: true},
-      {_id: 2, number: 3, _show: false},
-      {_id: 3, number: 4, _show: true}
+      {_id: 0, number: 1, _show: true, ____mut: ''},
+      {_id: 1, number: 2, _show: true, ____mut: ''},
+      {_id: 2, number: 3, _show: false, ____mut: ''},
+      {_id: 3, number: 4, _show: true, ____mut: ''}
     ]
-    let result = bodyParsing.filteredBody(excel, filter, 'number')
-    result.should.eql([
-      {_id: 0, number: 1, _show: false},
-      {_id: 1, number: 2, _show: false},
-      {_id: 2, number: 3, _show: false},
-      {_id: 3, number: 4, _show: false}
+    bodyParsing.filteredBody(excel, filter, 'number')
+    excel.should.eql([
+      {_id: 0, number: 1, _show: false, ____mut: ''},
+      {_id: 1, number: 2, _show: false, ____mut: ''},
+      {_id: 2, number: 3, _show: true, ____mut: ''},
+      {_id: 3, number: 4, _show: false, ____mut: ''}
     ])
   })
 
@@ -462,9 +468,9 @@ describe('derivedBody', () => {
     ]
     let result = bodyParsing.derivedBody(raw, ['salutations.hello'])
     result.should.eql([
-      { 'salutations.hello': 'hi' },
-      { 'salutations.hello': undefined },
-      { 'salutations.hello': undefined }
+      { salutations: { hello: 'hi', to: 'world' }, 'salutations.hello': 'hi' },
+      { erbs: 'rosmarine', 'salutations.hello': undefined },
+      { erbs: { 'light hearted': 'lavander', hard: 'basil' }, 'salutations.hello': undefined }
     ])
   })
 
@@ -475,11 +481,7 @@ describe('derivedBody', () => {
       { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
     ]
     let result = bodyParsing.derivedBody(raw, ['salutations.hello+salutations.to'])
-    result.should.eql([
-      { 'salutations.hello+salutations.to': { 'salutations.hello': 'hi', 'salutations.to': 'world' } },
-      { 'salutations.hello+salutations.to': { 'salutations.hello': undefined, 'salutations.to': undefined } },
-      { 'salutations.hello+salutations.to': { 'salutations.hello': undefined, 'salutations.to': undefined } }
-    ])
+    result[0]['salutations.hello+salutations.to'].should.eql({ 'salutations.hello': 'hi', 'salutations.to': 'world' })
   })
 
   it('should add derived columns 2', () => {
@@ -489,11 +491,11 @@ describe('derivedBody', () => {
       { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
     ]
     let result = bodyParsing.derivedBody(raw, ['erbs', 'erbs.light hearted'])
-    result.should.eql([
-      { erbs: undefined, 'erbs.light hearted': undefined },
-      { erbs: 'rosmarine', 'erbs.light hearted': undefined },
-      { erbs: { 'light hearted': 'lavander', hard: 'basil' }, 'erbs.light hearted': 'lavander' }
-    ])
+    expect(result[0]['erbs.light hearted']).to.be.undefined
+    result[1].erbs.should.equal('rosmarine')
+    expect(result[1]['erbs.light hearted']).to.be.undefined
+    result[2].erbs.should.eql({ 'light hearted': 'lavander', hard: 'basil' })
+    result[2]['erbs.light hearted'].should.equal('lavander')
   })
 
   it('should add derived columns 3', () => {
@@ -503,10 +505,18 @@ describe('derivedBody', () => {
       { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
     ]
     let result = bodyParsing.derivedBody(raw, ['salutations.hello+'])
-    result.should.eql([
-      { 'salutations.hello+': { 'salutations.hello': 'hi', '': undefined } },
-      { 'salutations.hello+': { 'salutations.hello': undefined, '': undefined } },
-      { 'salutations.hello+': { 'salutations.hello': undefined, '': undefined } }
-    ])
+    result[0]['salutations.hello+']['salutations.hello'].should.equal('hi')
   })
 })
+
+/* describe('projectedBody', () => {
+  it('should project the body ignoring columns that start with underscore', () => {
+    let finalBody = [
+      { final: 'this is final', _id: 'final id', '_final field': 'final hidden field', finallyVisible: 'hello' }
+    ]
+    let result = bodyParsing.projectedBody(finalBody, ['finallyVisible'])
+    result.should.eql([
+      { _id: 'final id', '_final field': 'final hidden field', finallyVisible: 'hello' }
+    ])
+  })
+})*/

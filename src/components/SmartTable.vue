@@ -1,16 +1,10 @@
 <template>
   <div class="smart-table table-responsive">
-    <modal @confirm="doCommand"></modal>
     <table :class="tableClassesProcessed">
       <thead>
       <tr>
-        <th v-if="actionsArePresent">
-          <input class="toggle-all" type="checkbox" @click="toggleAllRows"/>
-        </th>
         <th v-for="column in tableHeader" class="col-{{column.key}} col-cell {{canOrderBy(column.key) ? 'ord' : ''}} {{orderClass(column.key)}}" @click="doOrderBy(column.key)">
           {{column.label || column.key}}
-        </th>
-        <th v-if="delete">
         </th>
       </tr>
       </thead>
@@ -20,23 +14,10 @@
         <td v-for="footerCell in footerRow" track-by="$index">
           {{footerCell}}
         </td>
-        <td v-if="delete"></td>
-      </tr>
-      <tr v-if="actionsArePresent" class="action-row">
-        <td class="smart-control-bar" colspan="{{span}}">
-          <span class="bottom-right-corner">&#8990;</span>
-          <select class="actions" v-model="action">
-            <option v-for="(key, label) in actions" value="{{key}}" class="action-label">{{label}}</option>
-          </select>
-          <button class="action-button" @click="next">Next...</button>
-        </td>
       </tr>
       </tfoot>
       <tbody>
-      <tr v-for="row in smartBody" class="row-{{row._id}}" track-by="_id" v-show="filteredRowsById[row._id] !== true">
-        <td v-if="actionsArePresent">
-          <input id="toggle-{{row._id}}" value="{{row._id}}" type="checkbox" v-model="selection"/>
-        </td>
+      <tr v-for="row in smartBody" class="row-{{row._id}}" track-by="_id" v-show="row._show !== false">
         <td
           v-for="col in row.cols"
           id="cell-{{row._id}}-{{col}}"
@@ -48,12 +29,8 @@
             </slot>
           </div>
         </td><!-- todo: when upgrading to 2.x.x put a th here for the mainCol -->
-        <td v-if="delete">
-          <button id="delete-{{row._id}}" @click="remove(row._id)">Delete</button>
-        </td>
       </tr>
       <tr v-if="addRow" class="row-new">
-        <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
         <td
           v-for="col in tableHeader"
           id="edit-cell-{{col.key}}"
@@ -67,7 +44,6 @@
             </slot>
           </div>
         </td>
-        <td v-if="delete"></td>
       </tr>
       </tbody>
     </table>
@@ -81,6 +57,7 @@
   import cssesc from 'css.escape'
   import PlainText from './PlainText'
   import Vue from 'vue'
+  import bodyParsing from './bodyParsing'
   Vue.component('plain-text', PlainText)
   export default {
     components: { Modal },
@@ -93,16 +70,14 @@
         backMatrix: {},
         newRowInput: {},
         scrolledPast: false,
-        filters: {},
         orderKey: undefined,
         reverseOrder: false,
         additionalTdClasses: [], // [col][id][class1, class2...]
         mandatory: [], // [col]true|false
         customEditChildrenByCol: {},
         addRowCompiled: {},
-        filterAll: '',
-        filteredRowsById: {}
-        // totals: undefined // footer line with totals
+        filters: [], // {key: 'column', value: 'value'}
+        pBody: []
       }
     },
     props: {
@@ -217,7 +192,7 @@
         return false
       },
       tableHeader () {
-        // WARNING: must not (and cannot) depend on processedSmartBody!
+        // WARNING: must not depend on pBody!
 
         // if not every column is a string return as is
         if (!this.header.every(col => typeof col === 'string' || col instanceof String)) {
@@ -265,68 +240,10 @@
         }
       },
       smartBody () {
-        return this.processedSmartBody.map(row => {
+        return this.pBody.map(row => {
           let cols = this.tableHeader.map(col => col.key)
-          // todo: _id should be already filtered if the table header is only strings
-          /* cols = cols
-            .filter(col => col !== '_id' || this.shouldShowId)*/
-          return {_id: row._id, cols}
+          return {_id: row._id, _show: row._show, cols}
         })
-      },
-      processedSmartBody () {
-        function getDataFromDotNotation (d, row) {
-          return d.split('.').reduce((o, i) => o[i], row)
-        }
-
-        if (this.body === undefined) {
-          this.body = []
-        }
-
-        // at least 1 row has id undefined, add them where it's not present
-        let counter = 0
-        this.body.forEach(row => {
-          let idValue = getDataFromDotNotation(this.idCol, row)
-          if ((idValue === undefined || idValue === null) && (row[this.idCol] === undefined || row[this.idCol] === null)) {
-            row[this.idCol] = 'smart_' + counter++
-          }
-        })
-
-        let smartBody = []
-
-        this.body.forEach(row => {
-          // filter unwanted columns
-          let finalRow = {}
-          this.tableHeader.forEach(col => {
-            let realColValue = {}
-            if (/\+/.test(col.key)) {
-              // it's a composite column will return an object
-              col.key.split('+').forEach(d => {
-                realColValue[d] = getDataFromDotNotation(d, row)
-              })
-            } else {
-              realColValue = getDataFromDotNotation(col.key, row)
-            }
-            finalRow[col.key] = realColValue
-          })
-          let idValue = getDataFromDotNotation(this.idCol, row)
-          let altIdValue = row[this.idCol]
-          finalRow._id = String(idValue || altIdValue)
-          smartBody.push(finalRow)
-        })
-        // filter body using gui filters
-        // todo: if filterable bla bla smartBody = filterRows(smartBody)
-        // filterAll
-        this.filteredRowsById = {}
-        this.canFilterBy.forEach(col => {
-          this.filterRows(smartBody, this.filterAll, col)
-        })
-        if (this.orderKey !== undefined) {
-        // this.tableHeader.find(col => col.key === this.sortKey) &&
-        // Object.keys(this.orderBy).indexOf(this.sortKey) !== -1) {
-          smartBody = this.sortRows(smartBody, this.orderKey, this.reverseOrder)
-        }
-
-        return smartBody
       },
       shouldShowId () {
         return this.tableHeader.find(col => col.key === '_id') !== undefined
@@ -359,74 +276,42 @@
       if (this.actions === undefined) {
         this.actions = {}
       }
-
-      // initialize filters
-      if (Array.isArray(this.canFilterBy)) {
-        let acc = {}
-        this.canFilterBy.forEach(col => (acc[col] = {open: false, model: ''}))
-        this.filters = acc
-      }
     },
-    compiled () {
+    ready () {
       // load data if auto-load set to true
       if (this.autoLoad === true) {
         this.refresh()
       } else {
-        this.updateInjectedValues()
+        this.makepBody()
+        this.$nextTick(() => {
+          this.updateInjectedValues()
+        })
       }
     },
     watch: {
       'body' () {
-        this.updateInjectedValues()
+        this.makepBody()
+        this.$nextTick(() => {
+          this.updateInjectedValues()
+        })
       }
     },
     methods: {
-      filterRows (smartBody, filterText, filterCol) {
-        return smartBody.forEach(row => {
-          if (row[filterCol].toLowerCase().indexOf(filterText.toLowerCase()) === -1) {
-            this.filteredRowsById[row._id] = true && (this.filteredRowsById[row._id] !== false)
-          } else {
-            this.filteredRowsById[row._id] = false
-          }
+      makepBody () {
+        if (this.body === undefined) {
+          this.body = []
+        }
+        let malleableBody = []
+        this.body.forEach(row => {
+          malleableBody.push(Object.assign({}, row, {_show: true}))
         })
+        Vue.set(this, 'pBody', malleableBody)
+        bodyParsing.derivedBody(this.pBody, this.tableHeader.map(c => c.key))
+        bodyParsing.bodyWithIds(this.pBody, this.idCol)
       },
-      sortRows (smartBody, sortKey, reverse) {
-        function numericCompare (row1, row2) {
-          let valA = row1[sortKey]
-          var valB = row2[sortKey]
-          if (valA === undefined || valB === undefined) {
-            return 0
-          }
-          return (valA - valB) * (reverse ? -1 : 1)
-        }
-        function lexicographicCompare (row1, row2) {
-          let valA = row1[sortKey]
-          var valB = row2[sortKey]
-          if (valA === undefined || valB === undefined) {
-            return 0
-          }
-          var r = (valA > valB) ? 1 : -1
-          return r * (reverse ? -1 : 1)
-        }
+      compareFunction (sortKey) {
         let child = this.$children.find(c => c.col === sortKey)
-        if (child.sortFunction !== undefined && typeof child.sortFunction === 'function') {
-          smartBody.sort(child.sortFunction)
-          return smartBody
-        }
-        let forceLexicographic = false
-        if (child.sortFunction !== undefined && typeof child.sortFunction === 'string') {
-          if (child.sortFunction === 'lexicographic') {
-            forceLexicographic = true
-          }
-        }
-
-        let everyRowIsNonNumeric = smartBody.every(r => !this.isNumeric(r[sortKey]))
-        if (everyRowIsNonNumeric | forceLexicographic) {
-          smartBody.sort(lexicographicCompare)
-        } else {
-          smartBody.sort(numericCompare)
-        }
-        return smartBody
+        return child.compareFunction
       },
       tdClasses (col, id) {
         let acc = ''
@@ -467,9 +352,6 @@
         if (this.autoRefresh) {
           this.refresh()
         }
-      },
-      openFilter (column) {
-        this.filters[column].open = true
       },
       saveNewRow () {
         if (this.canSaveNewRow) {
@@ -579,7 +461,10 @@
         let elsByColId = {}
         function byId (id) {
           return function (row) {
-            return row._id === id
+            // we cast row._id to string because we are going
+            // to extract id from a string, so there is no
+            // chance that it retains its original type
+            return String(row._id) === id
           }
         }
         father.tableHeader.map(c => c.key)
@@ -597,7 +482,7 @@
             }
             Object.keys(elsByColId[col]).forEach(id => {
               let child
-              let row = father.processedSmartBody.find(byId(id))
+              let row = father.pBody.find(byId(id))
               let escapedId = '#' + cssesc('value-' + id + '-' + col)
               if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
                 child = customChildrenByCol[col][id]
@@ -665,45 +550,6 @@
             })
           })
       },
-      toggleAllRows () {
-        if (this.toggleAll === false) {
-          this.toggleAll = true
-          this.selection = this.processedSmartBody.map(r => r._id)
-        } else {
-          this.toggleAll = false
-          this.selection = []
-        }
-      },
-      next () {
-        var actionKey = this.action
-        var actionLabel = this.actions[this.action]
-        var selectionKeyLabel = this.selection.map(rowId => {
-          let selectedRow = this.processedSmartBody.filter(row => row._id === rowId)[0]
-          if (selectedRow !== undefined) {
-            let rowLabel = selectedRow[this.mainCol]
-            return {key: rowId, label: rowLabel}
-          } else {
-            return null
-          }
-        }).filter(a => a !== null)
-        var commandToBeConfirmed = { action: { key: actionKey, label: actionLabel }, selection: selectionKeyLabel }
-        this.$broadcast('command', commandToBeConfirmed)
-      },
-      doCommand (command) {
-        this.$dispatch('before-request')
-
-        // special case
-        if (/^(_remove|_delete)$/i.test(command.action)) {
-          this.$http.delete(this.endpoint, command).then(this.onSuccess, this.onFailure)
-        } else {
-          this.$http.get(this.endpoint, command).then(this.onSuccess, this.onFailure)
-        }
-      },
-      remove (id) {
-        this.$dispatch('before-request')
-
-        this.$http.delete(this.endpoint + '/' + id).then(this.onSuccess, this.onFailure)
-      },
       // this field, if visible, should be editable and present in the new row
       isEditable (col) {
         return this.editable.indexOf(col) !== -1
@@ -768,6 +614,7 @@
           this.reverseOrder = false
         }
         this.orderKey = col
+        bodyParsing.sortedBody(this.pBody, col, this.reverseOrder, this.compareFunction(col))
       },
       orderClass (col) {
         if (this.orderKey === col && this.reverseOrder === false) {
@@ -843,7 +690,7 @@
         }
       },
       'filterAll' (text) {
-        this.filterAll = text
+        bodyParsing.filteredBody(this.pBody, text, this.canFilterBy)
       }
     }
   }

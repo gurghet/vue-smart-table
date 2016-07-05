@@ -8,7 +8,6 @@ function getDataFromDotNotation (d, row) {
 
 function derivedBody (body, cols) {
   return body.map(row => {
-    let newRow = {}
     cols.forEach(col => {
       let realColValue = {}
       if (/\+/.test(col)) {
@@ -19,9 +18,9 @@ function derivedBody (body, cols) {
       } else {
         realColValue = getDataFromDotNotation(col, row)
       }
-      newRow[col] = realColValue
+      row[col] = realColValue
     })
-    return newRow
+    return row
   })
 }
 
@@ -37,13 +36,13 @@ function bodyWithIds (body, idColKey) {
   let usedIds = []
   body.forEach(row => {
     let idValue = getDataFromDotNotation(idColKey, row)
-    if ((idValue === undefined || idValue === null) && (row[idColKey] === undefined)) {
+    if ((idValue === undefined || idValue === null) && (row[idColKey] === undefined || row[idColKey] === null)) {
       idValue = '_smart_' + counter++
     }
     if (usedIds.indexOf(idValue) !== -1) {
       idValue = String(idValue) + '-' + counter++
     }
-    row[idColKey] = idValue
+    row._id = idValue
     usedIds.push(idValue)
     Object.keys(row).forEach(p => {
       if (p.indexOf(' ') !== -1) {
@@ -57,38 +56,55 @@ function bodyWithIds (body, idColKey) {
   return body
 }
 
-function filteredBody (body, filter, colKey) {
+function assertShowReactive (row) {
+  if (row._show === undefined || ((Object.getOwnPropertyDescriptor(row, '_show').get === undefined) && row.____mut !== '')) {
+    console.error('[Smart Table Internal Error] Missing or non-reactive _show property, set the _show property before calling filteredBody and it has to be reactive')
+  }
+}
+
+function filteredBody (body, filter, colKeys) {
+  if (colKeys === undefined) {
+    throw new Error('[Smart Table Internal Error] Filtering scope not defined')
+  }
   if (typeof filter === 'function') {
-    if (colKey === undefined) {
-      throw new Error('[Smart Table Internal Error] Must scope filter with custom functions')
+    if (Array.isArray(colKeys)) {
+      throw new Error('[Smart Table Internal Error] When using custom function the filtering scope must be on a single column (namely the column of component that provides the function)')
     }
-    return body.map(row => {
+    let colKey = colKeys
+    return body.forEach(row => {
+      assertShowReactive(row)
       let val = getDataFromDotNotation(colKey, row)
       if (filter(val)) {
-        return Object.assign(row, { _show: row._show !== false && true })
+        row._show = true // row._show !== false
       } else {
-        return Object.assign(row, { _show: false })
+        row._show = false
       }
     })
   } else if (typeof filter === 'string') {
-    return body.map(row => {
+    return body.forEach(row => {
+      assertShowReactive(row)
       function someColumnContainsFilter () {
-        return Object.keys(row).some(col => {
-          return typeof row[col] === 'string' && row[col].indexOf(filter) !== -1 ||
-            typeof row[col] === 'number' && String(row[col]).indexOf(filter) !== -1
+        return colKeys.some(col => {
+          let val = getDataFromDotNotation(col, row)
+          let lowerCaseFilter = filter.toLowerCase()
+          let columnIsStringAndContainsFilter = typeof val === 'string' && val.toLowerCase().indexOf(lowerCaseFilter) !== -1
+          let columnIsNumberAndContainsFilterAsAString = typeof val === 'number' && String(val).indexOf(filter) !== -1
+          return columnIsStringAndContainsFilter || columnIsNumberAndContainsFilterAsAString
         })
       }
       function columnContainsFilter () {
+        let colKey = colKeys
         let val = getDataFromDotNotation(colKey, row)
-        return val !== undefined && val.indexOf(filter) !== -1
+        let lowerCaseFilter = filter.toLowerCase()
+        return val !== undefined && val.toLowerCase().indexOf(lowerCaseFilter) !== -1
       }
       if (
-        colKey === undefined && someColumnContainsFilter() || // global search
-        colKey !== undefined && columnContainsFilter()
+        Array.isArray(colKeys) && someColumnContainsFilter() || // global search
+        typeof colKeys === 'string' && columnContainsFilter()
       ) {
-        return Object.assign(row, { _show: row._show !== false && true })
+        row._show = true // row._show !== false
       } else {
-        return Object.assign(row, { _show: false })
+        row._show = false
       }
     })
   }

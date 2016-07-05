@@ -1,19 +1,16 @@
 /**
  * Created by gurghet on 21.05.16.
  */
-
 /* global describe, it, expect, beforeEach, chai */
 
 import Vue from 'vue'
 Vue.use(require('vue-resource'))
 Vue.config.debug = true
 import SmartTable from 'src/components/SmartTable'
-var $ = require('jquery')
 chai.use(require('chai-dom'))
 let testBody = [{_id: 0, name: 'Gennaro', age: 34}, {_id: 1, name: 'Marco', age: 22}]
 let testBody2 = [{_id: 1, name: 'Gennaro', age: 34}, {_id: 3, name: 'Marco', age: 22}]
 let testBody3 = [{_id: 1, bau: 'Gennaro', pau: 34}, {_id: 55, bau: 'Marco', pau: 22}]
-let testBodyId = [{id: 1, name: 'Gennaro', age: 34}, {id: 3, name: 'Marco', age: 22}]
 let testBodyNoId = [{name: 'Gennaro', age: 34}, {name: 'Marco', age: 22}]
 
 describe('SmartTable.vue', () => {
@@ -36,8 +33,8 @@ describe('SmartTable.vue', () => {
     }).$mount()
     expect(vm.$el.querySelectorAll('td').length).to.eql(4)
     vm.$nextTick(() => {
-      expect(vm.$el.querySelector('#value-smart_0-name')).to.contain.text('Gennaro')
-      expect(vm.$el.querySelector('#value-smart_1-name')).to.contain.text('Marco')
+      expect(vm.$el.querySelector('#value-_smart_0-name')).to.contain.text('Gennaro')
+      expect(vm.$el.querySelector('#value-_smart_1-name')).to.contain.text('Marco')
       done()
     })
   })
@@ -64,278 +61,6 @@ describe('SmartTable.vue', () => {
         done()
       })
     })
-  })
-  it('should select all the rows when selectAll turns on and no rows were selected', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody"></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody }
-    }).$mount()
-    vm.$children[0].toggleAllRows()
-    expect(vm.$children[0].selection).to.eql(['0', '1'])
-  })
-  it('should select all the rows when selectAll turns on and 1 row was selected', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody"></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody }
-    }).$mount()
-    vm.$children[0].selection = ['1']
-    vm.$children[0].toggleAllRows()
-    expect(vm.$children[0].selection).to.eql(['0', '1'])
-  })
-  it('should turn on and off selectAll when selectAllRows is called', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody"></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody }
-    }).$mount()
-    vm.$children[0].toggleAllRows()
-    expect(vm.$children[0].toggleAll).to.eql(true)
-    vm.$children[0].toggleAllRows()
-    expect(vm.$children[0].toggleAll).to.eql(false)
-  })
-  it('should deselect all the rows when selectAll turns off, toggleAll is true and all the rows were selected', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody"></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody }
-    }).$mount()
-    vm.$children[0].toggleAll = true
-    vm.$children[0].selection = ['1', '2']
-    vm.$children[0].toggleAllRows()
-    expect(vm.$children[0].selection).to.eql([])
-  })
-  it('should broadcast \'command\' with an action when command called', () => {
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        data () {
-          this.$parent.$refs['son'] = this
-          return {received: false}
-        },
-        events: {
-          'command' () {
-            this.received = true
-          }
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :actions="[\'act1\']"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBody }
-    }).$mount()
-    vm.$children[0].next()
-    expect(vm.$children[0].$refs.son.received).to.eql(true)
-  })
-  it('should broadcast \'command\' with an action when command called and id-col is set', () => {
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        data () {
-          this.$parent.$refs['son'] = this
-          return {received: false}
-        },
-        events: {
-          'command' () {
-            this.received = true
-          }
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBodyId" :actions="[\'act1\']" id-col="id"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBodyId }
-    }).$mount()
-    vm.$children[0].next()
-    expect(vm.$children[0].$refs.son.received).to.eql(true)
-  })
-  it('should broadcast \'command\' with an action key and label when command called (simple array case)', (done) => {
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        events: {
-          'command' (command) {
-            expect(command.action).to.eql({key: 'act1', label: 'act1'})
-            done()
-          }
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2" :actions="[\'act1\']"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBody2 }
-    }).$mount()
-    vm.$children[0].action = 'act1'
-    vm.$children[0].selection = [1, 3]
-    vm.$children[0].next()
-  })
-  it('should broadcast \'command\' with an action key and label when command called (object case)', (done) => {
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        events: {
-          'command' (command) {
-            expect(command.action).to.eql({key: 'action1', label: 'Save'})
-            done()
-          }
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2" :actions="testActions"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: {
-        testActions: {action1: 'Save', action2: 'Thisi is just a label'},
-        testBody2
-      }
-    }).$mount()
-    vm.$children[0].action = 'action1'
-    vm.$children[0].selection = ['1', '3']
-    vm.$children[0].next()
-  })
-  it('should broadcast \'command\' with an array of id and labels when command called ', (done) => {
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        events: {
-          'command' (command) {
-            expect(command.selection).to.eql([{key: '1', label: 'Gennaro'}, {key: '3', label: 'Marco'}])
-            done()
-          }
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2" :actions="[\'act1\']"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBody2 }
-    }).$mount()
-    vm.$children[0].action = 'act1'
-    vm.$children[0].selection = ['1', '3']
-    vm.$children[0].next()
-  })
-  it('should broadcast \'command\' with an array of id and labels when command called with id-col changed', (done) => {
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        events: {
-          'command' (command) {
-            expect(command.selection).to.eql([{key: '1', label: 'Gennaro'}, {key: '3', label: 'Marco'}])
-            done()
-          }
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBodyId" :actions="[\'act1\']" id-col="id" label-col="name"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBodyId }
-    }).$mount()
-    vm.$children[0].action = 'act1'
-    vm.$children[0].selection = ['1', '3']
-    vm.$children[0].next()
-  })
-  it('should extend an array of action names as an object', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :actions="[\'doge\',\'such test\']"></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody }
-    }).$mount()
-    expect(vm.$children[0].actions).to.eql({doge: 'doge', 'such test': 'such test'})
-  })
-  it('should broadcast the event \'command\' with correct parameters when action button is clicked', () => {
-    var a
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        events: {
-          'command' (command) { a = command }
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :actions="[\'doge\']"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBody }
-    }).$mount()
-    vm.$children[0].selection = ['1']
-    vm.$children[0].action = 'doge'
-    const button = vm.$el.querySelector('.action-button')
-    button.click()
-    expect(a.action.key).to.eql('doge')
-    expect(a.selection).to.eql([{key: '1', label: 'Marco'}])
-  })
-  it('should perform an http request with action and selection (and update the body) when confirm is received', (done) => {
-    Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift((req, next) => {
-      expect(req.params.action).to.eql('foo')
-      expect(req.params.selection).to.eql([1, 3])
-      next({
-        data: {body: [{_id: 1, name: 'maciccio', age: 88}]},
-        status: 200,
-        statusText: 'Ok'
-      })
-    })
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        created () {
-          this.$dispatch('confirm', {action: 'foo', selection: [1, 3]})
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBody2 }
-    }).$mount()
-    vm.$watch('$children[0].body', () => {
-      expect(vm.$children[0].body).to.eql([{_id: 1, name: 'maciccio', age: 88}])
-      done()
-    })
-  })
-  it('should set an error after requesting an action that returns 500', (done) => {
-    Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift((req, next) => {
-      next({
-        data: {error: 'error data'},
-        status: 500,
-        statusText: 'Nope'
-      })
-    })
-    const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-    const SmartTableWithMock = inject({
-      './Modal': {
-        created () {
-          this.$dispatch('confirm', {action: 'foo', selection: [1, 3]})
-        }
-      }
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2"></smart-table></div>',
-      components: {'smart-table': SmartTableWithMock},
-      data: { testBody2 }
-    }).$mount()
-    vm.$watch('$children[0].error', () => {
-      expect(vm.$children[0].error).to.eql({status: 500, data: 'error data'})
-      done()
-    })
-  })
-  it('it should display a combobox with 1 action in the footer', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="[{_id: 4, t:3}]" :actions="testActions"></smart-table></div>',
-      components: {SmartTable},
-      data: {
-        testActions: {wow: 'Doge'}
-      }
-    }).$mount()
-    expect(vm.$el.querySelector('.smart-control-bar select.actions').options.length).to.eql(1)
-    expect(vm.$el.querySelector('.smart-control-bar select.actions').options[0].value).to.eql('wow')
-    expect(vm.$el.querySelector('.smart-control-bar select.actions').options[0].text).to.eql('Doge')
   })
   it('should create a header with the keys as column if header not provided', () => {
     const vm = new Vue({
@@ -412,105 +137,6 @@ describe('SmartTable.vue', () => {
     expect(vm.$el.querySelectorAll('td').length).to.eql(2)
     expect(vm.$el.querySelector('#value-1-name\\+age')).to.exist
   })
-  // todo: bring this to e2e
-  /* it('double clicking a field should put it in edit mode', (done) => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :actions="[\'mela\']"></smart-table></div>',
-      components: {SmartTable},
-      data: {
-        testBody: {1: {name: 'Gennaro', age: 34}, 3: {name: 'Marco', age: 22}}
-      }
-    }).$mount()
-    var field = vm.$el.querySelector('#value-1-name')
-    expect(vm.$el.querySelectorAll('#value-1-name-edit input').length).to.eql(0)
-    vm.$nextTick(() => {
-      vm.$nextTick(() => {
-        expect(vm.$el.querySelectorAll('#value-1-name-edit input').length).to.eql(1)
-        done()
-      })
-    })
-    var event = new MouseEvent('dblclick', {
-      'view': window,
-      'bubbles': true,
-      'cancelable': true
-    })
-    field.dispatchEvent(event)
-  })
-  it('double clicking a second time should put it in edit mode', (done) => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :actions="[\'mela\']"></smart-table></div>',
-      components: {SmartTable},
-      data: {
-        testBody: {1: {name: 'Gennaro', age: 34}, 3: {name: 'Marco', age: 22}}
-      }
-    }).$mount()
-    var field1 = $(vm.$el).find('#cell-1-name')
-    field1.dblclick(() => {
-      vm.$nextTick(() => {
-        $(vm.$el).find('.modal-edit button.modal-cancel-button').click(() => {
-          vm.$nextTick(() => {
-            var field2 = $(vm.$el).find('#cell-3-name')
-            field2.dblclick(() => {
-              vm.$nextTick(() => {
-                expect(vm.$el.querySelectorAll('#value-3-name-edit input').length).to.eql(1)
-                done()
-              })
-            })
-            field2.get(0).dispatchEvent(event)
-          })
-        })
-        $(vm.$el).find('.modal-edit button.modal-cancel-button').get(0).click()
-      })
-    })
-    var event = new MouseEvent('dblclick', {
-      'view': window,
-      'bubbles': true,
-      'cancelable': true
-    })
-    field1.get(0).dispatchEvent(event)
-  })*/
-  /* xit('should show the undo button when modifying field successfully', (done) => {
-   Vue.http.interceptors.unshift({
-   request (request) {
-   request.client = (request) => {
-   var response = {request: request}
-   response.status = 200
-   response.data.body = {1: {name: 'Gennaro', age: 99}, 55: {name: 'Marco', age: 22}}
-   Vue.http.interceptors.shift()
-   return response
-   }
-   return request
-   }
-   })
-   const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-   const SmartTableWithMock = inject({
-   './ModalEdit': {
-   events: {
-   'modalEdit' (modalEdit) {
-   this.$dispatch('confirm', {
-   id: modalEdit.id,
-   col: modalEdit.col,
-   currentValue: modalEdit.currentValue,
-   previousValue: modalEdit.previousValue
-   })
-   this.$dispatch('close')
-   }
-   }
-   }
-   })
-   const vm = new Vue({
-   template: '<div><smart-table :body="testBody"></smart-table></div>',
-   components: {'smart-table': SmartTableWithMock},
-   data: {
-   testBody: {1: {name: 'Gennaro', age: 34}, 55: {name: 'Marco', age: 22}}
-   }
-   }).$mount()
-   vm.$children[0].valueClick(1, 'age')
-   vm.$watch('$children[0].backMatrix', () => {
-   expect(vm.$el.querySelectorAll('#undo-1-age').length).to.eql(1)
-   done()
-   }, {deep: true})
-   }) */
   it('main col should set age as main col when age is set and present in first row', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody2" label-col="age"></smart-table></div>',
@@ -544,46 +170,6 @@ describe('SmartTable.vue', () => {
       expect(vm.$el.querySelectorAll('.count')[2].textContent).to.contain('4')
     })
   })
-  /* it('should not attempt to update the body if http response body is empty', (done) => {
-   Vue.http.interceptors.unshift({
-   request (request) {
-   request.client = (request) => {
-   var response = {request: request}
-   response.status = 200
-   response.data.body = {}
-   response.data.success = 'generic success message'
-   Vue.http.interceptors.shift()
-   return response
-   }
-   return request
-   }
-   })
-   const inject = require('!!vue?inject!../../../src/components/SmartTable.vue')
-   const SmartTableWithMock = inject({
-   './Modal': {
-   created () {
-   this.$dispatch('confirm')
-   }
-   }
-   })
-   const vm = new Vue({
-   template: '<div><smart-table :body="testBody" @after-request="finish"></smart-table></div>',
-   components: {'smart-table': SmartTableWithMock},
-   data: {
-   testBody: {1: {name: 'Gennaro', age: 34}, 55: {name: 'Marco', age: 22}}
-   },
-   methods: {
-   finish () {
-   expect(this.$children[0].body[55].name).to.eql('Marco')
-   done()
-   }
-   }
-   }).$mount()
-   vm.$watch('$children[0].body', () => {
-   expect(Object.keys(vm.$children[0].body).length).to.eql(2)
-   done()
-   })
-   }) */
   it('should hide the smart actions if no actions are defined', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody2"></smart-table></div>',
@@ -592,16 +178,6 @@ describe('SmartTable.vue', () => {
     }).$mount()
     expect(vm.$el.querySelectorAll('.smart-control-bar').length).to.eql(0)
     expect(vm.$el.querySelectorAll('input[type="checkbox="]').length).to.eql(0)
-  })
-  // todo: move into PlainTextComponent
-  xit('should put into edit mode even if cell is empty', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :editable="[\'name\']" v-ref:ut></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody: [{_id: 0, name: 'Gennaro', age: 34}, {_id: 1, name: '', age: 22}] }
-    }).$mount()
-    vm.$children[0].valueClick('1', 'name')
-    expect(vm.$refs.ut.modalEdit).to.not.equal(undefined)
   })
   it('should show an ordered set of columns in the body if the header is an object with 2 swapped columns', () => {
     const vm = new Vue({
@@ -648,32 +224,20 @@ describe('SmartTable.vue', () => {
     expect(vm.$el.querySelectorAll('.footer-row td').length).to.eql(6)
     expect(vm.$el.querySelectorAll('.footer-row td')[3].textContent).to.contain('foot')
   })
-  xit('should filter by age', (done) => {
+  it('should filter by age', (done) => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody2" :can-filter-by="[\'age\']"  v-ref:ut></smart-table></div>',
       components: {'smart-table': SmartTable},
       data: { testBody2 }
     }).$mount()
-    // check that there is a filter gui
-    expect(vm.$el.querySelectorAll('.age-filter-cue').length).to.eql(1)
-    // simulate click and write '22' to its model
-    vm.$refs.ut.filters = {age: {open: true, model: '22'}}
     // check that there is only one row visible and that it contains the Marco row
+    vm.$broadcast('filterAll', '22')
     vm.$nextTick(() => {
-      expect(vm.$el.querySelector('.row-1')).to.be.null
-      expect(vm.$el.querySelector('.row-3')).not.to.null
-      expect(vm.$el.querySelector('#value-3-name')).not.to.null
+      expect(vm.$el.querySelector('.row-1')).not.to.be.visible
+      expect(vm.$el.querySelector('.row-3')).to.be.visible
+      expect(vm.$el.querySelector('#value-3-name')).to.be.visible
       done()
     })
-  })
-  it('should not show filter cue on age', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2"  v-ref:ut></smart-table></div>',
-      components: {'smart-table': SmartTable},
-      data: { testBody2 }
-    }).$mount()
-    // check that there is not a filter gui
-    expect(vm.$el.querySelectorAll('.age-filter-cue').length).to.eql(0)
   })
   it('should order the table numerically by age', (done) => {
     const vm = new Vue({
@@ -696,13 +260,13 @@ describe('SmartTable.vue', () => {
     }).$mount()
     // check that there is not a filter gui
     expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(34)
-    vm.$refs['ut'].doOrderBy('age')
+    vm.$refs.ut.doOrderBy('age')
     vm.$nextTick(() => {
       expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(22)
-      vm.$refs['ut'].doOrderBy('age')
+      vm.$refs.ut.doOrderBy('age')
       vm.$nextTick(() => {
         expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(34)
-        vm.$refs['ut'].doOrderBy('age')
+        vm.$refs.ut.doOrderBy('age')
         vm.$nextTick(() => {
           expect(vm.$refs.ut.processedSmartBody[0].age).to.equal(22)
           done()
@@ -725,19 +289,5 @@ describe('SmartTable.vue', () => {
         done()
       })
     })
-  })
-  xit('should report the total', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :sum="[\'age\']"  v-ref:ut></smart-table></div>',
-      components: {'smart-table': SmartTable},
-      data: { testBody2 }
-    }).$mount()
-
-    const ageTotal = $('#value-total-age', vm.$el)
-    // const nameTotal = $('#value-total-name', vm.$el)
-    expect(ageTotal).to.exist
-    console.info(ageTotal.innerHTML)
-    expect(ageTotal).to.have.html('56')
-    // expect(nameTotal).to.contain.text('')
   })
 })

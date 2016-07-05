@@ -34,6 +34,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       methods: {
         test () {
           vm.$nextTick(() => {
+            expect(vm.$el.querySelector('#value-3-name')).to.exist
             expect(vm.$el.querySelector('#value-3-name')).to.contain.text('Marco')
             done()
           })
@@ -223,7 +224,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       }
     }).$mount()
   })
-  it('should set the id to the dot notation \'id.SSN\' even when it is null', (done) => {
+  it('should set the id to the dot notation \'id.value\' even when id is null', (done) => {
     Vue.http.interceptors.shift()
     Vue.http.interceptors.unshift((req, next) => {
       next({
@@ -253,7 +254,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       methods: {
         test (event) {
           vm.$nextTick(() => {
-            expect(vm.$el.querySelector('#value-smart_0-name')).to.contain.text('john')
+            expect(vm.$el.querySelector('#value-_smart_0-name')).to.contain.text('john')
             done()
           })
         }
