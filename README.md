@@ -132,6 +132,10 @@ Here is a list of similar components that also display a table:
 
 ##Changelog
 
+###2.4.3
+
+- [Fix] Polyfill for find added for Chrome for Android
+
 ###2.4.2
 
 - [Fix] As a workaround for Safari, use explicitly CSS polyfill
