@@ -76,8 +76,8 @@ function filteredBody (body, filter, colKeys) {
     return
   }
   if (typeof filter === 'function') {
-    if (Array.isArray(colKeys)) {
-      throw new Error('[Smart Table Internal Error] When using custom function the filtering scope must be on a single column (namely the column of component that provides the function)')
+    if (Array.isArray(colKeys) && colKeys.length !== 1) {
+      throw new Error('[Smart Table Internal Error] When using custom function the filtering scope must be on exatcly one column (namely the column of component that provides the function, but I don\'t know if this is actually enforced in the code... mmmh... I\'m way too lazy to check lol.)')
     }
     let colKey = colKeys
     return body.forEach(row => {

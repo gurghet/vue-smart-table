@@ -74,12 +74,6 @@
       },
       autoLoad: Boolean,
       autoRefresh: Boolean,
-      canFilterBy: {
-        type: Array,
-        default () {
-          return []
-        }
-      },
       header: {
         type: Array,
         default () {
@@ -252,7 +246,8 @@
         let tag = el.tagName.toLowerCase()
         let col = el.attributes.col.value
         if (commonTagRE.test(tag)) {
-          console.error('[Smart Table Usage Error] HTML element"' + tag + '" cannot be a component. Skipping')
+          console.error('[Smart Table Usage Error] HTML element"' + tag +
+          '" cannot be a component. Skipping')
           return
         }
         // the plain-text is an exception because we don't expect the user to register a built-in component
@@ -264,7 +259,9 @@
                   this.$root.$options.components[pascalCase(tag)]
 
         if (res === undefined) {
-          console.error('[Smart Table Usage Error] Component "' + tag + '" was not found. Skipping')
+          console.error('[Smart Table Usage Error] Component "' + tag +
+          '" was not found. Make sure the component is registered before ' +
+          'you instantiate your root Vue instance. Skipping')
           return
         }
         this.column2stampMap[col] = {
@@ -566,8 +563,8 @@
           }, 120)
         }
       },
-      'filterAll' (text) {
-        bodyParsing.filteredBody(this.pBody, text, this.canFilterBy)
+      'filter' ({filter, col}) {
+        bodyParsing.filteredBody(this.pBody, filter, col)
       }
     }
   }
