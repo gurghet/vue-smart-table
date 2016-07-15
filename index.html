@@ -57,9 +57,9 @@
              the full country name! -->
     </smart-table>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.26/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.8.0/vue-resource.js"></script>
-<script src="dist/static/vue-smart-table.js"></script>
+<script src="https://npmcdn.com/vue-smart-table@2.4.3/dist/static/vue-smart-table.js"></script>
 <script>
     new Vue({el: '#app'})
 
@@ -79,7 +79,7 @@
     Vue.component('nationality', {
         template: "<p>{{value}}</p>",
         watch: {
-            'value' (val) {
+            'value': function (val) {
                 if (val.length !== 2) { return }
                 this.$http.get('https://restcountries.eu/rest/v1/alpha/' + val)
                         .then(function(res) { this.$set('value', res.data.name) })
