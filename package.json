@@ -1,6 +1,6 @@
 {
   "name": "vue-smart-table",
-  "version": "2.5.0-alpha1",
+  "version": "2.5.0-alpha2",
   "description": "A table with dynamic components for vue.js",
   "main": "src/components/SmartTable.vue",
   "author": "Andrea Passaglia <gurghet@gmail.com>",
@@ -47,6 +47,7 @@
     "chai-dom": "^1.4.0",
     "chromedriver": "^2.21.2",
     "connect-history-api-fallback": "^1.1.0",
+    "core-js": "^2.4.0",
     "cross-spawn": "^2.1.5",
     "css-loader": "^0.23.0",
     "eslint": "^2.0.0",
