@@ -1,36 +1,25 @@
 <template>
   <div class="smart-table table-responsive">
+    <slot><!--here all the custom components will end--></slot>
     <table :class="tableClassesProcessed">
       <thead>
       <tr>
-        <th v-for="column in tableHeader" class="col-{{column.key}} col-cell {{canOrderBy(column.key) ? 'ord' : ''}} {{orderClass(column.key)}}" @click="doOrderBy(column.key)">
-          {{column.label || column.key}}
+        <th v-for="col in tableHeader" class="col-{{col.key}} col-cell {{canOrderBy(col.key) ? 'ord' : ''}} {{orderClass(col.key)}}" @click="doOrderBy(col.key)" track-by="key">
+          {{col.label || col.key}}
         </th>
       </tr>
       </thead>
-      <tfoot>
-      <tr v-for="footerRow in processedFooter" class="footer-row">
-        <td v-if="actionsArePresent"><!-- to match the toggle checkboxes --></td>
-        <td v-for="footerCell in footerRow" track-by="$index">
-          {{footerCell}}
-        </td>
-      </tr>
-      </tfoot>
       <tbody>
-      <tr v-for="row in smartBody" class="row-{{row._id}}" track-by="_id" v-show="row._show !== false">
+      <tr v-for="row in pBody" id="row-{{row._id}}" track-by="_id" v-show="row._show">
         <td
-          v-for="col in row.cols"
-          id="cell-{{row._id}}-{{col}}"
-          :class="tdClasses(col, row._id) + ' cell-' + col"
+          v-for="col in tableHeader"
+          track-by="key"
+          :id="'cell-' + row._id + '-' + col.key"
+          :class="tdClasses(col.key, row._id) + ' value-cell cell-' + col.key"
         >
-          <div id="value-{{row._id}}-{{col}}">
-            <slot :name="col">
-              {{placeholder}}
-            </slot>
-          </div>
-        </td><!-- todo: when upgrading to 2.x.x put a th here for the mainCol -->
+        </td><!-- todo: when upgrading to vue 2.x.x put a th here for the mainCol -->
       </tr>
-      <tr v-if="addRow" class="row-new">
+      <!--tr v-if="addRow" class="row-new">
         <td
           v-for="col in tableHeader"
           id="edit-cell-{{col.key}}"
@@ -44,40 +33,38 @@
             </slot>
           </div>
         </td>
-      </tr>
+      </tr-->
       </tbody>
     </table>
-    <div class="add-row-button" v-show="canSaveNewRow"><button class="ui button" @click="saveNewRow">Add Row</button></div>
+    <!--div class="add-row-button" v-show="canSaveNewRow"><button class="ui button" @click="saveNewRow">Add Row</button></div-->
     <div class="error-panel" v-show="error">{{error | json}}</div>
   </div>
 </template>
 
 <script lang="babel">
-  import Modal from './Modal'
-  import cssesc from 'css.escape'
   import PlainText from './PlainText'
   import Vue from 'vue'
   import bodyParsing from './bodyParsing'
+  var pascalCase = require('pascal-case')
+  var camelCase = require('camel-case')
   Vue.component('plain-text', PlainText)
+  const commonTagRE = /^(div|p|span|img|a|b|i|br|ul|ol|li|h1|h2|h3|h4|h5|h6|code|pre|table|th|td|tr|form|label|input|select|option|nav|article|section|header|footer)$/i
   export default {
-    components: { Modal },
+    name: 'VueSmartTable',
     data () {
       return {
-        toggleAll: false,
-        action: undefined,
-        selection: [],
         error: false,
-        backMatrix: {},
-        newRowInput: {},
-        scrolledPast: false,
+        // newRowInput: {},
         orderKey: undefined,
         reverseOrder: false,
         additionalTdClasses: [], // [col][id][class1, class2...]
         mandatory: [], // [col]true|false
-        customEditChildrenByCol: {},
-        addRowCompiled: {},
+        // customEditChildrenByCol: {},
+        // addRowCompiled: {},
         filters: [], // {key: 'column', value: 'value'}
-        pBody: []
+        pBody: [],
+        elHarvest: [],
+        column2stampMap: {}
       }
     },
     props: {
@@ -99,19 +86,20 @@
           return []
         }
       },
-      orderBy: Array,
+      orderBy: {
+        type: Array,
+        default () {
+          return []
+        }
+      },
       idCol: {
         type: String,
         required: false,
         default: '_id'
       },
-      'delete': {
-        type: Boolean,
-        default: false
-      },
-      footer: {
+      /* footer: {
         required: false
-      },
+      },*/
       bodyPath: {
         type: String,
         default: 'body'
@@ -121,7 +109,7 @@
         required: false,
         default: undefined
       },
-      actions: [Object, Array],
+      // actions: [Object, Array],
       endpoint: {
         type: String,
         default: 'http://localhost:8080'
@@ -150,13 +138,13 @@
         }
       },
       tableClassesProcessed () {
-        if (this.orderBy !== {}) {
+        if (this.orderBy !== []) {
           return 'sortable ' + this.tableClasses
         } else {
           return this.tableClasses
         }
       },
-      processedFooter () {
+      /* processedFooter () {
         if (this.footer === undefined) {
           return []
         }
@@ -171,7 +159,7 @@
         if (typeof this.footer === 'object') {
           return this.footer
         }
-      },
+      },*/
       mandatoryFields () {
         return this.tableHeader.filter(col => this.isMandatoryField(col.key))
       },
@@ -181,15 +169,6 @@
       // fields that right now are visible and editable and should present themselves in the new row if present
       editableFields () {
         return this.tableHeader.filter(col => this.isEditable(col.key))
-      },
-      actionsArePresent () {
-        if (Array.isArray(this.actions) && this.actions.length > 0) {
-          return true
-        }
-        if (this.actions instanceof Object && Object.keys(this.actions).length > 0) {
-          return true
-        }
-        return false
       },
       tableHeader () {
         // WARNING: must not depend on pBody!
@@ -239,61 +218,71 @@
           return this.labelCol
         }
       },
-      smartBody () {
-        return this.pBody.map(row => {
-          let cols = this.tableHeader.map(col => col.key)
-          return {_id: row._id, _show: row._show, cols}
-        })
-      },
       shouldShowId () {
         return this.tableHeader.find(col => col.key === '_id') !== undefined
-      },
-      span () {
-        return this.tableHeader.length + 1 + (this.delete ? 1 : 0)
       }
     },
     beforeCompile () {
       if ((this.body === undefined || this.body.length < 1) && this.autoLoad === false) {
-        console.warn('Body passed is empty, if you want to load data set auto-load to true')
+        console.warn('[Smart Table Usage Warning] Body passed is empty, if you want to load data set auto-load to true')
       }
 
-      // if orderBy is not an object turn it into one
-      if (Array.isArray(this.orderBy)) {
-        var orderByObj = {}
-        this.orderBy.forEach(el => { orderByObj[el] = {} })
-        this.orderBy = orderByObj
-      }
-      if (this.orderBy === undefined) {
-        this.orderBy = {}
+      if (this.autoLoad === false) {
+        this.makepBody()
       }
 
-      // if actions is not an object, it doesn't have labels
-      if (Array.isArray(this.actions)) {
-        var actionsObj = {}
-        this.actions.forEach(el => (actionsObj[el] = el))
-        this.actions = actionsObj
+      // Deprecation warning for slot
+      // todo: _content is not available in vue 2.x.x, _renderChildren should be
+      // used as a second option (maybe with duck typing to sense the vue version)
+      if (this.$options._content !== undefined) {
+        Array.from(this.$options._content.querySelectorAll('[slot]')).forEach(el => {
+          console.warn('[Smart Table Deprecation Warning] "slot" is deprecated use "col" instead')
+          el.setAttribute('col', el.getAttribute('slot'))
+        })
+        // Harvest all the custom components from the slot
+        Array.from(this.$options._content.querySelectorAll('[col]')).forEach(el => {
+          this.elHarvest.push(this.$options._content.removeChild(el))
+        })
+        // Drain spurious elements draining the slot
+        this.$options._content.innerHTML = ''
       }
-      if (this.actions === undefined) {
-        this.actions = {}
-      }
+
+      // build stamp library
+      this.elHarvest.forEach(el => {
+        let tag = el.tagName.toLowerCase()
+        let col = el.attributes.col.value
+        if (commonTagRE.test(tag)) {
+          console.error('[Smart Table Usage Error] HTML element"' + tag + '" cannot be a component. Skipping')
+          return
+        }
+        // the plain-text is an exception because we don't expect the user to register a built-in component
+        // so we won't find it in the $root's components let's add it manually
+        this.$root.$options.components.PlainText = Vue.extend(PlainText)
+
+        let res = this.$root.$options.components[tag] ||
+                  this.$root.$options.components[camelCase(tag)] ||
+                  this.$root.$options.components[pascalCase(tag)]
+
+        if (res === undefined) {
+          console.error('[Smart Table Usage Error] Component "' + tag + '" was not found. Skipping')
+          return
+        }
+        this.column2stampMap[col] = {
+          el () { return el.cloneNode(true) },
+          Ctor: res
+        }
+      })
     },
-    ready () {
-      // load data if auto-load set to true
+    compiled () {
       if (this.autoLoad === true) {
         this.refresh()
       } else {
-        this.makepBody()
-        this.$nextTick(() => {
-          this.updateInjectedValues()
-        })
+        this.updateInjectedValues()
       }
     },
     watch: {
       'body' () {
         this.makepBody()
-        this.$nextTick(() => {
-          this.updateInjectedValues()
-        })
       }
     },
     methods: {
@@ -308,6 +297,9 @@
         Vue.set(this, 'pBody', malleableBody)
         bodyParsing.derivedBody(this.pBody, this.tableHeader.map(c => c.key))
         bodyParsing.bodyWithIds(this.pBody, this.idCol)
+        // this.$nextTick(() => {
+        this.updateInjectedValues()
+        // })
       },
       compareFunction (sortKey) {
         let child = this.$children.find(c => c.col === sortKey)
@@ -337,7 +329,7 @@
             retBody = response.data[this.bodyPath]
           }
           Vue.set(this, 'body', retBody)
-          this.$set('footer', response.data.footer)
+          this.makepBody()
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
           this.$set('error', false)
@@ -371,94 +363,14 @@
       },
       validate (col, value) {
         return (value !== undefined && value !== '')
-        // todo: more complex validation
+        // todo: hook for external validation
       },
-      injectEditComponentForCol (col) {
-        let father = this
-        let child
-        let escapedEditCol = cssesc('edit-new-' + col)
-        if (father.customEditChildrenByCol[col] === undefined) {
-          if (!father.isMandatoryField(col) && !father.isEditable(col)) {
-            this.addRowCompiled[col] = true
-            return
-          }
-          // no component for column, default on built-in PlainText
-          Object.keys(PlainText.props).forEach(p => (PlainText.props[p].coerce = undefined))
-          let PlainTextConstructor = Vue.extend(PlainText)
-          child = new PlainTextConstructor({
-            el: father.$el.querySelector('#' + escapedEditCol),
-            parent: father
-          })
-        } else {
-          child = father.customEditChildrenByCol[col]
-          if (!father.isMandatoryField(col) && !father.isEditable(col)) {
-            if (child !== undefined) {
-              child.$destroy(true)
-              father.customEditChildrenByCol[col] = undefined
-              this.addRowCompiled[col] = true
-              return
-            }
-          }
-          let initialProps = child.$options.props
-          if (child._props !== undefined) {
-            let propKeys = Object.keys(child._props)
-            let propValues = {}
-            propKeys.forEach(k => (propValues[k] = child[k]))
-            let additionalFunctions = propKeys.map(k => function coerce () { return child[k] })
-            Object.keys(initialProps).forEach((p, i) => (initialProps[p].coerce = additionalFunctions[i]))
-          }
-          let mix = {
-            methods: {
-              enterEditMode () {
-                this.$dispatch('enterEditMode', {id: this.id, col: this.col})
-              },
-              saveNewValue () {
-                this.$dispatch('saveNewValue', {id: this.id, col: this.col})
-              },
-              cancel () {
-                this.$dispatch('cancel', {id: this.id, col: this.col})
-              }
-            }
-          }
-          let options = Object.assign({}, child.$options, {
-            mixins: [mix],
-            el () {
-              return father.$el.querySelector('#' + escapedEditCol)
-            },
-            props: initialProps
-          })
-          let Constru = Vue.extend(options)
-          child.$destroy()
-          child = new Constru({
-            parent: father
-          })
-        }
-        Vue.set(child, 'id', '____add-row')
-        Vue.set(child, 'col', col)
-        Vue.set(child, 'mode', 'edit')
-        Vue.set(child, 'mandatory', this.isMandatoryField(col))
-        this.addRowCompiled[col] = true
-      },
+      /**
+       * Wait before the table actually finishes rendering
+       * before calling this function since it writes only
+       * based on what it finds on the DOM
+       */
       updateInjectedValues () {
-        let father = this
-        let customChildrenByCol = {}
-        father.$children.forEach(c => {
-          if (/^edit/.test(c.$el.parentElement.id)) {
-            let col = c.$el.parentElement.id.match(/^edit-(?:new|cell)-([a-zA-Z0-9.+]+)/)[1]
-            if (this.customEditChildrenByCol[col] === undefined) {
-              this.customEditChildrenByCol[col] = c
-            }
-          }
-          if (/^value/.test(c.$el.parentElement.id)) {
-            let id = c.$el.parentElement.id.match(/^value-([a-zA-Z0-9 ._-]+)-/)[1]
-            let col = c.$el.parentElement.id.match(/^value-[a-zA-Z0-9 ._-]+-([a-zA-Z0-9.+]+)$/)[1]
-            if (customChildrenByCol[col] === undefined) {
-              customChildrenByCol[col] = {}
-            }
-            customChildrenByCol[col][id] = c
-          }
-        })
-        let elsByColId = {}
         function byId (id) {
           return function (row) {
             // we cast row._id to string because we are going
@@ -467,88 +379,54 @@
             return String(row._id) === id
           }
         }
-        father.tableHeader.map(c => c.key)
-          .forEach(col => {
-            let escapedCol = cssesc(col)
-            if (father.addRow === true && (father.addRowCompiled[col] === false || father.addRowCompiled[col] === undefined)) {
-              father.injectEditComponentForCol(col)
+        let smartTable = this
+        Array.from(this.$el.querySelectorAll('.value-cell')).forEach(cellEl => {
+          let [, id, col] = cellEl.id.match(/^cell-([a-zA-Z0-9 ._-]+)-([a-zA-Z0-9.+]+)$/)
+          let comp = this.$children.find(c => c.id === id && c.col === col)
+          if (comp === undefined) {
+            // new, create!
+            let dataMixin = {
+              data () {
+                let defaultValue = this.constructor.options.data ? this.constructor.options.data().value : undefined
+                return {
+                  editable: smartTable.isEditable(col),
+                  value: smartTable.pBody.find(byId(id))[col] || defaultValue,
+                  mode: 'readOnly',
+                  col,
+                  id
+                }
+              }
             }
-            if (elsByColId[col] === undefined) {
-              elsByColId[col] = {}
-              Array.from(father.$el.querySelectorAll('.cell-' + escapedCol)).forEach(cell => {
-                let id = cell.id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1]
-                elsByColId[col][id] = cell
-              })
+            let smartMethods = {
+              methods: {
+                enterEditMode () {
+                  this.$dispatch('enterEditMode', {id: this.id, col: this.col})
+                },
+                saveNewValue () {
+                  this.$dispatch('saveNewValue', {id: this.id, col: this.col})
+                },
+                cancel () {
+                  this.$dispatch('cancel', {id: this.id, col: this.col})
+                }
+              }
             }
-            Object.keys(elsByColId[col]).forEach(id => {
-              let child
-              let row = father.pBody.find(byId(id))
-              let escapedId = '#' + cssesc('value-' + id + '-' + col)
-              if (customChildrenByCol[col] !== undefined && customChildrenByCol[col][id] !== undefined) {
-                child = customChildrenByCol[col][id]
-                let initialProps = child.$options.props
-                if (child._props !== undefined) {
-                  let propKeys = Object.keys(child._props)
-                  let propValues = {}
-                  propKeys.forEach(k => (propValues[k] = child[k]))
-                  let additionalFunctions = propKeys.map(k => function coerce () { return child[k] })
-                  Object.keys(initialProps).forEach((p, i) => (initialProps[p].coerce = additionalFunctions[i]))
-                }
-                let mix = {
-                  methods: {
-                    enterEditMode () {
-                      this.$dispatch('enterEditMode', {id: this.id, col: this.col})
-                    },
-                    saveNewValue () {
-                      this.$dispatch('saveNewValue', {id: this.id, col: this.col})
-                    },
-                    cancel () {
-                      this.$dispatch('cancel', {id: this.id, col: this.col})
-                    }
-                  }
-                }
-                let options = Object.assign({}, child.$options, {
-                  mixins: [mix],
-                  el () {
-                    return father.$el.querySelector(escapedId)
-                  },
-                  props: initialProps
-                })
-                let Constru = Vue.extend(options)
-                child.$destroy()
-                child = new Constru({
-                  parent: father
-                })
-              } else {
-                // no custom component default on built-in PlainText
-                Object.keys(PlainText.props).forEach(p => (PlainText.props[p].coerce = undefined))
-                let PlainTextConstructor = Vue.extend(PlainText)
-                child = new PlainTextConstructor({
-                  el: father.$el.querySelector(escapedId),
-                  // having father in the argument ensures that this works even if smart table is not mounted in the DOM
-                  parent: father
-                })
-                if (father.$el.querySelector(escapedId) === undefined) {
-                  console.error('could not find element "' + escapedId + '"')
-                  return
-                }
-              }
-              if (child === undefined) {
-                console.error('no child component found for id ' + id.match(/^cell-([a-zA-Z0-9 ._-]+)-/)[1])
-                return
-              }
-              Vue.set(child, 'id', id)
-              Vue.set(child, 'col', col)
-              Vue.set(child, 'mode', 'readOnly')
-              Vue.set(child, 'value', row[col])
-              // Vue.set(child, 'newValue', row[col])
-              Vue.set(child, 'editable', father.isEditable(col))
-              if (father.additionalTdClasses[col] === undefined) {
-                father.additionalTdClasses[col] = []
-              }
-              father.additionalTdClasses[col][id] = child.tdClasses || []
+            let compOptions = Object.assign({
+              el: smartTable.column2stampMap[col] ? smartTable.column2stampMap[col].el : document.createElement('plain-text'),
+              mixins: [dataMixin, smartMethods],
+              parent: smartTable
             })
-          })
+            let Ctor = this.column2stampMap[col] ? this.column2stampMap[col].Ctor : Vue.extend(PlainText)
+            comp = new Ctor(compOptions)
+            // manually appending the child
+            cellEl.appendChild(comp.$el)
+            // manually appending will not trigger normal
+            // ready hook, fire the hook:attached event manually
+            comp.$dispatch('hook:attached')
+          } else {
+            // old, refresh
+            comp.value = smartTable.pBody.find(byId(id))[col] || comp.Ctor.options.data().value
+          }
+        })
       },
       // this field, if visible, should be editable and present in the new row
       isEditable (col) {
@@ -626,7 +504,7 @@
         return ''
       },
       canOrderBy (col) {
-        return Object.keys(this.orderBy).indexOf(col) !== -1
+        return this.orderBy.indexOf(col) !== -1
       },
       isNumeric (n) {
         return !!(+('1' + n) || +(n + '1')) && !Array.isArray(n) && isFinite(n) && (n !== '')
@@ -645,7 +523,6 @@
         }
         if (body !== undefined || body === {}) {
           this.$set('body', body)
-          this.$set('footer', response.data.footer)
         }
         this.$dispatch('successful-request')
         this.$dispatch('after-request')

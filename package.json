@@ -28,7 +28,8 @@
     "smart"
   ],
   "dependencies": {
-    "css.escape": "^1.5.0"
+    "camel-case": "^3.0.0",
+    "pascal-case": "^2.0.0"
   },
   "peerDependencies": {
     "vue": "1.0.26",

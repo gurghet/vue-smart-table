@@ -281,6 +281,22 @@ describe('filteredBody', () => {
     let result = () => bodyParsing.filteredBody(excel, filter)
     result.should.throw(Error)
   })
+
+  it('should leave body unchanged if scope is an empty array', () => {
+    let tooMany = [
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
+    ]
+    bodyParsing.filteredBody(tooMany, 'c', [])
+    tooMany.should.eql([
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
+    ])
+  })
 })
 
 describe('sortedBody', () => {

@@ -27,6 +27,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       })
     })
     const vm = new Vue({
+      replace: false,
       template: '<div><smart-table :auto-load="true" @successful-request="test"></smart-table></div>',
       components: {
         'smart-table': SmartTable
@@ -34,40 +35,10 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       methods: {
         test () {
           vm.$nextTick(() => {
-            expect(vm.$el.querySelector('#value-3-name')).to.exist
-            expect(vm.$el.querySelector('#value-3-name')).to.contain.text('Marco')
+            expect(vm.$el.querySelector('#cell-3-name')).to.exist
+            expect(vm.$el.querySelector('#cell-3-name')).to.contain.text('Marco')
             done()
           })
-        }
-      }
-    }).$mount()
-  })
-  it('should load data automatically on refresh', (done) => {
-    let counter = 0
-    Vue.http.interceptors.shift()
-    Vue.http.interceptors.unshift((req, next) => {
-      counter++
-      next({
-        data: {body: testBody},
-        status: 200,
-        statusText: 'Ok'
-      })
-    })
-    const vm = new Vue({
-      template: '<div><smart-table :auto-load="true" @successful-request="test" :auto-refresh="true"></smart-table></div>',
-      components: {
-        'smart-table': SmartTable
-      },
-      methods: {
-        test () {
-          if (counter === 1) {
-            vm.$nextTick(() => {
-              expect(vm.$el.querySelector('#value-3-name')).to.contain.text('Marco')
-              vm.$children[0].doCommand({action: 'foo', selection: [1, 2]})
-            })
-          } else if (counter === 3) {
-            done()
-          }
         }
       }
     }).$mount()
@@ -118,7 +89,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       methods: {
         test (event) {
           vm.$nextTick(() => {
-            expect(vm.$el.querySelector('#value-476-name')).to.contain.text('john')
+            expect(vm.$el.querySelector('#cell-476-name')).to.contain.text('john')
             done()
           })
         }
@@ -152,7 +123,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       methods: {
         test (event) {
           vm.$nextTick(() => {
-            expect(vm.$el.querySelector('#value-98-name')).to.contain.text('john')
+            expect(vm.$el.querySelector('#cell-98-name')).to.contain.text('john')
             done()
           })
         }
@@ -180,7 +151,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       methods: {
         test (event) {
           vm.$nextTick(() => {
-            expect(vm.$el.querySelector('#value-98-name')).to.contain.text('john')
+            expect(vm.$el.querySelector('#cell-98-name')).to.contain.text('john')
             done()
           })
         }
@@ -217,7 +188,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       methods: {
         test (event) {
           vm.$nextTick(() => {
-            expect(vm.$el.querySelector('#value-476B-name')).to.contain.text('john')
+            expect(vm.$el.querySelector('#cell-476B-name')).to.contain.text('john')
             done()
           })
         }
@@ -254,7 +225,7 @@ describe('Asyncronous resource loading when "auto-load" is set to true', () => {
       methods: {
         test (event) {
           vm.$nextTick(() => {
-            expect(vm.$el.querySelector('#value-_smart_0-name')).to.contain.text('john')
+            expect(vm.$el.querySelector('#cell-_smart_0-name')).to.contain.text('john')
             done()
           })
         }

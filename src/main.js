@@ -20,9 +20,6 @@ new Vue({
   watch: {
     'search' (val) {
       this.$broadcast('filterAll', val)
-      // this.$dispatch('filterAll', val)
-      // this.$emit('filterAll', val)
-      console.log('fi>>>')
     }
   },
   components: { SmartTable, Src2img, Contacts, Nationality, Fontawesome, ExampleComponent }

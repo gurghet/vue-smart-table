@@ -66,6 +66,15 @@ function filteredBody (body, filter, colKeys) {
   if (colKeys === undefined) {
     throw new Error('[Smart Table Internal Error] Filtering scope not defined')
   }
+  if (colKeys.length === 0) {
+    // no scoping => no filtering
+    // this is to treat the most common case
+    // in which no filterable columns are
+    // defined, it also incidentally
+    // catches the case in which the scope is
+    // a malformed empty column
+    return
+  }
   if (typeof filter === 'function') {
     if (Array.isArray(colKeys)) {
       throw new Error('[Smart Table Internal Error] When using custom function the filtering scope must be on a single column (namely the column of component that provides the function)')
