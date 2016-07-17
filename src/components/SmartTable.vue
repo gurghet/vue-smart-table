@@ -10,7 +10,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="row in pBody" id="row-{{row._id}}" track-by="_id" v-show="row._show">
+      <tr v-for="row in pBody" id="row-{{row._id}}" track-by="_id" :class="trClasses(row._id, row._show)">
         <td
           v-for="col in tableHeader"
           track-by="key"
@@ -59,9 +59,7 @@
         reverseOrder: false,
         additionalTdClasses: [], // [col][id][class1, class2...]
         mandatory: [], // [col]true|false
-        // customEditChildrenByCol: {},
-        // addRowCompiled: {},
-        filters: [], // {key: 'column', value: 'value'}
+        filters: [], // {filter: string or function, col: string or array of strings}
         pBody: [],
         elHarvest: [],
         column2stampMap: {}
@@ -101,7 +99,9 @@
       body: {
         type: Array,
         required: false,
-        default: undefined
+        default () {
+          return []
+        }
       },
       // actions: [Object, Array],
       endpoint: {
@@ -178,9 +178,6 @@
         // else, the header is an array of strings, build one
         // 1. check that the header has the same number of columns as the body
         let body = this.body
-        if (this.body === undefined) {
-          body = []
-        }
         // columns is the set of all the columns in the body
         let columns = [...new Set([].concat.apply([], body.map(row => Object.keys(row))))]
         // filter hidden columns (columns with keys that start with underscore)
@@ -284,9 +281,6 @@
     },
     methods: {
       makepBody () {
-        if (this.body === undefined) {
-          this.body = []
-        }
         let malleableBody = []
         this.body.forEach(row => {
           malleableBody.push(Object.assign({}, row, {_show: true}))
@@ -315,6 +309,13 @@
         }
         this.additionalTdClasses[col][id].forEach(additionalTdClass => (acc += ' ' + additionalTdClass))
         return acc
+      },
+      trClasses (id, show) {
+        if (show) {
+          return ''
+        } else {
+          return 'smart-filter custom-filter'
+        }
       },
       refresh () {
         this.$dispatch('before-request')
@@ -564,7 +565,30 @@
         }
       },
       'filter' ({filter, col}) {
-        bodyParsing.filteredBody(this.pBody, filter, col)
+        // update or create the filter
+        let currentFilter = this.filters.find(f => f.col === col)
+        if (currentFilter === undefined) {
+          // no existing filter, new!
+          this.filters.push({filter, col})
+        } else {
+          this.filters.splice(this.filters.indexOf(currentFilter), 1)
+          this.filters.push({filter, col})
+        }
+        let cumulative = false
+        this.filters.forEach(f => {
+          let filter = f.filter
+          let col = f.col
+          // intercept the filter in case we have a custom component to
+          // check if they have a custom filter function
+          if (typeof col === 'string' || col.length === 1 && Array.isArray(col)) {
+            let comp = this.$children.find(c => c.col === col)
+            if (comp && comp.filterFunction !== undefined) {
+              filter = comp.filterFunction(filter)
+            }
+          }
+          bodyParsing.filteredBody(this.pBody, filter, col, cumulative)
+          cumulative = true
+        })
       }
     }
   }

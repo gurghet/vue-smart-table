@@ -231,16 +231,65 @@ describe('SmartTable.vue', () => {
   it('should filter by age', (done) => {
     const vm = new Vue({
       replace: false,
-      template: '<div><smart-table :body="testBody2" :can-filter-by="[\'age\']"  v-ref:ut></smart-table></div>',
+      template: '<div><smart-table :body="testBody2" v-ref:ut></smart-table></div>',
       components: {'smart-table': SmartTable},
       data: { testBody2 }
     }).$mount()
     // check that there is only one row visible and that it contains the Marco row
-    vm.$broadcast('filterAll', '22')
+    vm.$broadcast('filter', {filter: '22', col: 'age'})
     vm.$nextTick(() => {
-      expect(vm.$el.querySelector('.row-1')).not.to.be.visible
-      expect(vm.$el.querySelector('.row-3')).to.be.visible
-      expect(vm.$el.querySelector('#cell-3-name')).to.be.visible
+      expect(vm.$el.querySelector('#row-1')).to.exist
+      expect(vm.$el.querySelector('#row-3')).to.exist
+      expect(vm.$el.querySelector('#row-1')).to.have.class('smart-filter')
+      expect(vm.$el.querySelector('#row-1')).to.have.class('custom-filter')
+      expect(vm.$el.querySelector('#row-3')).not.to.have.class('smart-filter')
+      done()
+    })
+  })
+  it('should filter by age and then by name, then again by age', (done) => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="testBody2" v-ref:ut></smart-table></div>',
+      components: {'smart-table': SmartTable},
+      data: { testBody2 }
+    }).$mount()
+    vm.$broadcast('filter', {filter: '22', col: 'age'})
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelector('#row-1')).to.have.class('smart-filter')
+      expect(vm.$el.querySelector('#row-1')).to.have.class('custom-filter')
+      expect(vm.$el.querySelector('#row-3')).not.to.have.class('smart-filter')
+      vm.$broadcast('filter', {filter: 'genna', col: 'name'})
+      vm.$nextTick(() => {
+        expect(vm.$el.querySelector('#row-1')).to.have.class('smart-filter')
+        expect(vm.$el.querySelector('#row-3')).to.have.class('smart-filter')
+        vm.$broadcast('filter', {filter: '', col: 'age'})
+        vm.$nextTick(() => {
+          expect(vm.$el.querySelector('#row-1')).not.to.have.class('smart-filter')
+          expect(vm.$el.querySelector('#row-3')).to.have.class('smart-filter')
+          done()
+        })
+      })
+    })
+  })
+  it('should filter by a custom function', (done) => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="testBody2"  v-ref:ut><invert col="age"></invert></smart-table></div>',
+      components: {'smart-table': SmartTable, 'invert': { template: '<p></p>', methods: {filterFunction (filter) {
+        return function (val) {
+          return String(filter) !== String(val)
+        }
+      }}}},
+      data: { testBody2 }
+    }).$mount()
+    // check that there is only one row visible and that it contains the Marco row
+    vm.$broadcast('filter', {filter: '22', col: 'age'})
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelector('#row-1')).to.exist
+      expect(vm.$el.querySelector('#row-3')).to.exist
+      expect(vm.$el.querySelector('#row-3')).to.have.class('smart-filter')
+      expect(vm.$el.querySelector('#row-3')).to.have.class('custom-filter')
+      expect(vm.$el.querySelector('#row-1')).not.to.have.class('smart-filter')
       done()
     })
   })

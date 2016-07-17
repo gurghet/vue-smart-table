@@ -62,7 +62,7 @@ function assertShowReactive (row) {
   }
 }
 
-function filteredBody (body, filter, colKeys) {
+function filteredBody (body, filter, colKeys, cumulative = false) {
   if (colKeys === undefined) {
     throw new Error('[Smart Table Internal Error] Filtering scope not defined')
   }
@@ -77,14 +77,14 @@ function filteredBody (body, filter, colKeys) {
   }
   if (typeof filter === 'function') {
     if (Array.isArray(colKeys) && colKeys.length !== 1) {
-      throw new Error('[Smart Table Internal Error] When using custom function the filtering scope must be on exatcly one column (namely the column of component that provides the function, but I don\'t know if this is actually enforced in the code... mmmh... I\'m way too lazy to check lol.)')
+      throw new Error('[Smart Table Internal Error] When using custom function the filtering scope must be on exatcly one column (namely the column of component that provides the function)')
     }
     let colKey = colKeys
     return body.forEach(row => {
       assertShowReactive(row)
       let val = getDataFromDotNotation(colKey, row)
       if (filter(val)) {
-        row._show = true // row._show !== false
+        row._show = !cumulative || row._show
       } else {
         row._show = false
       }
@@ -104,14 +104,15 @@ function filteredBody (body, filter, colKeys) {
       function columnContainsFilter () {
         let colKey = colKeys
         let val = getDataFromDotNotation(colKey, row)
-        let lowerCaseFilter = filter.toLowerCase()
-        return val !== undefined && val.toLowerCase().indexOf(lowerCaseFilter) !== -1
+        // todo: remove this code duplication eventually
+        let lowerCaseFilter = String(filter).toLowerCase()
+        return val !== undefined && String(val).toLowerCase().indexOf(lowerCaseFilter) !== -1
       }
       if (
         Array.isArray(colKeys) && someColumnContainsFilter() || // global search
         typeof colKeys === 'string' && columnContainsFilter()
       ) {
-        row._show = true // row._show !== false
+        row._show = !cumulative || row._show
       } else {
         row._show = false
       }

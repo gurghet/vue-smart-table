@@ -114,6 +114,23 @@ describe('filteredBody', () => {
     ])
   })
 
+  it('should filter numbers', () => {
+    // ____mut suppresses errors
+    let ages = [
+      {_id: 0, age: 3, surname: 'aaa', _show: true, ____mut: ''},
+      {_id: 1, age: 44, surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, age: 70, surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, age: 12, surname: 'bac', _show: true, ____mut: ''}
+    ]
+    bodyParsing.filteredBody(ages, '4', 'age')
+    ages.should.eql([
+      {_id: 0, age: 3, surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, age: 44, surname: 'bbb', _show: true, ____mut: ''},
+      {_id: 2, age: 70, surname: 'ccc', _show: false, ____mut: ''},
+      {_id: 3, age: 12, surname: 'bac', _show: false, ____mut: ''}
+    ])
+  })
+
   it('should perform a global filtering case insensitive', () => {
     let tooMany = [
       {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
@@ -158,7 +175,7 @@ describe('filteredBody', () => {
     ])
   })
 
-  it('should not be cumulative', () => {
+  it('should not be cumulative by default', () => {
     let tooMany = [
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
@@ -170,6 +187,22 @@ describe('filteredBody', () => {
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
       {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
+    ])
+  })
+
+  it('should be cumulative if asked kindly', () => {
+    let tooMany = [
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: false, ____mut: ''},
+      {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
+    ]
+    bodyParsing.filteredBody(tooMany, 'c', 'surname', true)
+    tooMany.should.eql([
+      {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
+      {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
+      {_id: 2, name: 'aba', surname: 'ccc', _show: false, ____mut: ''},
       {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ])
   })
