@@ -293,6 +293,27 @@ describe('SmartTable.vue', () => {
       done()
     })
   })
+  it('should filter by a default function for custom components', (done) => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="testBody2"  v-ref:ut><empty col="age"></empty></smart-table></div>',
+      components: {'smart-table': SmartTable, 'empty': { template: '<p></p>' }},
+      data: { testBody2 }
+    }).$mount()
+    // check that there is only one row visible and that it contains the Marco row
+    vm.$broadcast('filter', {filter: '22', col: 'age'})
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelector('#row-1')).to.have.class('smart-filter')
+      expect(vm.$el.querySelector('#row-1')).to.have.class('custom-filter')
+      expect(vm.$el.querySelector('#row-3')).not.to.have.class('smart-filter')
+      vm.$broadcast('filter', {filter: '', col: 'age'})
+      vm.$nextTick(() => {
+        expect(vm.$el.querySelector('#row-1')).not.to.have.class('smart-filter')
+        expect(vm.$el.querySelector('#row-3')).not.to.have.class('smart-filter')
+        done()
+      })
+    })
+  })
   it('should order the table numerically by age', (done) => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody2" :order-by="[\'age\']" v-ref:ut></smart-table></div>',

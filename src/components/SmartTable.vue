@@ -565,8 +565,14 @@
         }
       },
       'filter' ({filter, col}) {
+        function sameCols (col1, col2) {
+          if (col1 === col2) return true
+          if (col1.length !== col2.length) return false
+          col1.forEach((c, i) => { if (c !== col2[i]) return false })
+          return true
+        }
         // update or create the filter
-        let currentFilter = this.filters.find(f => f.col === col)
+        let currentFilter = this.filters.find(f => sameCols(f.col, col))
         if (currentFilter === undefined) {
           // no existing filter, new!
           this.filters.push({filter, col})
