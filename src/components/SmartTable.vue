@@ -165,14 +165,13 @@
         return this.tableHeader.filter(col => this.isEditable(col.key))
       },
       tableHeader () {
-        // WARNING: must not depend on pBody!
-
         // if not every column is a string return as is
         if (!this.header.every(col => typeof col === 'string' || col instanceof String)) {
           if (this.header.some(col => typeof col === 'string' || col instanceof String)) {
             console.error('[Smart Table Error] Some elements of the header are strings while other are not, cannot have a mixed header')
             return
           }
+          bodyParsing.camelizeHeader(this.header)
           return this.header
         }
         // else, the header is an array of strings, build one
@@ -199,6 +198,7 @@
           finalHeader[i] = {key: columns[i], label: header[i]}
         })
 
+        bodyParsing.camelizeHeader(finalHeader)
         return finalHeader
       },
       mainCol () {
@@ -422,7 +422,7 @@
             comp.$dispatch('hook:attached')
           } else {
             // old, refresh
-            comp.value = smartTable.pBody.find(byId(id))[col] || comp.Ctor.options.data().value
+            comp.value = smartTable.pBody.find(byId(id))[col] || comp.Ctor && comp.Ctor.options.data().value
           }
         })
       },

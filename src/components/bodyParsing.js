@@ -24,6 +24,10 @@ function derivedBody (body, cols) {
   })
 }
 
+var camelCase = require('camel-case')
+function undashCamelize (columnKey) {
+  return camelCase(columnKey.replace(/\-/, ' '))
+}
 /**
  * rawBody is an array in the form
  * [ { 'col 1': 'value 1', 'col 2': 'value 2', ... [_id: 'some id'] },
@@ -45,11 +49,11 @@ function bodyWithIds (body, idColKey) {
     row._id = idValue
     usedIds.push(idValue)
     Object.keys(row).forEach(p => {
-      if (p.indexOf(' ') !== -1) {
-        let dashedp = p.replace(/ /g, '-')
+      if (p.indexOf(' ') !== -1 || p.indexOf('-') !== -1) {
+        let camelized = undashCamelize(p)
         let v = row[p]
         delete row[p]
-        row[dashedp] = v
+        row[camelized] = v
       }
     })
   })
@@ -166,4 +170,12 @@ function sortedBody (body, colKey, desc, compareFunction) {
   return body
 }
 
-export default { derivedBody, bodyWithIds, filteredBody, sortedBody }
+function camelizeHeader (header) {
+  header.forEach(p => {
+    if (p.key.indexOf(' ') !== -1 || p.key.indexOf('-') !== -1) {
+      p.key = camelCase(p.key.replace(/\-/, ' '))
+    }
+  })
+}
+
+export default { derivedBody, bodyWithIds, filteredBody, sortedBody, camelizeHeader }

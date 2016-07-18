@@ -63,15 +63,17 @@ describe('bodyWithIds', () => {
     ])
   })
 
-  it('should turn spaces in columns into dashes', () => {
+  it('should camelize spaces and dashes', () => {
     let foo = [
       {_id: 0, 'foo bar': 'excelsior'},
-      {_id: '0', 'bar baz': 'robustus'}
+      {_id: '0', 'bar-baz': 'robustus'},
+      {_id: '1', 'petrus_augustus': 'robustus'}
     ]
     let result = bodyParsing.bodyWithIds(foo, '_id')
     result.should.eql([
-      {_id: 0, 'foo-bar': 'excelsior'},
-      {_id: '0', 'bar-baz': 'robustus'}
+      {_id: 0, 'fooBar': 'excelsior'},
+      {_id: '0', 'barBaz': 'robustus'},
+      {_id: '1', 'petrus_augustus': 'robustus'}
     ])
   })
 
@@ -511,13 +513,13 @@ describe('sortedBody', () => {
 describe('derivedBody', () => {
   it('should parse dot notation', () => {
     let raw = [
-      { salutations: { hello: 'hi', to: 'world' } },
+      { salutations: { hello: 'hi', 'to the': 'world' } },
       { erbs: 'rosmarine' },
       { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
     ]
     let result = bodyParsing.derivedBody(raw, ['salutations.hello'])
     result.should.eql([
-      { salutations: { hello: 'hi', to: 'world' }, 'salutations.hello': 'hi' },
+      { salutations: { hello: 'hi', 'to the': 'world' }, 'salutations.hello': 'hi' },
       { erbs: 'rosmarine', 'salutations.hello': undefined },
       { erbs: { 'light hearted': 'lavander', hard: 'basil' }, 'salutations.hello': undefined }
     ])
