@@ -94,15 +94,15 @@
     <smart-table
         table-classes="ui celled table unstackable things teal"
         :body="[
-            {pic: 'pics/cat.png', desc: 'This is a cat\nCats are nice', features: ['cool','nice'], actions: {delete: '#/del', pet: '#/pet'}},
-            {pic: 'pics/dog.png', desc: 'Dogs go bau.\nAt least in Italy', features: ['drooly','noisy'], actions: {delete: '#/del', scold: '#/scold'}},
-            {pic: 'pics/pipe.png', desc: 'Pipes are used\nto connect', features: ['hollow','round'], actions: {delete: '#/del'}},
-            {pic: 'pics/bolt.png', desc: 'Bolts are nice\nbolts are fast', features: ['fast','nice'], actions: {delete: '#/del', run: '#/run', win: '#/win'}},
-            {pic: 'pics/dinosaur.png', desc: 'This is a dinosaur.\nNice.', features: ['extinct','nice'], actions: {delete: '#/del'}},
-            {pic: 'pics/bell.png', desc: 'Bells are not animals.', features: ['noisy'], actions: {play: '#/del'}},
-            {pic: 'pics/rubber.png', desc: 'Rubbers are white.\nNice.', features: ['white','nice'], actions: {delete: '#/del', erase: '#/erase'}},
-            {pic: 'pics/nice.png', desc: 'Nice is deadly\nDon’t get shot', features: ['extinct'], actions: {delete: '#/del'}},
-            {pic: 'pics/clouds.png', desc: 'Clouds are nice.\nNice.', features: ['nice'], actions: {delete: '#/del'}}
+            {pic: '/vue-smart-table/pics/cat.png', desc: 'This is a cat\nCats are nice', features: ['cool','nice'], actions: {delete: '#/del', pet: '#/pet'}},
+            {pic: '/vue-smart-table/pics/dog.png', desc: 'Dogs go bau.\nAt least in Italy', features: ['drooly','noisy'], actions: {delete: '#/del', scold: '#/scold'}},
+            {pic: '/vue-smart-table/pics/pipe.png', desc: 'Pipes are used\nto connect', features: ['hollow','round'], actions: {delete: '#/del'}},
+            {pic: '/vue-smart-table/pics/bolt.png', desc: 'Bolts are nice\nbolts are fast', features: ['fast','nice'], actions: {delete: '#/del', run: '#/run', win: '#/win'}},
+            {pic: '/vue-smart-table/pics/dinosaur.png', desc: 'This is a dinosaur.\nNice.', features: ['extinct','nice'], actions: {delete: '#/del'}},
+            {pic: '/vue-smart-table/pics/bell.png', desc: 'Bells are not animals.', features: ['noisy'], actions: {play: '#/del'}},
+            {pic: '/vue-smart-table/pics/rubber.png', desc: 'Rubbers are white.\nNice.', features: ['white','nice'], actions: {delete: '#/del', erase: '#/erase'}},
+            {pic: '/vue-smart-table/pics/nice.png', desc: 'Nice is deadly\nDon’t get shot', features: ['extinct'], actions: {delete: '#/del'}},
+            {pic: '/vue-smart-table/pics/clouds.png', desc: 'Clouds are nice.\nNice.', features: ['nice'], actions: {delete: '#/del'}}
         ]"
     >
         <src2img col="pic"></src2img>
@@ -168,7 +168,7 @@
     Vue.component('badges', {
         template: `<div class="ui list">
                      <div class="item" v-for="badge in value">
-                       <img :src="'/badges/'+badge+'.png'" class="ui avatar image"/>
+                       <img :src="'/vue-smart-table/badges/'+badge+'.png'" class="ui avatar image"/>
                        <div class="content"><div class="description">{{badge}}</div></div>
                      </ul>
                    </div>`
