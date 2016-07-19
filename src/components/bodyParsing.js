@@ -173,7 +173,7 @@ function sortedBody (body, colKey, desc, compareFunction) {
 function camelizeHeader (header) {
   header.forEach(p => {
     if (p.key.indexOf(' ') !== -1 || p.key.indexOf('-') !== -1) {
-      p.key = camelCase(p.key.replace(/\-/, ' '))
+      p.key = camelCase(p.key.replace(/\-/, ' ').replace(/\./, '※')).replace(/※/, '.')
     }
   })
 }

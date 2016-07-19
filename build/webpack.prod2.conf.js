@@ -7,7 +7,7 @@ var baseWebpackConfig = require('./webpack.base.conf')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
 var env = process.env.NODE_ENV === 'testing'
   ? require('../config/test.env')
-  : config.build.env
+  : config.dev.env
 
 module.exports = merge(baseWebpackConfig, {
   entry: {
@@ -19,7 +19,7 @@ module.exports = merge(baseWebpackConfig, {
   devtool: config.build.productionSourceMap ? '#source-map' : false,
   output: {
     path: config.build.assetsRoot, // dist directory
-    filename: utils.assetsPath('vue-smart-table.min.js'),
+    filename: utils.assetsPath('vue-smart-table.js'),
     library: "SmartTable",
     libraryTarget: "umd"
   },
@@ -37,11 +37,6 @@ module.exports = merge(baseWebpackConfig, {
     // http://vuejs.github.io/vue-loader/workflow/production.html
     new webpack.DefinePlugin({
       'process.env': env
-    }),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false
-      }
     }),
     new webpack.optimize.OccurenceOrderPlugin(),
     // extract css into its own file

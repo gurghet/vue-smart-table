@@ -241,7 +241,11 @@
       // build stamp library
       this.elHarvest.forEach(el => {
         let tag = el.tagName.toLowerCase()
-        let col = el.attributes.col.value
+        // todo: these fillinig character are phonetic letters, this mean
+        // discouraging language students and professionals from using
+        // the table, need to find a better solution.
+        let col = camelCase(el.attributes.col.value.replace(/\-/, ' ')
+          .replace(/\./, 'ʬ').replace(/\+/, 'ʭ')).replace(/ʬ/, '.').replace(/ʭ/, '+')
         if (commonTagRE.test(tag)) {
           console.error('[Smart Table Usage Error] HTML element"' + tag +
           '" cannot be a component. Skipping')
