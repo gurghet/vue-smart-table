@@ -6,23 +6,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/semantic.min.css" media="all">
     <style>
-        #app {
+        #app1 {
+            background-color: #96DFED;
+        }
+        #filterAll {
+            background-color: #A7DBD8;
+        }
+        #filterScoped {
+            background-color: #E0E4CC;
+        }
+        #yoDawg {
+            background-color: #DDBEA7;
+        }
+        #app1, #filterAll, #filterScoped,  #yoDawg {
             display: flex;
             justify-content: center;
+            flex-flow: column;
         }
-        .smart-table {
+        #filterScoped .filters {
+            display: flex;
+            flex-flow: row;
+        }
+        #filterScoped .by-name {
+            flex-grow: 4;
+        }
+        #filterScoped .by-open-source {
+            flex-grow: 1;
+        }
+        .smart-table, .ui.input, .ui.checkbox {
             margin: 20px;
+        }
+        .smart-filter.custom-filter {
+            display: none;
+        }
+        .things .cell-pic img{
+           max-width: 50px;
+           max-height: 50px;
         }
     </style>
 </head>
 <body>
-<div id="app">
+<div id="app1">
     <smart-table
-            table-classes="ui celled table unstackable"
+            table-classes="ui celled table unstackable blue"
             :auto-load="true"
             body-path="results"
             id-col="id.value"
-            endpoint="http://api.randomuser.me/?page=1&results=20"
+            endpoint="http://api.randomuser.me/?page=1&results=10"
             :header="[
             {key: 'name.first', label: 'name'},
             {key: 'name.last', label: 'surname'},
@@ -34,35 +64,122 @@
             :order-by="['name.first', 'name.last']"
     >
 
-        <fontawesome slot="gender"></fontawesome>
+        <fontawesome col="gender"></fontawesome>
         <!-- this component is pretty self
              explanatory, it will turn the string
              into the specified icon -->
 
-        <contacts slot="phone+cell"></contacts>
+        <contacts col="phone+cell"></contacts>
         <!-- phone+cell is a derived column,
              this component is just a <div> tag to
              display 2 lines-->
 
-        <src2img slot="picture.thumbnail"></src2img>
+        <src2img col="picture.thumbnail"></src2img>
         <!-- this component will read the image
              address inside the nested json
              object and put it into the scr of
              an img tag -->
 
-        <nationality slot="nat"></nationality>
+        <nationality col="nat"></nationality>
         <!-- this component will take the country
              iso code from the json, query
              a web service and overwrite itself with
              the full country name! -->
     </smart-table>
 </div>
+<div id="filterAll">
+    <div class="ui input">
+        <input title="search" type="text" placeholder="Search" @input="searchAll"></input>
+    </div>
+    <smart-table
+        table-classes="ui celled table unstackable things teal"
+        :body="[
+            {pic: '/pics/cat.png', desc: 'This is a cat\nCats are nice', features: ['cool','nice'], actions: {delete: '#/del', pet: '#/pet'}},
+            {pic: '/pics/dog.png', desc: 'Dogs go bau.\nAt least in Italy', features: ['drooly','noisy'], actions: {delete: '#/del', scold: '#/scold'}},
+            {pic: '/pics/pipe.png', desc: 'Pipes are used\nto connect', features: ['hollow','round'], actions: {delete: '#/del'}},
+            {pic: '/pics/bolt.png', desc: 'Bolts are nice\nbolts are fast', features: ['fast','nice'], actions: {delete: '#/del', run: '#/run', win: '#/win'}},
+            {pic: '/pics/dinosaur.png', desc: 'This is a dinosaur.\nNice.', features: ['extinct','nice'], actions: {delete: '#/del'}},
+            {pic: '/pics/bell.png', desc: 'Bells are not animals.', features: ['noisy'], actions: {play: '#/del'}},
+            {pic: '/pics/rubber.png', desc: 'Rubbers are white.\nNice.', features: ['white','nice'], actions: {delete: '#/del', erase: '#/erase'}},
+            {pic: '/pics/nice.png', desc: 'Nice is deadly\nDon’t get shot', features: ['extinct'], actions: {delete: '#/del'}},
+            {pic: '/pics/clouds.png', desc: 'Clouds are nice.\nNice.', features: ['nice'], actions: {delete: '#/del'}}
+        ]"
+    >
+        <src2img col="pic"></src2img>
+        <plain-text col="desc" :multiline="true"></plain-text>
+        <badges col="features"></badges>
+        <dashboard col="actions"></dashboard>
+    </smart-table>
+</div>
+<div id="filterScoped">
+    <div class="filters">
+        <div class="by-name ui input"><input title="Search by Name" type="text" placeholder="Name" @input="search('name', $event.target.value)"></input></div>
+        <div class="by-open-source ui checkbox">
+            <input id="filter-by-open-source" title="Filter by Open Source" type="checkbox" @change="search('openSource', $event.target.checked)"></input>
+            <label for="filter-by-open-source">Open Source</label>
+        </div>
+    </div>
+    <smart-table
+        table-classes="ui celled table unstackable olive"
+        :body="[
+            {name: 'WordPress', openSource: true},
+            {name: 'Drupal', openSource: true},
+            {name: 'Microsoft Office 365', openSource: false},
+            {name: 'Joomla', openSource: true},
+            {name: 'Altitude3.Net', openSource: false},
+        ]"
+    >
+        <truefalse col="openSource"></truefalse>
+    </smart-table>
+</div>
+<div id="yoDawg">
+    <smart-table
+    table-classes="ui celled table unstackable orange"
+    :body="[
+        {'Yo Dawg! I heard you like Vue Smart Table, so': [
+          {'what I have put':'a Vue Smart Table', where:'inside your Vue Smart Table', 'so you can':'Smart Table', 'while you':'Smart Table'},
+          {'what I have put':'a Smart Component', where:'inside your Smart Component', 'so you can':'compose', 'while you':'compose'},  
+        ], 'Lonely Column': 'Forever a col'}
+    ]"
+    >
+        <wrapper col="Yo Dawg! I heard you like Vue Smart Table, so"></wrapper>
+    </smart-table>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.26/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.8.0/vue-resource.js"></script>
-<script src="https://npmcdn.com/vue-smart-table@2.4.3/dist/static/vue-smart-table.js"></script>
+<script src="https://npmcdn.com/vue-smart-table@2.5.0-alpha19/dist/static/vue-smart-table.js"></script>
 <script>
-    new Vue({el: '#app'})
-
+    /* global Vue */
+    Vue.component('wrapper', {
+        template: `<div><smart-table :body="value" table-classes="ui celled table unstackable brown"></smart-table></div>`
+    })
+    
+    Vue.component('truefalse', {
+        template: `<p>{{value || 'false'}}</p>`,
+        methods: {
+            filterFunction (filter) {
+                return function (value) {
+                    return !filter || value
+                }
+            }
+        }
+    })
+    
+    Vue.component('badges', {
+        template: `<div class="ui list">
+                     <div class="item" v-for="badge in value">
+                       <img :src="'/badges/'+badge+'.png'" class="ui avatar image"/>
+                       <div class="content"><div class="description">{{badge}}</div></div>
+                     </ul>
+                   </div>`
+    })
+    
+    Vue.component('dashboard', {
+        template: `<div>
+                     <button v-for="(action, link) in value" class="ui button">{{action}}</button>
+                   </div>`
+    })
+    
     Vue.component('fontawesome', {
         template: ' <i class="fa fa-{{value}}" aria-hidden="true"></i>',
         created: function () {injectFontAwesome()}
@@ -77,15 +194,25 @@
     })
 
     Vue.component('nationality', {
-        template: "<p>{{value}}</p>",
-        watch: {
-            'value': function (val) {
-                if (val.length !== 2) { return }
-                this.$http.get('https://restcountries.eu/rest/v1/alpha/' + val)
-                        .then(function(res) { this.$set('value', res.data.name) })
+        template: "<p>{{$parent.nationalityCache && $parent.nationalityCache[value]}}</p>",
+        init () {
+            if (this.$parent.nationalityCache === undefined) {
+                Vue.set(this.$parent, 'nationalityCache', {})
+            }
+        },
+        ready () {
+            if (this.$parent.nationalityCache[this.value] === undefined) {
+                Vue.set(this.$parent.nationalityCache, this.value, 'loading...')
+                this.$http.get('http://restcountries.eu/rest/v1/alpha/' + this.value)
+                    .then(function(res){Vue.set(this.$parent.nationalityCache, this.value, res.data.name)})
             }
         }
     })
+    
+    new Vue({el: '#app1'})
+    new Vue({el: '#filterAll', methods: {searchAll (e) {this.$broadcast('filter', {filter: e.target.value, col: ['desc']})}}})
+    new Vue({el: '#filterScoped', methods: {search (col, filter) {this.$broadcast('filter', {col, filter})}}})
+    new Vue({el: '#yoDawg'})
 
     function injectFontAwesome() {
         // avoid duplicates
