@@ -5,27 +5,62 @@
     <title>Vue-smart-table by gurghet</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/semantic.min.css" media="all">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/highlight.js/9.5.0/styles/zenburn.min.css">
+    <script src="//cdn.jsdelivr.net/highlight.js/9.5.0/highlight.min.js"></script>
     <style>
+        pre {
+            margin: 0;
+            line-height: 0;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        code {
+            line-height: normal;
+        }
+        code:last-child {
+            height: 100%;
+            flex: 1;
+            border-bottom: 1px dashed coral;
+        }
+        .wrapper {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap-reverse;
+        }
+        .tables {
+            flex: 1 0 50%;
+        }
+        .code {
+            flex: 1 0 50%;
+            font-size: 0.8em;
+            min-width: 487px;
+        }
         #app1 {
             background-color: #96DFED;
+            height: 100%;
         }
         #filterAll {
             background-color: #A7DBD8;
+            height: 100%;
         }
         #filterScoped {
             background-color: #E0E4CC;
+            height: 100%;
         }
         #yoDawg {
             background-color: #DDBEA7;
+            height: 100%;
         }
         #app1, #filterAll, #filterScoped,  #yoDawg {
             display: flex;
             justify-content: center;
-            flex-flow: column;
+            flex-direction: column;
         }
         #filterScoped .filters {
             display: flex;
-            flex-flow: row;
+            flex-direction: row;
         }
         #filterScoped .by-name {
             flex-grow: 4;
@@ -46,6 +81,9 @@
     </style>
 </head>
 <body>
+<script>hljs.initHighlightingOnLoad();</script>
+<div class="wrapper">
+<div class="tables">
 <div id="app1">
     <smart-table
             table-classes="ui celled table unstackable blue"
@@ -87,6 +125,86 @@
              the full country name! -->
     </smart-table>
 </div>
+</div>
+<div class="code">
+    <pre><code class="html">
+&lt;smart-table
+    table-classes=&quot;ui celled table unstackable blue&quot;
+    :auto-load=&quot;true&quot;
+    body-path=&quot;results&quot;
+    id-col=&quot;id.value&quot;
+    endpoint=&quot;http://api.randomuser.me/?page=1&amp;results=10&quot;
+    :header=&quot;[
+    {key: 'name.first', label: 'name'},
+    {key: 'name.last', label: 'surname'},
+    {key: 'gender'},
+    {key: 'phone+cell', label: 'contacts'},
+    {key: 'picture.thumbnail', label: 'avatar'},
+    {key: 'nat', label: 'nationality'}
+    ]&quot;
+    :order-by=&quot;['name.first', 'name.last']&quot;
+&gt;
+
+&lt;fontawesome col=&quot;gender&quot;&gt;&lt;/fontawesome&gt;
+&lt;contacts col=&quot;phone+cell&quot;&gt;&lt;/contacts&gt;
+&lt;src2img col=&quot;picture.thumbnail&quot;&gt;&lt;/src2img&gt;
+&lt;nationality col=&quot;nat&quot;&gt;&lt;/nationality&gt;
+&lt;/smart-table&gt;
+    </code>
+    <code>
+Vue.component('fontawesome', {
+    template: `&lt;i 
+                 class=&quot;fa fa-{{value}}&quot;
+                 aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;`,
+    created: function () {injectFontAwesome()}
+})
+
+Vue.component('contacts', {
+    template: `&lt;div&gt;tel. {{value ? value.phone : ''}}&lt;br/&gt;
+               cell. {{value ? value.cell : ''}}&lt;/div&gt;`
+})
+
+Vue.component('src2img', {
+    template: '&lt;img :src=&quot;value&quot;&gt;&lt;/img&gt;'
+})
+
+Vue.component('nationality', {
+    template: `&lt;p&gt;
+        {{$parent.nationalityCache &amp;&amp; $parent.nationalityCache[value]}}
+        &lt;/p&gt;`,
+    init () {
+        if (this.$parent.nationalityCache === undefined) {
+            Vue.set(this.$parent, 'nationalityCache', {})
+        }
+    },
+    ready () {
+        if (this.$parent.nationalityCache[this.value] === undefined) {
+            Vue.set(
+                this.$parent.nationalityCache,
+                this.value,
+                'loading...'
+            )
+            
+            this.$http.get('//restcountries.eu/rest/v1/alpha/' + 
+                                                            this.value)
+                .then(function(res){
+                    Vue.set(
+                        this.$parent.nationalityCache,
+                        this.value,
+                        res.data.name
+                    )
+                })
+        }
+    }
+})
+
+new Vue({el: '#app1'})
+    </code>
+    </pre>
+</div>
+</div>
+<div class="wrapper">
+    <div class="tables">
 <div id="filterAll">
     <div class="ui input">
         <input title="search" type="text" placeholder="Search" @input="searchAll"></input>
@@ -111,11 +229,103 @@
         <dashboard col="actions"></dashboard>
     </smart-table>
 </div>
+</div>
+<div class="code">
+    <pre>
+        <code>
+&lt;div class=&quot;ui input&quot;&gt;
+    &lt;
+      title=&quot;search&quot; 
+      type=&quot;text&quot; 
+      placeholder=&quot;Search&quot; 
+      @input=&quot;searchAll&quot;&gt;
+      &lt;/input&gt;
+&lt;/div&gt;
+&lt;smart-table
+    table-classes=&quot;ui celled table unstackable things teal&quot;
+    :body=&quot;[
+{pic: 'pics/cat.png', desc: 'This is a cat\nCats are nice',
+  features: ['cool','nice'], actions: {delete: '#/del', pet: '#/pet'}},
+{pic: 'pics/dog.png', desc: 'Dogs go bau.\nAt least in Italy', 
+  features: ['drooly','noisy'], actions: {delete: '#/del', scold: '#/scold'}},
+{pic: 'pics/pipe.png', desc: 'Pipes are used\nto connect', 
+  features: ['hollow','round'], actions: {delete: '#/del'}},
+{pic: 'pics/bolt.png', desc: 'Bolts are nice\nbolts are fast', 
+  features: ['fast','nice'], actions: {delete: '#/del', ... , win: '#/win'}},
+{pic: 'pics/dinosaur.png', desc: 'This is a dinosaur.\nNice.', 
+  features: ['extinct','nice'], actions: {delete: '#/del'}},
+{pic: 'pics/bell.png', desc: 'Bells are not animals.', 
+  features: ['noisy'], actions: {play: '#/del'}},
+{pic: 'pics/rubber.png', desc: 'Rubbers are white.\nNice.', 
+  features: ['white','nice'], actions: {delete: '#/del', erase: '#/erase'}},
+{pic: 'pics/nice.png', desc: 'Nice is deadly\nDon&rsquo;t get shot', 
+  features: ['extinct'], actions: {delete: '#/del'}},
+{pic: 'pics/clouds.png', desc: 'Clouds are nice.\nNice.', 
+  features: ['nice'], actions: {delete: '#/del'}}
+    ]&quot;
+&gt;
+    &lt;src2img col=&quot;pic&quot;&gt;&lt;/src2img&gt;
+    &lt;plain-text col=&quot;desc&quot; :multiline=&quot;true&quot;&gt;&lt;/plain-text&gt;
+    &lt;badges col=&quot;features&quot;&gt;&lt;/badges&gt;
+    &lt;dashboard col=&quot;actions&quot;&gt;&lt;/dashboard&gt;
+&lt;/smart-table&gt;
+        </code>
+        <code>
+Vue.component('badges', {
+ template: `&lt;div class=&quot;ui list&quot;&gt;
+              &lt;div 
+                class=&quot;item&quot;
+                v-for=&quot;badge in value&quot;
+              &gt;
+                &lt;img :src=&quot;'/vue-smart-table/badges/'+badge+'.png'&quot; class=&quot;ui avatar image&quot;/&gt;
+                &lt;div class=&quot;content&quot;&gt;
+                  &lt;div class=&quot;description&quot;&gt;{{badge}}&lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;`
+})
+
+Vue.component('dashboard', {
+   template: `&lt;div&gt;
+                &lt;button
+                  v-for=&quot;(action, link) in value&quot; 
+                  class=&quot;ui button&quot;
+                &gt;{{action}}&lt;/button&gt;
+              &lt;/div&gt;`
+})
+
+Vue.component('src2img', {
+   template: '&lt;img :src=&quot;value&quot;&gt;&lt;/img&gt;'
+})
+
+new Vue({
+  el: '#filterAll', 
+  methods: {
+    searchAll (e) {
+      this.$broadcast('filter', {filter: e.target.value, col: ['desc']})
+    }
+  }
+})
+        </code>
+    </pre>
+</div>
+</div>
+<div class="wrapper">
+    <div class="tables">
 <div id="filterScoped">
     <div class="filters">
-        <div class="by-name ui input"><input title="Search by Name" type="text" placeholder="Name" @input="search('name', $event.target.value)"></input></div>
+        <div class="by-name ui input">
+          <input
+            title="Search by Name"
+            type="text"
+            placeholder="Name"
+            @input="search('name', $event.target.value)"></input></div>
         <div class="by-open-source ui checkbox">
-            <input id="filter-by-open-source" title="Filter by Open Source" type="checkbox" @change="search('openSource', $event.target.checked)"></input>
+            <input
+              id="filter-by-open-source"
+              title="Filter by Open Source"
+              type="checkbox"
+              @change="search('openSource', $event.target.checked)"></input>
             <label for="filter-by-open-source">Open Source</label>
         </div>
     </div>
@@ -132,22 +342,110 @@
         <truefalse col="openSource"></truefalse>
     </smart-table>
 </div>
+</div>
+<div class="code">
+  <pre>
+    <code>
+&lt;div class=&quot;filters&quot;&gt;
+    &lt;div class=&quot;by-name ui input&quot;&gt;
+      &lt;input
+        title=&quot;Search by Name&quot;
+        type=&quot;text&quot;
+        placeholder=&quot;Name&quot;
+        @input=&quot;search('name', $event.target.value)&quot;&gt;&lt;/input&gt;&lt;/div&gt;
+    &lt;div class=&quot;by-open-source ui checkbox&quot;&gt;
+        &lt;input
+          id=&quot;filter-by-open-source&quot;
+          title=&quot;Filter by Open Source&quot;
+          type=&quot;checkbox&quot;
+          @change=&quot;search('openSource', $event.target.checked)&quot;&gt;&lt;/input&gt;
+        &lt;label for=&quot;filter-by-open-source&quot;&gt;Open Source&lt;/label&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;smart-table
+    table-classes=&quot;ui celled table unstackable olive&quot;
+    :body=&quot;[
+        {name: 'WordPress', openSource: true},
+        {name: 'Drupal', openSource: true},
+        {name: 'Microsoft Office 365', openSource: false},
+        {name: 'Joomla', openSource: true},
+        {name: 'Altitude3.Net', openSource: false},
+    ]&quot;
+&gt;
+    &lt;truefalse col=&quot;openSource&quot;&gt;&lt;/truefalse&gt;
+&lt;/smart-table&gt;
+    </code>
+    <code>
+Vue.component('truefalse', {
+    template: `<p>{{value || 'false'}}</p>`,
+    methods: {
+        filterFunction (filter) {
+            return function (value) {
+                return !filter || value
+            }
+        }
+    }
+})
+new Vue({
+  el: '#filterScoped',
+  methods: {
+    search (col, filter) {
+      this.$broadcast('filter', {col, filter})
+    }
+  }
+})
+    </code>
+  </pre>
+</div>
+</div>
+<div class="wrapper">
+    <div class="tables">
 <div id="yoDawg">
     <smart-table
     table-classes="ui celled table unstackable orange"
     :body="[
         {'Yo Dawg! I heard you like Vue Smart Table, so': [
-          {'what I have put':'a Vue Smart Table', where:'inside your Vue Smart Table', 'so you can':'Smart Table', 'while you':'Smart Table'},
-          {'what I have put':'a Smart Component', where:'inside your Smart Component', 'so you can':'compose', 'while you':'compose'},  
+          {'what I have put':'a Vue Smart Table',
+            where:'inside your Vue Smart Table',
+            'so you can':'Smart Table', 'while you':'Smart Table'},
+          {'what I have put':'a Smart Component',
+            where:'inside your Smart Component',
+            'so you can':'compose', 'while you':'compose'},  
         ], 'Lonely Column': 'Forever a col'}
     ]"
     >
         <wrapper col="Yo Dawg! I heard you like Vue Smart Table, so"></wrapper>
     </smart-table>
 </div>
+</div>
+<div class="code">
+<pre>
+  <code>
+&lt;smart-table
+table-classes=&quot;ui celled table unstackable orange&quot;
+:body=&quot;[
+    {'Yo Dawg! I heard you like Vue Smart Table, so': [
+      {'what I have put':'a Vue Smart Table',
+        where:'inside your Vue Smart Table',
+        'so you can':'Smart Table', 'while you':'Smart Table'},
+      {'what I have put':'a Smart Component',
+        where:'inside your Smart Component',
+        'so you can':'compose', 'while you':'compose'},  
+    ], 'Lonely Column': 'Forever a col'}
+]&quot;
+&gt;
+    &lt;wrapper col=&quot;Yo Dawg! I heard you like Vue Smart Table, so&quot;&gt;&lt;/wrapper&gt;
+&lt;/smart-table&gt;
+  </code>
+  <code>
+new Vue({el: '#yoDawg'})
+  </code>
+</pre>
+</div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.26/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.8.0/vue-resource.js"></script>
-<script src="https://npmcdn.com/vue-smart-table@2.5.0-alpha19/dist/static/vue-smart-table.js"></script>
+<script src="https://npmcdn.com/vue-smart-table@2.5.0-alpha23/dist/static/vue-smart-table.js"></script>
 <script>
     /* global Vue */
     Vue.component('wrapper', {
@@ -169,8 +467,10 @@
         template: `<div class="ui list">
                      <div class="item" v-for="badge in value">
                        <img :src="'/vue-smart-table/badges/'+badge+'.png'" class="ui avatar image"/>
-                       <div class="content"><div class="description">{{badge}}</div></div>
-                     </ul>
+                       <div class="content">
+                         <div class="description">{{badge}}</div>
+                       </div>
+                     </div>
                    </div>`
     })
     
