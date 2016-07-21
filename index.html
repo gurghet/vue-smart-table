@@ -22,7 +22,9 @@
         code:last-child {
             height: 100%;
             flex: 1;
-            border-bottom: 1px dashed coral;
+        }
+        code:first-child {
+          border-top: 1px dashed coral;
         }
         .wrapper {
             display: flex;
@@ -30,11 +32,11 @@
             flex-wrap: wrap-reverse;
         }
         .tables {
-            flex: 1 0 50%;
+            flex: 1 0 487px;
         }
         .code {
-            flex: 1 0 50%;
-            font-size: 0.8em;
+            flex: 1 0 487px;
+            font-size: 0.85em;
             min-width: 487px;
         }
         #app1 {
@@ -71,8 +73,10 @@
         .smart-table, .ui.input, .ui.checkbox {
             margin: 20px;
         }
-        .smart-filter.custom-filter {
-            display: none;
+        #filterAll .smart-filter.custom-filter {
+          display: table-row; /* necessary to revert display: none */
+          opacity: 0.6; /* Normal browsers */
+          filter: alpha(opacity = 60); /* "Special" browsers */
         }
         .things .cell-pic img{
            max-width: 50px;
@@ -277,7 +281,9 @@ Vue.component('badges', {
                 class=&quot;item&quot;
                 v-for=&quot;badge in value&quot;
               &gt;
-                &lt;img :src=&quot;'/vue-smart-table/badges/'+badge+'.png'&quot; class=&quot;ui avatar image&quot;/&gt;
+                &lt;img
+                  :src=&quot;'/vue-smart-table/badges/'+badge+'.png'&quot;
+                  class=&quot;ui avatar image&quot;/&gt;
                 &lt;div class=&quot;content&quot;&gt;
                   &lt;div class=&quot;description&quot;&gt;{{badge}}&lt;/div&gt;
                 &lt;/div&gt;
@@ -347,20 +353,20 @@ new Vue({
   <pre>
     <code>
 &lt;div class=&quot;filters&quot;&gt;
-    &lt;div class=&quot;by-name ui input&quot;&gt;
+  &lt;div class=&quot;by-name ui input&quot;&gt;
+    &lt;input
+      title=&quot;Search by Name&quot;
+      type=&quot;text&quot;
+      placeholder=&quot;Name&quot;
+      @input=&quot;search('name', $event.target.value)&quot;&gt;&lt;/input&gt;&lt;/div&gt;
+  &lt;div class=&quot;by-open-source ui checkbox&quot;&gt;
       &lt;input
-        title=&quot;Search by Name&quot;
-        type=&quot;text&quot;
-        placeholder=&quot;Name&quot;
-        @input=&quot;search('name', $event.target.value)&quot;&gt;&lt;/input&gt;&lt;/div&gt;
-    &lt;div class=&quot;by-open-source ui checkbox&quot;&gt;
-        &lt;input
-          id=&quot;filter-by-open-source&quot;
-          title=&quot;Filter by Open Source&quot;
-          type=&quot;checkbox&quot;
-          @change=&quot;search('openSource', $event.target.checked)&quot;&gt;&lt;/input&gt;
-        &lt;label for=&quot;filter-by-open-source&quot;&gt;Open Source&lt;/label&gt;
-    &lt;/div&gt;
+        id=&quot;filter-by-open-source&quot;
+        title=&quot;Filter by Open Source&quot;
+        type=&quot;checkbox&quot;
+        @change=&quot;search('openSource', $event.target.checked)&quot;&gt;&lt;/input&gt;
+      &lt;label for=&quot;filter-by-open-source&quot;&gt;Open Source&lt;/label&gt;
+  &lt;/div&gt;
 &lt;/div&gt;
 &lt;smart-table
     table-classes=&quot;ui celled table unstackable olive&quot;
@@ -377,7 +383,7 @@ new Vue({
     </code>
     <code>
 Vue.component('truefalse', {
-    template: `<p>{{value || 'false'}}</p>`,
+    template: `&lt;p&gt;{{value || 'false'}}&lt;/p&gt;`,
     methods: {
         filterFunction (filter) {
             return function (value) {
@@ -438,6 +444,9 @@ table-classes=&quot;ui celled table unstackable orange&quot;
 &lt;/smart-table&gt;
   </code>
   <code>
+Vue.component('wrapper', {
+  template: `&lt;div&gt;&lt;smart-table :body=&quot;value&quot; table-classes=&quot;ui celled table unstackable brown&quot;&gt;&lt;/smart-table&gt;&lt;/div&gt;`
+})
 new Vue({el: '#yoDawg'})
   </code>
 </pre>
@@ -445,7 +454,7 @@ new Vue({el: '#yoDawg'})
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.26/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.8.0/vue-resource.js"></script>
-<script src="https://npmcdn.com/vue-smart-table@2.5.0-alpha23/dist/static/vue-smart-table.js"></script>
+<script src="https://npmcdn.com/vue-smart-table@2.5.0-beta1/dist/static/vue-smart-table.js"></script>
 <script>
     /* global Vue */
     Vue.component('wrapper', {
