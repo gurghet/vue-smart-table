@@ -133,20 +133,20 @@
 <div class="code">
     <pre><code class="html">
 &lt;smart-table
-    table-classes=&quot;ui celled table unstackable blue&quot;
-    :auto-load=&quot;true&quot;
-    body-path=&quot;results&quot;
-    id-col=&quot;id.value&quot;
-    endpoint=&quot;http://api.randomuser.me/?page=1&amp;results=10&quot;
-    :header=&quot;[
+  table-classes=&quot;ui celled table unstackable blue&quot;
+  :auto-load=&quot;true&quot;
+  body-path=&quot;results&quot;
+  id-col=&quot;id.value&quot;
+  endpoint=&quot;http://api.randomuser.me/?results=10&quot;
+  :header=&quot;[
     {key: 'name.first', label: 'name'},
     {key: 'name.last', label: 'surname'},
     {key: 'gender'},
     {key: 'phone+cell', label: 'contacts'},
     {key: 'picture.thumbnail', label: 'avatar'},
     {key: 'nat', label: 'nationality'}
-    ]&quot;
-    :order-by=&quot;['name.first', 'name.last']&quot;
+  ]&quot;
+  :order-by=&quot;['name.first', 'name.last']&quot;
 &gt;
 
 &lt;fontawesome col=&quot;gender&quot;&gt;&lt;/fontawesome&gt;
@@ -157,49 +157,48 @@
     </code>
     <code>
 Vue.component('fontawesome', {
-    template: `&lt;i 
-                 class=&quot;fa fa-{{value}}&quot;
-                 aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;`,
-    created: function () {injectFontAwesome()}
+  template: `&lt;i 
+    class=&quot;fa fa-{{value}}&quot;
+    aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;`,
+  created: function () {injectFontAwesome()}
 })
 
 Vue.component('contacts', {
-    template: `&lt;div&gt;tel. {{value ? value.phone : ''}}&lt;br/&gt;
-               cell. {{value ? value.cell : ''}}&lt;/div&gt;`
+  template: `&lt;div&gt;tel. {{value ? value.phone : ''}}&lt;br/&gt;
+    cell. {{value ? value.cell : ''}}&lt;/div&gt;`
 })
 
 Vue.component('src2img', {
-    template: '&lt;img :src=&quot;value&quot;&gt;&lt;/img&gt;'
+  template: '&lt;img :src=&quot;value&quot;&gt;&lt;/img&gt;'
 })
 
 Vue.component('nationality', {
-    template: `&lt;p&gt;
-        {{$parent.nationalityCache &amp;&amp; $parent.nationalityCache[value]}}
-        &lt;/p&gt;`,
-    init () {
-        if (this.$parent.nationalityCache === undefined) {
-            Vue.set(this.$parent, 'nationalityCache', {})
-        }
-    },
-    ready () {
-        if (this.$parent.nationalityCache[this.value] === undefined) {
-            Vue.set(
-                this.$parent.nationalityCache,
-                this.value,
-                'loading...'
-            )
-            
-            this.$http.get('//restcountries.eu/rest/v1/alpha/' + 
-                                                            this.value)
-                .then(function(res){
-                    Vue.set(
-                        this.$parent.nationalityCache,
-                        this.value,
-                        res.data.name
-                    )
-                })
-        }
+  template: `&lt;p&gt;
+    {{$parent.nationalityCache &amp;&amp; $parent.nationalityCache[value]}}
+    &lt;/p&gt;`,
+  init () {
+    if (this.$parent.nationalityCache === undefined) {
+      Vue.set(this.$parent, 'nationalityCache', {})
     }
+  },
+  ready () {
+    if (this.$parent.nationalityCache[this.value] === undefined) {
+      Vue.set(
+        this.$parent.nationalityCache,
+        this.value,
+        'loading...'
+      )
+          
+      this.$http.get('//restcountries.eu/rest/v1/alpha/' + this.value)
+        .then(function(res){
+          Vue.set(
+            this.$parent.nationalityCache,
+            this.value,
+            res.data.name
+          )
+        })
+    }
+  }
 })
 
 new Vue({el: '#app1'})
@@ -238,16 +237,16 @@ new Vue({el: '#app1'})
     <pre>
         <code>
 &lt;div class=&quot;ui input&quot;&gt;
-    &lt;
-      title=&quot;search&quot; 
-      type=&quot;text&quot; 
-      placeholder=&quot;Search&quot; 
-      @input=&quot;searchAll&quot;&gt;
-      &lt;/input&gt;
+  &lt;input
+    title=&quot;search&quot; 
+    type=&quot;text&quot; 
+    placeholder=&quot;Search&quot; 
+    @input=&quot;searchAll&quot;&gt;
+  &lt;/input&gt;
 &lt;/div&gt;
 &lt;smart-table
-    table-classes=&quot;ui celled table unstackable things teal&quot;
-    :body=&quot;[
+  table-classes=&quot;ui celled table unstackable things teal&quot;
+  :body=&quot;[
 {pic: 'pics/cat.png', desc: 'This is a cat\nCats are nice',
   features: ['cool','nice'], actions: {delete: '#/del', pet: '#/pet'}},
 {pic: 'pics/dog.png', desc: 'Dogs go bau.\nAt least in Italy', 
@@ -266,29 +265,29 @@ new Vue({el: '#app1'})
   features: ['extinct'], actions: {delete: '#/del'}},
 {pic: 'pics/clouds.png', desc: 'Clouds are nice.\nNice.', 
   features: ['nice'], actions: {delete: '#/del'}}
-    ]&quot;
+  ]&quot;
 &gt;
-    &lt;src2img col=&quot;pic&quot;&gt;&lt;/src2img&gt;
-    &lt;plain-text col=&quot;desc&quot; :multiline=&quot;true&quot;&gt;&lt;/plain-text&gt;
-    &lt;badges col=&quot;features&quot;&gt;&lt;/badges&gt;
-    &lt;dashboard col=&quot;actions&quot;&gt;&lt;/dashboard&gt;
+  &lt;src2img col=&quot;pic&quot;&gt;&lt;/src2img&gt;
+  &lt;plain-text col=&quot;desc&quot; :multiline=&quot;true&quot;&gt;&lt;/plain-text&gt;
+  &lt;badges col=&quot;features&quot;&gt;&lt;/badges&gt;
+  &lt;dashboard col=&quot;actions&quot;&gt;&lt;/dashboard&gt;
 &lt;/smart-table&gt;
         </code>
         <code>
 Vue.component('badges', {
- template: `&lt;div class=&quot;ui list&quot;&gt;
-              &lt;div 
-                class=&quot;item&quot;
-                v-for=&quot;badge in value&quot;
-              &gt;
-                &lt;img
-                  :src=&quot;'/vue-smart-table/badges/'+badge+'.png'&quot;
-                  class=&quot;ui avatar image&quot;/&gt;
-                &lt;div class=&quot;content&quot;&gt;
-                  &lt;div class=&quot;description&quot;&gt;{{badge}}&lt;/div&gt;
-                &lt;/div&gt;
-              &lt;/div&gt;
-            &lt;/div&gt;`
+  template: `&lt;div class=&quot;ui list&quot;&gt;
+      &lt;div 
+        class=&quot;item&quot;
+        v-for=&quot;badge in value&quot;
+      &gt;
+        &lt;img
+          :src=&quot;'/vue-smart-table/badges/'+badge+'.png'&quot;
+          class=&quot;ui avatar image&quot;/&gt;
+        &lt;div class=&quot;content&quot;&gt;
+          &lt;div class=&quot;description&quot;&gt;{{badge}}&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;`
 })
 
 Vue.component('dashboard', {
@@ -308,7 +307,8 @@ new Vue({
   el: '#filterAll', 
   methods: {
     searchAll (e) {
-      this.$broadcast('filter', {filter: e.target.value, col: ['desc']})
+      this.$broadcast('filter', 
+        {filter: e.target.value, col: ['desc']})
     }
   }
 })
@@ -369,28 +369,28 @@ new Vue({
   &lt;/div&gt;
 &lt;/div&gt;
 &lt;smart-table
-    table-classes=&quot;ui celled table unstackable olive&quot;
-    :body=&quot;[
-        {name: 'WordPress', openSource: true},
-        {name: 'Drupal', openSource: true},
-        {name: 'Microsoft Office 365', openSource: false},
-        {name: 'Joomla', openSource: true},
-        {name: 'Altitude3.Net', openSource: false},
-    ]&quot;
+  table-classes=&quot;ui celled table unstackable olive&quot;
+  :body=&quot;[
+    {name: 'WordPress', openSource: true},
+    {name: 'Drupal', openSource: true},
+    {name: 'Microsoft Office 365', openSource: false},
+    {name: 'Joomla', openSource: true},
+    {name: 'Altitude3.Net', openSource: false},
+  ]&quot;
 &gt;
     &lt;truefalse col=&quot;openSource&quot;&gt;&lt;/truefalse&gt;
 &lt;/smart-table&gt;
     </code>
     <code>
 Vue.component('truefalse', {
-    template: `&lt;p&gt;{{value || 'false'}}&lt;/p&gt;`,
-    methods: {
-        filterFunction (filter) {
-            return function (value) {
-                return !filter || value
-            }
-        }
+  template: `&lt;p&gt;{{value || 'false'}}&lt;/p&gt;`,
+  methods: {
+    filterFunction (filter) {
+      return function (value) {
+        return !filter || value
+      }
     }
+  }
 })
 new Vue({
   el: '#filterScoped',
@@ -445,7 +445,12 @@ table-classes=&quot;ui celled table unstackable orange&quot;
   </code>
   <code>
 Vue.component('wrapper', {
-  template: `&lt;div&gt;&lt;smart-table :body=&quot;value&quot; table-classes=&quot;ui celled table unstackable brown&quot;&gt;&lt;/smart-table&gt;&lt;/div&gt;`
+  template: `&lt;div&gt;
+      &lt;smart-table 
+        :body=&quot;value&quot;
+        table-classes=&quot;ui celled table unstackable brown&quot;&gt;
+      &lt;/smart-table&gt;
+    &lt;/div&gt;`
 })
 new Vue({el: '#yoDawg'})
   </code>
