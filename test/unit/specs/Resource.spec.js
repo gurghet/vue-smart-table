@@ -16,7 +16,7 @@ let testBody = [{
   age: 22
 }]
 
-describe('Asyncronous resource loading when "auto-load" is set to true', () => {
+describe('Resource', () => {
   it('should load data automatically on startup', (done) => {
     Vue.http.interceptors.shift()
     Vue.http.interceptors.unshift((req, next) => {

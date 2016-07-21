@@ -28,6 +28,7 @@ var camelCase = require('camel-case')
 function undashCamelize (columnKey) {
   return camelCase(columnKey.replace(/\-/, ' '))
 }
+
 /**
  * rawBody is an array in the form
  * [ { 'col 1': 'value 1', 'col 2': 'value 2', ... [_id: 'some id'] },
@@ -36,6 +37,9 @@ function undashCamelize (columnKey) {
  * Columns can be omitted and _ids can be omitted too.
  */
 function bodyWithIds (body, idColKey) {
+  if (body.length === 0) {
+    return
+  }
   let counter = 0
   let usedIds = []
   body.forEach(row => {

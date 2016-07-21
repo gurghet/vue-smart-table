@@ -62,7 +62,8 @@
         filters: [], // {filter: string or function, col: string or array of strings}
         pBody: [],
         elHarvest: [],
-        column2stampMap: {}
+        column2stampMap: {},
+        counter: {c: 0}
       }
     },
     props: {
@@ -219,7 +220,7 @@
       }
 
       if (this.autoLoad === false) {
-        this.makepBody()
+        this.makepBody('immediateRender')
       }
 
       // Deprecation warning for slot
@@ -284,7 +285,7 @@
       }
     },
     methods: {
-      makepBody () {
+      makepBody (immediateRender = false) {
         let malleableBody = []
         this.body.forEach(row => {
           malleableBody.push(Object.assign({}, row, {_show: true}))
@@ -292,9 +293,20 @@
         Vue.set(this, 'pBody', malleableBody)
         bodyParsing.derivedBody(this.pBody, this.tableHeader.map(c => c.key))
         bodyParsing.bodyWithIds(this.pBody, this.idCol)
-        // this.$nextTick(() => {
-        this.updateInjectedValues()
-        // })
+        this.applyFilters()
+
+        // destroy removed components
+        let insistingIds = this.pBody.map(r => r._id)
+        let childrenToRemove = this.$children.filter(c => insistingIds.indexOf(c.id) === -1)
+        childrenToRemove.forEach(c => c.$destroy())
+
+        if (immediateRender) {
+          this.updateInjectedValues()
+        } else {
+          this.$nextTick(() => {
+            this.updateInjectedValues()
+          })
+        }
       },
       compareFunction (sortKey) {
         let child = this.$children.find(c => c.col === sortKey)
@@ -383,7 +395,7 @@
         }
         let smartTable = this
         Array.from(this.$el.querySelectorAll('.value-cell')).forEach(cellEl => {
-          let [, id, col] = cellEl.id.match(/^cell-([a-zA-Z0-9 ._-]+)-([a-zA-Z0-9.+]+)$/)
+          let [, id, col] = cellEl.id.match(/^cell-([a-zA-Z0-9 ._-]+)-([a-zA-Z0-9_.+]+)$/)
           let comp = this.$children.find(c => c.id === id && c.col === col)
           if (comp === undefined) {
             // new, create!
@@ -412,12 +424,18 @@
                 }
               }
             }
+            let altCol = camelCase(col.replace(/\-/, ' ')
+                           .replace(/\./, 'ʬ').replace(/\+/, 'ʭ'))
+                           .replace(/ʬ/, '.').replace(/ʭ/, '+')
+            let res = smartTable.column2stampMap[col] ||
+                      smartTable.column2stampMap[altCol]
+            let elInstance = res ? res.el : document.createElement('plain-text')
             let compOptions = Object.assign({
-              el: smartTable.column2stampMap[col] ? smartTable.column2stampMap[col].el : document.createElement('plain-text'),
+              el: elInstance,
               mixins: [dataMixin, smartMethods],
               parent: smartTable
             })
-            let Ctor = this.column2stampMap[col] ? this.column2stampMap[col].Ctor : Vue.extend(PlainText)
+            let Ctor = res ? res.Ctor : Vue.extend(PlainText)
             comp = new Ctor(compOptions)
             // manually appending the child
             cellEl.appendChild(comp.$el)
@@ -530,6 +548,23 @@
         this.$dispatch('after-request')
         this.$set('error', false)
         this.maybeRefresh()
+      },
+      applyFilters () {
+        let cumulative = false
+        this.filters.forEach(f => {
+          let filter = f.filter
+          let col = f.col
+          // intercept the filter in case we have a custom component to
+          // check if they have a custom filter function
+          if (typeof col === 'string' || col.length === 1 && Array.isArray(col)) {
+            let comp = this.$children.find(c => c.col === col)
+            if (comp && comp.filterFunction !== undefined) {
+              filter = comp.filterFunction(filter)
+            }
+          }
+          bodyParsing.filteredBody(this.pBody, filter, col, cumulative)
+          cumulative = true
+        })
       }
     },
     events: {
@@ -584,58 +619,14 @@
           this.filters.splice(this.filters.indexOf(currentFilter), 1)
           this.filters.push({filter, col})
         }
-        let cumulative = false
-        this.filters.forEach(f => {
-          let filter = f.filter
-          let col = f.col
-          // intercept the filter in case we have a custom component to
-          // check if they have a custom filter function
-          if (typeof col === 'string' || col.length === 1 && Array.isArray(col)) {
-            let comp = this.$children.find(c => c.col === col)
-            if (comp && comp.filterFunction !== undefined) {
-              filter = comp.filterFunction(filter)
-            }
-          }
-          bodyParsing.filteredBody(this.pBody, filter, col, cumulative)
-          cumulative = true
-        })
+        this.applyFilters()
       }
     }
   }
 </script>
 
 <style>
-
-  .bottom-right-corner {
-    font-size: 42px;
-    float: left;
-    height: 1px;
-    top: -25px;
-    position: relative;
-    width: 32px;
-    left: 5px;
-    pointer-events: none;
-    cursor: default;
-  }
-
-  .action-label {
-    text-transform: capitalize;
-  }
-
-  table input[type="checkbox"] {
-    transform: scale(1.4);
-    margin: 0;
-  }
-
-  .error-panel {
-    width: 100%;
-    height: 50px;
-    background-color: #260707;
-    color: #c8999e;
-  }
-
-  .click-cue {
-    width: 1em;
-    height: 1em;
+  .smart-filter {
+    display: none;
   }
 </style>

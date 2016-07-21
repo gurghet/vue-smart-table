@@ -14,7 +14,7 @@ module.exports = merge(baseWebpackConfig, {
     app: './src/vue-smart-table.js'
   },
   module: {
-    loaders: utils.styleLoaders({ sourceMap: config.build.productionSourceMap, extract: true })
+    loaders: utils.styleLoaders({ sourceMap: config.build.productionSourceMap, extract: false })
   },
   devtool: config.build.productionSourceMap ? '#source-map' : false,
   output: {
@@ -26,7 +26,7 @@ module.exports = merge(baseWebpackConfig, {
   vue: {
     loaders: utils.cssLoaders({
       sourceMap: config.build.productionSourceMap,
-      extract: true
+      extract: false
     })
   },
   externals: {
@@ -43,10 +43,6 @@ module.exports = merge(baseWebpackConfig, {
         warnings: false
       }
     }),
-    new webpack.optimize.OccurenceOrderPlugin(),
-    // extract css into its own file
-    new ExtractTextPlugin(utils.assetsPath('vue-smart-table-default.css'))
-    // extract webpack runtime and module manifest to its own file in order to
-    // prevent vendor hash from being updated whenever app bundle is updated
+    new webpack.optimize.OccurenceOrderPlugin()
   ]
 })

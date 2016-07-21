@@ -50,7 +50,7 @@ describe('SmartTable.vue', () => {
         testBody: [{_id: 0, c1: 'c11', c2: 'c21', c3: 'c31'}, {_id: 1, c1: 'c12', c2: 'c22', c3: 'c32'}],
         testColumns: ['C1', 'C2', 'C3']
       }
-    }).$mount()
+    }).$mount('body')
     expect(vm.$el.querySelectorAll('td').length).to.eql(6)
     expect(vm.$el.querySelector('#cell-0-c1').textContent).to.contain('c11')
     vm.testBody = [
@@ -59,9 +59,20 @@ describe('SmartTable.vue', () => {
       {_id: 2, c1: 'c13', c2: 'c23', c3: 'c33'}
     ]
     vm.$nextTick(() => {
+      // canalization of the table
       expect(vm.$el.querySelectorAll('td').length).to.eql(9)
-      expect(vm.$el.querySelector('#cell-0-c1').textContent).to.contain('toredo')
-      done()
+      expect(vm.$el.querySelector('#cell-2-c1').textContent).to.contain('')
+      vm.$nextTick(() => {
+        // new elements are born with their first value already in the DOM
+        // old elements set their value in the data
+        expect(vm.$el.querySelector('#cell-2-c1').textContent).to.contain('c13')
+        expect(vm.$el.querySelector('#cell-0-c1').textContent).to.contain('c11')
+        vm.$nextTick(() => {
+          // eventually old objects are updated in the DOM also
+          expect(vm.$el.querySelector('#cell-0-c1').textContent).to.contain('toredo')
+          done()
+        })
+      })
     })
   })
   it('should create a header with the keys as column if header not provided', () => {

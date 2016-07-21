@@ -13,12 +13,12 @@
   </head>
   <body>
     <input type="text" v-model="search"/>
-   <smart-table
+   <!--smart-table
     :auto-load="true"
     body-path="results"
     id-col="id.value"
     table-classes="ui celled table unstackable"
-    endpoint="http://api.randomuser.me/?page=1&results=20&seed=abc"
+    endpoint="http://api.randomuser.me/?page=1&results=2&seed=abc"
     :header="[
     {key: 'name.first', label: 'name'},
     {key: 'name.last', label: 'surname'},
@@ -32,40 +32,21 @@
     :can-filter-by="['name.first', 'name.last']"
     v-ref:smart>
    <plain-text col="name.first" :multiline="true"></plain-text>
-   <!-- this component is used implicitly
-        you can write it if you want to tweak
-        its configuration -->
 
    <src2img col="picture.thumbnail"></src2img>
-   <!-- this component will read the image
-        address inside the nested json
-        object and put it into the scr of
-        an img tag -->
 
    <contacts col="phone+cell"></contacts>
-   <!-- every derived column needs a component
-        to be displayed correctly this
-        component is just a <p> tag and some
-        styling -->
 
    <fontawesome col="gender"></fontawesome>
-   <!-- this last component is pretty self
-        explanatory, it will turn the string
-        into the specified icon -->
 
    <nationality col="nat"></nationality>
-   <!-- this component will take the country
-        iso code from the json, query
-        a web service and overwrite itself with
-        the full country name! -->
-  </smart-table>
+  </smart-table-->
+  <button @click="add">add</button>
+  <button @click="remove">remove</button>
   <smart-table
-  :body="[{hello:'world'},{world:'hello'}]"
-    >
-  </smart-table>
-  <smart-table
-  :body="[{'hello world':'hi'}]"
-    >
+  :body="[{hello:'world'},{hello:'to you', world:'hello'}]"
+  :order-by="['hello', 'world']"
+  v-ref:ut>
   </smart-table>
   <!-- built files will be auto injected -->
   </body>

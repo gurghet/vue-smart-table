@@ -15,14 +15,26 @@ Vue.component('smart-table', SmartTable)
 new Vue({
   el: 'body',
   data: {
-    search: ''
+    search: '',
+    mine: []
   },
   watch: {
     'search' (val) {
-      this.$broadcast('filterAll', val)
+      this.$broadcast('filter', {filter: val, col: 'hello'})
     }
   },
-  components: { SmartTable, Src2img, Contacts, Nationality, Fontawesome, ExampleComponent }
+  components: { SmartTable, Src2img, Contacts, Nationality, Fontawesome, ExampleComponent },
+  methods: {
+    add () {
+      let m = {hello: Math.random(), world: 'chtulu'}
+      this.mine.push(m)
+      this.$refs.ut.body.push(m)
+    },
+    remove () {
+      this.$refs.ut.body.$remove(this.mine[this.mine.length - 1])
+      this.mine.splice(this.mine.length - 1, 1)
+    }
+  }
 })
 
 Vue.http.interceptors.unshift((request, next) => {
