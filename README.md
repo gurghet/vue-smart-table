@@ -4,8 +4,10 @@
 [![npm](https://img.shields.io/npm/dt/vue-smart-table.svg?maxAge=2592000)](https://www.npmjs.com/package/vue-smart-table)
 
 > Vue Smart Table lets you deploy beautiful tables when you are in a hurry and all you got is a tangled json from the backend.
+
 > After such a hack you are left with super mainainable code because the table is completely modular and divided in components.
-> You can than pick it up and perfect your work without long rewrites.
+
+> You can then pick it up and perfect your work without long rewrites.
 
 ## Usage
 
