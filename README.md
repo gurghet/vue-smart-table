@@ -25,10 +25,10 @@ Basically you write this
     ]"
     :order-by="['name.first', 'name.last']"
     >
-   <src2img slot="picture.thumbnail"></src2img><!-- renders pictures -->
-   <contacts slot="phone+cell"></contacts><!-- custom formatting -->
-   <nationality slot="nat"></nationality><!-- queries a remote server for country code to country name conversion -->
-   <fontawesome slot="gender"></fontawesome><!-- font awesome! -->
+   <src2img col="picture.thumbnail"></src2img><!-- renders pictures -->
+   <contacts col="phone+cell"></contacts><!-- custom formatting -->
+   <nationality col="nat"></nationality><!-- queries a remote server for country code to country name conversion -->
+   <fontawesome col="gender"></fontawesome><!-- font awesome! -->
   </smart-table>
 ```
 
@@ -74,13 +74,11 @@ After that you can freely use it in your templates:
 
 ## Documentation
 
-For the moment being I'll collect some documentation at the following link:
-
-http://forum.vuejs.org/topic/4140/vue-smart-table
-
-I'm also writing the wiki
+You will find documentation at the wiki page (although there is no versioning there, so heads up)
 
 [Documentation](https://github.com/gurghet/vue-smart-table/wiki)
+
+For more information visit: http://forum.vuejs.org/topic/4140/vue-smart-table
 
 The format of the `body` prop is like the following:
 
@@ -104,6 +102,8 @@ npm run build
 # run unit tests
 # always run unit tests! D:<
 npm run ~unit
+# for the body parsing run
+npm run ~funit
 ```
 
 ## Roadmap
@@ -121,7 +121,7 @@ npm run ~unit
   * [ ] Inline validation
 * [ ] Drag row to reorder
 * [ ] Filtering
-  * [ ] Client side
+  * [x] Client side
   * [ ] Server side
 
 ## Similar Components
@@ -131,6 +131,15 @@ Here is a list of similar components that also display a table:
 - [vue-table](https://github.com/ratiw/vue-table)
 
 ##Changelog
+
+###2.5.0
+
+- Complete engine rewrite!
+  - Core logic was ~100 lines, now only ~15
+  - Such maintainance
+  - Many development speed
+  - wow!
+- [Feature] Client filtering is now supported through the `filter` event
 
 ###2.4.2
 
