@@ -2,8 +2,13 @@
 
 [![Join the chat at https://gitter.im/gurghet/vue-smart-table](https://badges.gitter.im/gurghet/vue-smart-table.svg)](https://gitter.im/gurghet/vue-smart-table?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![npm](https://img.shields.io/npm/dt/vue-smart-table.svg?maxAge=2592000)](https://www.npmjs.com/package/vue-smart-table)
+[![Twitter URL](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&maxAge=2592000)](http://twitter.com/share?text=Cut%20development%20time.%20Smart%20Table%20renders%20cool%20ui%20grids%20with%200%20effort%20and%20max%20modularity&url=http://bit.ly/29TxlG6)
 
-> A vue table with dynamic components
+> Vue Smart Table lets you deploy beautiful tables when you are in a hurry and all you got is a tangled json from the backend.
+
+> After such a hack you are left with super mainainable code because the table is completely modular and divided in components.
+
+> You can then pick it up and perfect your work without long rewrites.
 
 ## Usage
 
@@ -14,7 +19,7 @@ Basically you write this
     :auto-load="true"
     body-path="results"
     id-col="id.value"
-    endpoint="http://api.randomuser.me/?page=1&results=20"
+    endpoint="http://api.randomuser.me/?results=20"
     :header="[
     {key: 'name.first', label: 'name'},
     {key: 'name.last', label: 'surname'},
@@ -25,10 +30,10 @@ Basically you write this
     ]"
     :order-by="['name.first', 'name.last']"
     >
-   <src2img slot="picture.thumbnail"></src2img><!-- renders pictures -->
-   <contacts slot="phone+cell"></contacts><!-- custom formatting -->
-   <nationality slot="nat"></nationality><!-- queries a remote server for country code to country name conversion -->
-   <fontawesome slot="gender"></fontawesome><!-- font awesome! -->
+   <src2img col="picture.thumbnail"></src2img><!-- renders pictures -->
+   <contacts col="phone+cell"></contacts><!-- custom formatting -->
+   <nationality col="nat"></nationality><!-- queries a remote server for country code to country name conversion -->
+   <fontawesome col="gender"></fontawesome><!-- font awesome! -->
   </smart-table>
 ```
 
@@ -40,7 +45,7 @@ and you get this
 
 ## Installation
 
-#### Webpack/Browserify
+#### If you use Webpack/Browserify
 
 ``` bash
 npm install vue-smart-table --save
@@ -52,17 +57,43 @@ In your app then you write:
 import SmartTable from "vue-smart-table"
 Vue.component('smart-table', SmartTable)
 ```
+Alternatively you can add it to your components options
 
-#### &lt;script&gt; tag inside your page
+``` javascript
+import SmartTable from "vue-smart-table"
+// ...
+components: {
+    'smart-table': SmartTable
+  }
+// ...
+```
+In Webpack you will have to transpile some `.js` files inside the vue-smart-table, since the `node_modules` directory it’s excluded by default in the `vue-cli` template, remember to enable it. This means that if your js loader is like this:
+
+``` javascript
+{
+  test: /\.js$/,
+  loader: 'babel',
+  include: projectRoot,
+  exclude: /node_modules/ // <-- this needs to be changed
+}
+```
+You will have to spare the folder `node_modules/vue-smart-table/src/components` from exclusion. Just turn the `exclude` property to:
+
+`eclude: /node_modules(?!\/vue-smart-table\/src\/components)/`
+
+#### If you use the &lt;script&gt; tag inside your page
+
+This is ideal if you are using Smart Table as a drop-in component in a bigger project that is *not* based on Vue.js
+
+The `vue-smart-table.js` does not contain `vue` and `vue-resources` dependencies, those will also need to be on the page.
 
 ``` html
-<!-- optional in your head -->
-<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.4.0/dist/static/vue-smart-table-default.css">
-<!-- at the end of your body -->
-<script src="https://npmcdn.com/vue-smart-table@2.4.0/dist/static/vue-smart-table.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue-smart-table/2.5.0-beta1/vue-smart-table.js"></script>
+<!-- or -->
+<script src="https://npmcdn.com/vue-smart-table@2.5.0/dist/static/vue-smart-table.js"></script>
 ```
 
-That’s it! The component will register itself!
+That’s it! The component will register itself! Remember do add a `min.js` when going in production.
 
  ---
 
@@ -74,13 +105,11 @@ After that you can freely use it in your templates:
 
 ## Documentation
 
-For the moment being I'll collect some documentation at the following link:
-
-http://forum.vuejs.org/topic/4140/vue-smart-table
-
-I'm also writing the wiki
+You will find documentation at the wiki page (although there is no versioning there, so heads up)
 
 [Documentation](https://github.com/gurghet/vue-smart-table/wiki)
+
+For more information visit: http://forum.vuejs.org/topic/4140/vue-smart-table
 
 The format of the `body` prop is like the following:
 
@@ -104,6 +133,8 @@ npm run build
 # run unit tests
 # always run unit tests! D:<
 npm run ~unit
+# for the body parsing run
+npm run ~funit
 ```
 
 ## Roadmap
@@ -121,7 +152,7 @@ npm run ~unit
   * [ ] Inline validation
 * [ ] Drag row to reorder
 * [ ] Filtering
-  * [ ] Client side
+  * [x] Client side
   * [ ] Server side
 
 ## Similar Components
@@ -131,6 +162,15 @@ Here is a list of similar components that also display a table:
 - [vue-table](https://github.com/ratiw/vue-table)
 
 ##Changelog
+
+###2.5.0
+
+- Complete engine rewrite!
+  - Core logic was ~100 lines, now only ~15
+  - Such maintainance
+  - Many development speed
+  - wow!
+- [Feature] Client filtering is now supported through the `filter` event
 
 ###2.4.3
 

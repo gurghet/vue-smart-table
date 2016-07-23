@@ -42,7 +42,7 @@ webpackConfig.module.preLoaders.unshift({
 // only apply babel for test files when using isparta
 webpackConfig.module.loaders.some(function (loader, i) {
   if (loader.loader === 'babel') {
-    loader.include = path.resolve(projectRoot, 'test/unit')
+    loader.include = path.resolve(projectRoot, 'test/unit-functions')
     return true
   }
 })
@@ -55,10 +55,10 @@ module.exports = function (config) {
     // 2. add it to the `browsers` array below.
     browsers: ['PhantomJS'],
     frameworks: ['mocha', 'sinon-chai'],
-    reporters: ['spec'], //, 'coverage'],
-    files: ['./index.js'],
+    reporters: ['spec', 'coverage'],
+    files: ['./specs/*.spec.js'],
     preprocessors: {
-      './index.js': ['webpack', 'sourcemap']
+      './specs/*.spec.js': ['webpack', 'sourcemap']
     },
     webpack: webpackConfig,
     webpackMiddleware: {

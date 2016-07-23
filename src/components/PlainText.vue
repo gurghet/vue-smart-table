@@ -40,7 +40,7 @@
         id: undefined,
         col: undefined,
         editable: false,
-        sortFunction: 3,
+        compareFunction: undefined,
         mode: 'readOnly'
       }
     },
@@ -56,7 +56,7 @@
     },
     compiled () {
       if (this.lexicographicalOrdering === true) {
-        this.sortFunction = 'lexicographic'
+        this.compareFunction = 'lexicographic'
       }
     },
     computed: {

@@ -16,7 +16,7 @@ let testBody3 = [{_id: 1, bau: 'Gennaro', pau: 34}, {_id: 55, bau: 'Marco', pau:
 let testBodyId = [{id: 1, name: 'Gennaro', age: 34}, {id: 3, name: 'Marco', age: 22}]
 let testBodyNoId = [{name: 'Gennaro', age: 34}, {name: 'Marco', age: 22}]*/
 
-describe('Add row feature', () => {
+describe.skip('Add row feature', () => {
   it('should show an editable row if add-row is set to true', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :add-row="true"></smart-table></div>',

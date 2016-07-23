@@ -6,15 +6,12 @@
   export default {
     data () {
       return {
-        value: '',
         fullnat: '..'
       }
     },
-    watch: {
-      'value' (val) {
-        this.$http.get('https://restcountries.eu/rest/v1/alpha/' + val)
-          .then(res => this.$set('fullnat', res.data.name))
-      }
+    ready () {
+      this.$http.get('http://restcountries.eu/rest/v1/alpha/' + this.value)
+        .then(res => this.$set('fullnat', res.data.name))
     }
   }
 </script>

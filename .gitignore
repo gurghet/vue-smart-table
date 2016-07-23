@@ -3,5 +3,6 @@ node_modules/
 npm-debug.log
 selenium-debug.log
 test/unit/coverage
+test/unit-functions/coverage
 test/e2e/reports
 .idea/
