@@ -73,7 +73,7 @@ In Webpack you will have to transpile some `.js` files inside the vue-smart-tabl
   test: /\.js$/,
   loader: 'babel',
   include: projectRoot,
-  exclude: /node_modules/
+  exclude: /node_modules/ // <-- this needs to be changed
 }
 ```
 You will have to spare the folder `node_modules/vue-smart-table/src/components` from exclusion. Just turn the `exclude` property to:
