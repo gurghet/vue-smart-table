@@ -44,7 +44,7 @@ and you get this
 
 ## Installation
 
-#### Webpack/Browserify
+#### If you use Webpack/Browserify
 
 ``` bash
 npm install vue-smart-table --save
@@ -56,17 +56,43 @@ In your app then you write:
 import SmartTable from "vue-smart-table"
 Vue.component('smart-table', SmartTable)
 ```
+Alternatively you can add it to your components options
 
-#### &lt;script&gt; tag inside your page
+``` javascript
+import SmartTable from "vue-smart-table"
+// ...
+components: {
+    'smart-table': SmartTable
+  }
+// ...
+```
+In Webpack you will have to transpile some `.js` files inside the vue-smart-table, since the `node_modules` directory it’s excluded by default in the `vue-cli` template, remember to enable it. This means that if your js loader is like this:
+
+``` javascript
+{
+  test: /\.js$/,
+  loader: 'babel',
+  include: projectRoot,
+  exclude: /node_modules/
+}
+```
+You will have to spare the folder `node_modules/vue-smart-table/src/components` from exclusion. Just turn the `exclude` property to:
+
+`eclude: /node_modules(?!\/vue-smart-table\/src\/components)/`
+
+#### If you use the &lt;script&gt; tag inside your page
+
+This is ideal if you are using Smart Table as a drop-in component in a bigger project that is *not* based on Vue.js
+
+The `vue-smart-table.js` does not contain `vue` and `vue-resources` dependencies, those will also need to be on the page.
 
 ``` html
-<!-- optional in your head -->
-<link rel="stylesheet" href="https://npmcdn.com/vue-smart-table@2.5.0/dist/static/vue-smart-table-default.css">
-<!-- at the end of your body -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue-smart-table/2.5.0-beta1/vue-smart-table.js"></script>
+<!-- or -->
 <script src="https://npmcdn.com/vue-smart-table@2.5.0/dist/static/vue-smart-table.js"></script>
 ```
 
-That’s it! The component will register itself!
+That’s it! The component will register itself! Remember do add a `min.js` when going in production.
 
  ---
 
