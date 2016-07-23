@@ -291,7 +291,7 @@
           malleableBody.push(Object.assign({}, row, {_show: true}))
         })
         Vue.set(this, 'pBody', malleableBody)
-        bodyParsing.derivedBody(this.pBody, this.tableHeader.map(c => c.key))
+        bodyParsing.deriveBody(this.pBody, this.tableHeader.map(c => c.key))
         bodyParsing.bodyWithIds(this.pBody, this.idCol)
         this.applyFilters()
 
@@ -512,7 +512,7 @@
           this.reverseOrder = false
         }
         this.orderKey = col
-        bodyParsing.sortedBody(this.pBody, col, this.reverseOrder, this.compareFunction(col))
+        bodyParsing.sortBody(this.pBody, col, this.reverseOrder, this.compareFunction(col))
       },
       orderClass (col) {
         if (this.orderKey === col && this.reverseOrder === false) {
@@ -562,7 +562,7 @@
               filter = comp.filterFunction(filter)
             }
           }
-          bodyParsing.filteredBody(this.pBody, filter, col, cumulative)
+          bodyParsing.filterBody(this.pBody, filter, col, cumulative)
           cumulative = true
         })
       }

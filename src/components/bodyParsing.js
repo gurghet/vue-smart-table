@@ -6,7 +6,7 @@ function getDataFromDotNotation (d, row) {
   return d.split('.').reduce((o, i) => { if (o === undefined) { return undefined } else { return o[i] } }, row)
 }
 
-function derivedBody (body, cols) {
+function deriveBody (body, cols) {
   return body.map(row => {
     cols.forEach(col => {
       let realColValue = {}
@@ -70,7 +70,7 @@ function assertShowReactive (row) {
   }
 }
 
-function filteredBody (body, filter, colKeys, cumulative = false) {
+function filterBody (body, filter, colKeys, cumulative = false) {
   if (colKeys === undefined) {
     throw new Error('[Smart Table Internal Error] Filtering scope not defined')
   }
@@ -128,7 +128,7 @@ function filteredBody (body, filter, colKeys, cumulative = false) {
   }
 }
 
-function sortedBody (body, colKey, desc, compareFunction) {
+function sortBody (body, colKey, desc, compareFunction) {
   function numericCompare (row1, row2) {
     let valA = getDataFromDotNotation(colKey, row1)
     var valB = getDataFromDotNotation(colKey, row2)
@@ -182,4 +182,4 @@ function camelizeHeader (header) {
   })
 }
 
-export default { derivedBody, bodyWithIds, filteredBody, sortedBody, camelizeHeader }
+export default { deriveBody, bodyWithIds, filterBody, sortBody, camelizeHeader }

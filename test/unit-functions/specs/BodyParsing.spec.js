@@ -98,7 +98,7 @@ describe('bodyWithIds', () => {
   })
 })
 
-describe('filteredBody', () => {
+describe('filterBody', () => {
   it('should apply the same filtering function to more columns', () => {
     // ____mut suppresses errors
     let tooMany = [
@@ -107,7 +107,7 @@ describe('filteredBody', () => {
       {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
       {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(tooMany, 'c', ['name', 'surname'])
+    bodyParsing.filterBody(tooMany, 'c', ['name', 'surname'])
     tooMany.should.eql([
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
@@ -124,7 +124,7 @@ describe('filteredBody', () => {
       {_id: 2, age: 70, surname: 'ccc', _show: true, ____mut: ''},
       {_id: 3, age: 12, surname: 'bac', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(ages, '4', 'age')
+    bodyParsing.filterBody(ages, '4', 'age')
     ages.should.eql([
       {_id: 0, age: 3, surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, age: 44, surname: 'bbb', _show: true, ____mut: ''},
@@ -140,7 +140,7 @@ describe('filteredBody', () => {
       {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
       {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(tooMany, 'C', ['name', 'surname'])
+    bodyParsing.filterBody(tooMany, 'C', ['name', 'surname'])
     tooMany.should.eql([
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
@@ -154,7 +154,7 @@ describe('filteredBody', () => {
       {_id: 0, name: 'aaa', age: 34, _show: true, ____mut: ''},
       {_id: 1, name: 'bbb', age: 3, _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(numbers, '3', ['name', 'age'])
+    bodyParsing.filterBody(numbers, '3', ['name', 'age'])
     numbers.should.eql([
       {_id: 0, name: 'aaa', age: 34, _show: true, ____mut: ''},
       {_id: 1, name: 'bbb', age: 3, _show: true, ____mut: ''}
@@ -168,7 +168,7 @@ describe('filteredBody', () => {
       {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
       {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(tooMany, 'c', 'name')
+    bodyParsing.filterBody(tooMany, 'c', 'name')
     tooMany.should.eql([
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
@@ -184,7 +184,7 @@ describe('filteredBody', () => {
       {_id: 2, name: 'aba', surname: 'ccc', _show: false, ____mut: ''},
       {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(tooMany, 'c', 'surname')
+    bodyParsing.filterBody(tooMany, 'c', 'surname')
     tooMany.should.eql([
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
@@ -200,7 +200,7 @@ describe('filteredBody', () => {
       {_id: 2, name: 'aba', surname: 'ccc', _show: false, ____mut: ''},
       {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(tooMany, 'c', 'surname', true)
+    bodyParsing.filterBody(tooMany, 'c', 'surname', true)
     tooMany.should.eql([
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, name: 'bbb', surname: 'bbb', _show: false, ____mut: ''},
@@ -216,7 +216,7 @@ describe('filteredBody', () => {
       {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
       {_id: 3, name: 'cab', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(missing, 'c', ['name', 'surname'])
+    bodyParsing.filterBody(missing, 'c', ['name', 'surname'])
     missing.should.eql([
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, surname: 'bbb', _show: false, ____mut: ''},
@@ -225,14 +225,14 @@ describe('filteredBody', () => {
     ])
   })
 
-  it('should perform filtering even with undefined columns are filtered specifically', () => {
+  it('should perform filtering even with undefined columns are filter specifically', () => {
     let missing = [
       {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
       {_id: 1, surname: 'bbb', _show: true, ____mut: ''},
       {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
       {_id: 3, name: 'cab', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(missing, 'c', 'surname')
+    bodyParsing.filterBody(missing, 'c', 'surname')
     missing.should.eql([
       {_id: 0, name: 'aaa', surname: 'aaa', _show: false, ____mut: ''},
       {_id: 1, surname: 'bbb', _show: false, ____mut: ''},
@@ -246,7 +246,7 @@ describe('filteredBody', () => {
       {_id: 0, name: { first: 'bob', last: 'marley' }, _show: true, ____mut: ''},
       {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(intricate, 'i', 'name.first')
+    bodyParsing.filterBody(intricate, 'i', 'name.first')
     intricate.should.eql([
       {_id: 0, name: { first: 'bob', last: 'marley' }, _show: false, ____mut: ''},
       {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true, ____mut: ''}
@@ -258,7 +258,7 @@ describe('filteredBody', () => {
       {_id: 0, name: { last: 'marley' }, _show: true, ____mut: ''},
       {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(intricateMissing, 'i', 'name.first')
+    bodyParsing.filterBody(intricateMissing, 'i', 'name.first')
     intricateMissing.should.eql([
       {_id: 0, name: { last: 'marley' }, _show: false, ____mut: ''},
       {_id: 1, name: { first: 'bib', last: 'mirley' }, _show: true, ____mut: ''}
@@ -275,7 +275,7 @@ describe('filteredBody', () => {
       {_id: 2, number: 3, _show: true, ____mut: ''},
       {_id: 3, number: 4, _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(excel, filter, 'number')
+    bodyParsing.filterBody(excel, filter, 'number')
     excel.should.eql([
       {_id: 0, number: 1, _show: false, ____mut: ''},
       {_id: 1, number: 2, _show: false, ____mut: ''},
@@ -294,7 +294,7 @@ describe('filteredBody', () => {
       {_id: 2, number: 3, _show: false, ____mut: ''},
       {_id: 3, number: 4, _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(excel, filter, 'number')
+    bodyParsing.filterBody(excel, filter, 'number')
     excel.should.eql([
       {_id: 0, number: 1, _show: false, ____mut: ''},
       {_id: 1, number: 2, _show: false, ____mut: ''},
@@ -313,7 +313,7 @@ describe('filteredBody', () => {
       {_id: 2, number: 3},
       {_id: 3, number: 4}
     ]
-    let result = () => bodyParsing.filteredBody(excel, filter)
+    let result = () => bodyParsing.filterBody(excel, filter)
     result.should.throw(Error)
   })
 
@@ -324,7 +324,7 @@ describe('filteredBody', () => {
       {_id: 2, name: 'aba', surname: 'ccc', _show: true, ____mut: ''},
       {_id: 3, name: 'cab', surname: 'bac', _show: true, ____mut: ''}
     ]
-    bodyParsing.filteredBody(tooMany, 'c', [])
+    bodyParsing.filterBody(tooMany, 'c', [])
     tooMany.should.eql([
       {_id: 0, name: 'aaa', surname: 'aaa', _show: true, ____mut: ''},
       {_id: 1, name: 'bbb', surname: 'bbb', _show: true, ____mut: ''},
@@ -334,7 +334,7 @@ describe('filteredBody', () => {
   })
 })
 
-describe('sortedBody', () => {
+describe('sortBody', () => {
   it('should sort lexicographically', () => {
     let names = [
       {_id: 0, _show: true, name: 'Andy'},
@@ -342,7 +342,7 @@ describe('sortedBody', () => {
       {_id: 2, _show: true, name: 'Sooty'},
       {_id: 3, _show: true, name: 'Cooty'}
     ]
-    let result = bodyParsing.sortedBody(names, 'name', false)
+    let result = bodyParsing.sortBody(names, 'name', false)
     result.should.eql([
       {_id: 0, _show: true, name: 'Andy'},
       {_id: 3, _show: true, name: 'Cooty'},
@@ -358,7 +358,7 @@ describe('sortedBody', () => {
       {_id: 2, _show: true, name: 'Sooty'},
       {_id: 3, _show: true, name: 'Cooty'}
     ]
-    let result = bodyParsing.sortedBody(names, 'name', true)
+    let result = bodyParsing.sortBody(names, 'name', true)
     result.should.eql([
       {_id: 2, _show: true, name: 'Sooty'},
       {_id: 1, _show: true, name: 'Dooty'},
@@ -374,7 +374,7 @@ describe('sortedBody', () => {
       {_id: 2, _show: true, name: 'Sooty', age: 1},
       {_id: 0, _show: true, name: 'Andy', age: 3}
     ]
-    let result = bodyParsing.sortedBody(names, 'age', false)
+    let result = bodyParsing.sortBody(names, 'age', false)
     result.should.eql([
       {_id: 2, _show: true, name: 'Sooty', age: 1},
       {_id: 3, _show: true, name: 'Cooty', age: 3},
@@ -390,7 +390,7 @@ describe('sortedBody', () => {
       {_id: 2, _show: true, name: 'Sooty', age: 1},
       {_id: 0, _show: true, name: 'Andy', age: 3}
     ]
-    let result = bodyParsing.sortedBody(names, 'age', true)
+    let result = bodyParsing.sortBody(names, 'age', true)
     result.should.eql([
       {_id: 1, _show: true, name: 'Dooty', age: 7},
       {_id: 3, _show: true, name: 'Cooty', age: 3},
@@ -406,7 +406,7 @@ describe('sortedBody', () => {
       {_id: 2, _show: true, name: 'Sooty', age: 1},
       {_id: 0, _show: true, name: 'Andy', age: 3}
     ]
-    let result = bodyParsing.sortedBody(bodyParsing.sortedBody(names, 'name', false), 'age', false)
+    let result = bodyParsing.sortBody(bodyParsing.sortBody(names, 'name', false), 'age', false)
     result.should.eql([
       {_id: 2, _show: true, name: 'Sooty', age: 1},
       {_id: 0, _show: true, name: 'Andy', age: 3},
@@ -422,7 +422,7 @@ describe('sortedBody', () => {
       {_id: 2, _show: true, name: 'Sooty', age: 10},
       {_id: 0, _show: true, name: 'Andy', age: 30}
     ]
-    let result = bodyParsing.sortedBody(names, 'age', false, 'lexicographic')
+    let result = bodyParsing.sortBody(names, 'age', false, 'lexicographic')
     result.should.eql([
       {_id: 2, _show: true, name: 'Sooty', age: 10},
       {_id: 0, _show: true, name: 'Andy', age: 30},
@@ -438,7 +438,7 @@ describe('sortedBody', () => {
       {_id: 2, _show: true, person: {name: 'Sooty', age: 1}},
       {_id: 0, _show: true, person: {name: 'Andy', age: 3}}
     ]
-    let result = bodyParsing.sortedBody(names, 'person.age', false)
+    let result = bodyParsing.sortBody(names, 'person.age', false)
     result.should.eql([
       {_id: 2, _show: true, person: {name: 'Sooty', age: 1}},
       {_id: 3, _show: true, person: {name: 'Cooty', age: 3}},
@@ -470,7 +470,7 @@ describe('sortedBody', () => {
       {_id: 1, _show: true, sharpie: { color: 'blue' }},
       {_id: 2, _show: true, sharpie: { color: 'green' }}
     ]
-    let result = bodyParsing.sortedBody(sharpies, 'sharpie', false, sharpieCompare)
+    let result = bodyParsing.sortBody(sharpies, 'sharpie', false, sharpieCompare)
     result.should.eql([
       {_id: 0, _show: true, sharpie: { color: 'red' }},
       {_id: 2, _show: true, sharpie: { color: 'green' }},
@@ -501,7 +501,7 @@ describe('sortedBody', () => {
       {_id: 1, _show: true, sharpie: { color: 'blue' }},
       {_id: 2, _show: true, sharpie: { color: 'green' }}
     ]
-    let result = bodyParsing.sortedBody(sharpies, 'sharpie', true, sharpieCompare)
+    let result = bodyParsing.sortBody(sharpies, 'sharpie', true, sharpieCompare)
     result.should.eql([
       {_id: 1, _show: true, sharpie: { color: 'blue' }},
       {_id: 2, _show: true, sharpie: { color: 'green' }},
@@ -510,14 +510,14 @@ describe('sortedBody', () => {
   })
 })
 
-describe('derivedBody', () => {
+describe('deriveBody', () => {
   it('should parse dot notation', () => {
     let raw = [
       { salutations: { hello: 'hi', 'to the': 'world' } },
       { erbs: 'rosmarine' },
       { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
     ]
-    let result = bodyParsing.derivedBody(raw, ['salutations.hello'])
+    let result = bodyParsing.deriveBody(raw, ['salutations.hello'])
     result.should.eql([
       { salutations: { hello: 'hi', 'to the': 'world' }, 'salutations.hello': 'hi' },
       { erbs: 'rosmarine', 'salutations.hello': undefined },
@@ -525,23 +525,23 @@ describe('derivedBody', () => {
     ])
   })
 
-  it('should add derived columns', () => {
+  it('should add derive columns', () => {
     let raw = [
       { salutations: { hello: 'hi', to: 'world' } },
       { erbs: 'rosmarine' },
       { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
     ]
-    let result = bodyParsing.derivedBody(raw, ['salutations.hello+salutations.to'])
+    let result = bodyParsing.deriveBody(raw, ['salutations.hello+salutations.to'])
     result[0]['salutations.hello+salutations.to'].should.eql({ 'salutations.hello': 'hi', 'salutations.to': 'world' })
   })
 
-  it('should add derived columns 2', () => {
+  it('should add derive columns 2', () => {
     let raw = [
       { salutations: { hello: 'hi', to: 'world' } },
       { erbs: 'rosmarine' },
       { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
     ]
-    let result = bodyParsing.derivedBody(raw, ['erbs', 'erbs.light hearted'])
+    let result = bodyParsing.deriveBody(raw, ['erbs', 'erbs.light hearted'])
     expect(result[0]['erbs.light hearted']).to.be.undefined
     result[1].erbs.should.equal('rosmarine')
     expect(result[1]['erbs.light hearted']).to.be.undefined
@@ -549,13 +549,13 @@ describe('derivedBody', () => {
     result[2]['erbs.light hearted'].should.equal('lavander')
   })
 
-  it('should add derived columns 3', () => {
+  it('should add derive columns 3', () => {
     let raw = [
       { salutations: { hello: 'hi', to: 'world' } },
       { erbs: 'rosmarine' },
       { erbs: { 'light hearted': 'lavander', hard: 'basil' } }
     ]
-    let result = bodyParsing.derivedBody(raw, ['salutations.hello+'])
+    let result = bodyParsing.deriveBody(raw, ['salutations.hello+'])
     result[0]['salutations.hello+']['salutations.hello'].should.equal('hi')
   })
 })
