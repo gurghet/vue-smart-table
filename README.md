@@ -88,7 +88,7 @@ This is ideal if you are using Smart Table as a drop-in component in a bigger pr
 The `vue-smart-table.js` does not contain `vue` and `vue-resources` dependencies, those will also need to be on the page.
 
 ``` html
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue-smart-table/2.5.0-beta1/vue-smart-table.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue-smart-table/2.5.0/vue-smart-table.js"></script>
 <!-- or -->
 <script src="https://npmcdn.com/vue-smart-table@2.5.0/dist/static/vue-smart-table.js"></script>
 ```
