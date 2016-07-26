@@ -182,4 +182,10 @@ function camelizeHeader (header) {
   })
 }
 
-export default { deriveBody, bodyWithIds, filterBody, sortBody, camelizeHeader }
+function returnPage (body, {itemsPerPage, currentPage} = {itemsPerPage: 20, currentPage: 1}) {
+  const zeroIndexedCurrentPage = currentPage - 1
+  return body.slice(zeroIndexedCurrentPage * itemsPerPage, (zeroIndexedCurrentPage + 1) * itemsPerPage)
+}
+
+export default { deriveBody, bodyWithIds, filterBody,
+                 sortBody, camelizeHeader, returnPage }

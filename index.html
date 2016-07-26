@@ -12,8 +12,8 @@
     </style>
   </head>
   <body>
-    <input type="text" v-model="search"/>
-   <!--smart-table
+    <!--input type="text" v-model="search"/>
+   <smart-table
     :auto-load="true"
     body-path="results"
     id-col="id.value"
@@ -44,9 +44,171 @@
   <button @click="add">add</button>
   <button @click="remove">remove</button>
   <smart-table
-  :body="[{hello:'world'},{hello:'to you', world:'hello'}]"
+  :items-per-page="10"
+  :body="[{hello:'world'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'peanuts'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'},
+  {hello:'to you', world:'hello'}]"
   :order-by="['hello', 'world']"
   v-ref:ut>
+    <footer>
+      <div class="ui right floated pagination menu">
+        <a class="icon item" @click="pag('prev')">
+          <i class="left chevron icon"></i>
+        </a>
+        <a v-for="n in 5" 
+          :class="n+max(1,min(numPages-4,currentPage-2)) === currentPage ? 'item disabled' : 'item'" 
+          @click="pag(n+max(1,min(numPages-4,currentPage-2)))"
+        >
+          {{n+max(1,min(numPages-4,currentPage-2))}}</a>
+        <a class="icon item" @click="pag('next')">
+          <i class="right chevron icon"></i>
+        </a>
+      </div>
+      </div>
+    </footer>
   </smart-table>
   <!-- built files will be auto injected -->
   </body>

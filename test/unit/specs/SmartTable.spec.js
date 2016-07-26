@@ -10,36 +10,32 @@ import SmartTable from 'src/components/SmartTable'
 chai.use(require('chai-dom'))
 let testBody = [{_id: 0, name: 'Gennaro', age: 34}, {_id: 1, name: 'Marco', age: 22}]
 let testBody2 = [{_id: 1, name: 'Gennaro', age: 34}, {_id: 3, name: 'Marco', age: 22}]
-let testBody3 = [{_id: 1, bau: 'Gennaro', pau: 34}, {_id: 55, bau: 'Marco', pau: 22}]
 let testBodyNoId = [{name: 'Gennaro', age: 34}, {name: 'Marco', age: 22}]
 
 describe('SmartTable.vue', () => {
-  it('should display 6 td cells when given a 3x2 body', (done) => {
+  it('should display 6 td cells when given a 3x2 body', () => {
     const vm = new Vue({
+      replace: false,
       template: '<div><smart-table :body="testBody" :header="testColumns"></smart-table></div>',
       components: {SmartTable},
       data: {
         testBody: [{_id: 7, c1: 'c11', c2: 'c21', c3: 'c31'}, {_id: 1, c1: 'c12', c2: 'c22', c3: 'c32'}],
         testColumns: ['C1', 'C2', 'C3']
       }
-    }).$mount()
-    vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('td').length).to.eql(6)
-      done()
-    })
+    }).$mount('body')
+    expect(vm.$el.querySelectorAll('td').length).to.eql(6)
+    vm.$el.querySelectorAll('td')[0].textContent.should.contain('c11')
   })
   it('should behave well when _id not present', () => {
     const vm = new Vue({
       replace: false,
-      template: '<div><smart-table :body="testBodyNoId" v-ref:ut></smart-table></div>',
+      template: '<div><smart-table :body="testBodyNoId"></smart-table></div>',
       components: {'smart-table': SmartTable},
       data: { testBodyNoId }
     }).$mount()
-    vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('td').length).to.eql(4)
-      expect(vm.$el.querySelector('#cell-_smart_0-name')).to.contain.text('Gennaro')
-      expect(vm.$el.querySelector('#cell-_smart_1-name')).to.contain.text('Marco')
-    })
+    expect(vm.$el.querySelectorAll('td').length).to.eql(4)
+    expect(vm.$el.querySelector('#cell-_smart_0-name')).to.contain.text('Gennaro')
+    expect(vm.$el.querySelector('#cell-_smart_1-name')).to.contain.text('Marco')
   })
   it('should display 6 td cells when given a 3x2 body and 9 td cells when one row is added', (done) => {
     const vm = new Vue({
@@ -59,20 +55,10 @@ describe('SmartTable.vue', () => {
       {_id: 2, c1: 'c13', c2: 'c23', c3: 'c33'}
     ]
     vm.$nextTick(() => {
-      // canalization of the table
       expect(vm.$el.querySelectorAll('td').length).to.eql(9)
-      expect(vm.$el.querySelector('#cell-2-c1').textContent).to.contain('')
-      vm.$nextTick(() => {
-        // new elements are born with their first value already in the DOM
-        // old elements set their value in the data
-        expect(vm.$el.querySelector('#cell-2-c1').textContent).to.contain('c13')
-        expect(vm.$el.querySelector('#cell-0-c1').textContent).to.contain('c11')
-        vm.$nextTick(() => {
-          // eventually old objects are updated in the DOM also
-          expect(vm.$el.querySelector('#cell-0-c1').textContent).to.contain('toredo')
-          done()
-        })
-      })
+      expect(vm.$el.querySelector('#cell-2-c1').textContent).to.contain('c13')
+      expect(vm.$el.querySelector('#cell-0-c1').textContent).to.contain('toredo')
+      done()
     })
   })
   it('should create a header with the keys as column if header not provided', () => {
@@ -95,7 +81,7 @@ describe('SmartTable.vue', () => {
     expect(vm.$el.querySelectorAll('.col-age').length).to.eql(1)
     expect(vm.$el.querySelector('.col-age').textContent).to.contain('Anni')
   })
-  it('should show a subset of columns in the header if the header is an object with 2 cols and there are 3', (done) => {
+  it('should show a subset of columns in the header if the header is an object with 2 cols and there are 3', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :header="subset"></smart-table></div>',
       components: {SmartTable},
@@ -104,14 +90,11 @@ describe('SmartTable.vue', () => {
         testBody: [{_id: 1, name: 'Gennaro', age: 34, hidden: 'pupu'}, {_id: 55, name: 'Marco', age: 22, hidden: 'caca'}]
       }
     }).$mount()
-    vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('th').length).to.eql(2)
-      expect(vm.$el.querySelectorAll('.col-hidden').length).to.eql(0)
-      expect(vm.$el.querySelector('.col-age').textContent).to.contain('Età')
-      done()
-    })
+    expect(vm.$el.querySelectorAll('th').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('.col-hidden').length).to.eql(0)
+    expect(vm.$el.querySelector('.col-age').textContent).to.contain('Età')
   })
-  it('should show a subset of columns in the body if the header is an object with 2 cols and there are 3', (done) => {
+  it('should show a subset of columns in the body if the header is an object with 2 cols and there are 3', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :header="subset"></smart-table></div>',
       components: {SmartTable},
@@ -120,21 +103,10 @@ describe('SmartTable.vue', () => {
         testBody: [{_id: 1, name: 'Gennaro', age: 34, hidden: 'pupu'}, {_id: 55, name: 'Marco', age: 22, hidden: 'caca'}]
       }
     }).$mount()
-    vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('td').length).to.eql(4)
-      expect(vm.$el.querySelector('#cell-1-age').textContent).to.contain('34')
-      done()
-    })
+    expect(vm.$el.querySelectorAll('td').length).to.eql(4)
+    expect(vm.$el.querySelector('#cell-1-age').textContent).to.contain('34')
   })
-  it('should choose an appropriate label in case _id is not in the header', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody3" :header="[\'sau\', \'mau\']"></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody3 }
-    }).$mount()
-    expect(vm.$children[0].mainCol).to.eql('bau')
-  })
-  it('should be able to form derived columns', (done) => {
+  it('should be able to form derived columns', () => {
     const vm = new Vue({
       template: '<div><smart-table :body="testBody" :header="subset"></smart-table></div>',
       components: {SmartTable},
@@ -143,38 +115,55 @@ describe('SmartTable.vue', () => {
         testBody: [{_id: 1, name: 'Gennaro', age: 34, hidden: 'pupu'}, {_id: 55, name: 'Marco', age: 22, hidden: 'caca'}]
       }
     }).$mount()
-    vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('td').length).to.eql(2)
-      expect(vm.$el.querySelector('#cell-1-name\\+age')).to.exist
-      done()
-    })
+    expect(vm.$el.querySelectorAll('td').length).to.eql(2)
+    expect(vm.$el.querySelector('#cell-1-name\\+age')).to.exist
   })
-  it('main col should set age as main col when age is set and present in first row', () => {
-    const vm = new Vue({
-      template: '<div><smart-table :body="testBody2" label-col="age"></smart-table></div>',
-      components: {SmartTable},
-      data: { testBody2 }
-    }).$mount()
-    expect(vm.$children[0].mainCol).to.eql('age')
-  })
-  it('should plug in doge component in the first column', (done) => {
+  it('should plug in doge component in the first column', () => {
     const vm = new Vue({
       replace: false,
       template: '<div><smart-table :body="testBody2"><doge col="name"></doge></smart-table></div>',
       components: {'smart-table': SmartTable, 'doge': {template: '<div class="doge">wow!</div>'}},
       data: { testBody2 }
-    }).$mount()
-    vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('.doge').length).to.eql(2)
-      expect(vm.$el.querySelectorAll('.doge')[0].textContent).to.contain('wow!')
-      done()
-    })
+    }).$mount('body')
+    expect(vm.$el.querySelectorAll('.doge').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('.doge')[0].textContent).to.contain('wow!')
   })
-  it('should plug in 7 5 4 in the first column', (done) => {
+  it('should plug in doGe component in the first column (Camel Case)', () => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="testBody2"><do-ge col="name"></do-ge></smart-table></div>',
+      components: {'smart-table': SmartTable, 'doGe': {template: '<div class="doge">wow!</div>'}},
+      data: { testBody2 }
+    }).$mount('body')
+    expect(vm.$el.querySelectorAll('.doge').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('.doge')[0].textContent).to.contain('wow!')
+  })
+  it('should plug in DoGe component in the first column (Pascal Case)', () => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="testBody2"><do-ge col="name"></do-ge></smart-table></div>',
+      components: {'smart-table': SmartTable, 'DoGe': {template: '<div class="doge">wow!</div>'}},
+      data: { testBody2 }
+    }).$mount('body')
+    expect(vm.$el.querySelectorAll('.doge').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('.doge')[0].textContent).to.contain('wow!')
+  })
+  it('should plug in doge component with a dawg component inside', () => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="testBody2"><doge col="name"></doge></smart-table></div>',
+      components: {'smart-table': SmartTable, 'doge': {template: '<div class="doge">wow!<dawg></dawg></div>', components: {'dawg': {template: '<p>Just a dog</p>'}}}},
+      data: { testBody2 }
+    }).$mount('body')
+    expect(vm.$el.querySelectorAll('.doge').length).to.eql(2)
+    expect(vm.$el.querySelectorAll('.doge')[0].textContent).to.contain('wow!')
+    expect(vm.$el.querySelectorAll('.doge')[0].textContent).to.contain('Just a dog')
+  })
+  it('should plug in 7 5 4 in the first column', () => {
     const vm = new Vue({
       replace: false,
       template: '<div><smart-table :body="testBody"><count col="name"></count></smart-table></div>',
-      components: {'smart-table': SmartTable, 'count': {template: '<p class="count">{{value.length}}</p>', data () { return { value: '' } }}},
+      components: {'smart-table': SmartTable, 'count': {template: '<p class="count">{{value.length}}</p>'}},
       data: {
         testBody: [
           {_id: 1, name: '1234567', age: 34},
@@ -182,17 +171,11 @@ describe('SmartTable.vue', () => {
           {_id: 6, name: 'Nico', age: 99}
         ]
       }
-    }).$mount()
-    vm.$nextTick(() => {
-      expect(vm.$el.querySelectorAll('.count').length).to.eql(3)
-      vm.$nextTick(() => {
-        expect(vm.$el.querySelectorAll('.count')[0]).to.contain.text('7')
-        expect(vm.$el.querySelectorAll('.count')[1]).to.contain.text('5')
-        expect(vm.$el.querySelectorAll('.count')[2]).to.contain.text('4')
-        debugger
-        done()
-      })
-    })
+    }).$mount('body')
+    expect(vm.$el.querySelectorAll('.count').length).to.eql(3)
+    expect(vm.$el.querySelectorAll('.count')[0]).to.contain.text('7')
+    expect(vm.$el.querySelectorAll('.count')[1]).to.contain.text('5')
+    expect(vm.$el.querySelectorAll('.count')[2]).to.contain.text('4')
   })
   it('should show an ordered set of columns in the body if the header is an object with 2 swapped columns', () => {
     const vm = new Vue({
@@ -203,8 +186,7 @@ describe('SmartTable.vue', () => {
         swapped: [{key: 'age', label: 'Età'}, {key: 'name', label: 'Nome'}],
         testBody2
       }
-    }).$mount('body')
-    debugger
+    }).$mount()
     const headerCells = vm.$el.querySelectorAll('th')
     expect(headerCells.length).to.eql(2)
     expect(headerCells[0].textContent).to.contain('Età')
@@ -214,17 +196,26 @@ describe('SmartTable.vue', () => {
     expect(firstRowCells[0].textContent).to.contain('34')
     expect(firstRowCells[1].textContent).to.contain('Gennaro')
   })
-  xit('should detect if the footer is an array and it should display 3 columns specified', () => {
+  it('should add a global footer', () => {
     const vm = new Vue({
-      template: '<div><smart-table :body="testBody" :footer="testFooter"></smart-table></div>',
+      replace: false,
+      template: '<div><smart-table :body="testBody"><footer>Hello footer world</footer></smart-table></div>',
       components: {SmartTable},
-      data: {
-        testBody: [{_id: 0, c1: 'c11', c2: 'c21', c3: 'c31'}, {_id: 1, c1: 'c12', c2: 'c22', c3: 'c32'}],
-        testFooter: ['hello', 'C2', 'C3']
-      }
+      data: {testBody}
     }).$mount()
-    expect(vm.$el.querySelectorAll('.footer-row td').length).to.eql(3)
-    expect(vm.$el.querySelectorAll('.footer-row td')[0].textContent).to.contain('hello')
+    expect(vm.$el.querySelectorAll('tfoot').length).to.eql(1)
+    expect(vm.$el.querySelector('tfoot > tr > th').colSpan).to.eql(2)
+    expect(vm.$el.querySelector('tfoot').textContent).to.contain('Hello footer world')
+  })
+  it('should two global footers', () => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="testBody"><footer>Hello</footer><footer>World</footer></smart-table></div>',
+      components: {SmartTable},
+      data: {testBody}
+    }).$mount()
+    expect(vm.$el.querySelectorAll('tfoot tr').length).to.eql(2)
+    expect(vm.$el.querySelector('tfoot tr').textContent).to.contain('Hello')
   })
   xit('should detect if the footer is a matrix and it should display as many rows as there are rows', () => {
     const vm = new Vue({
@@ -249,18 +240,40 @@ describe('SmartTable.vue', () => {
     // check that there is only one row visible and that it contains the Marco row
     vm.$broadcast('filter', {filter: '22', col: 'age'})
     vm.$nextTick(() => {
-      expect(vm.$el.querySelector('#row-1')).to.exist
-      expect(vm.$el.querySelector('#row-3')).to.exist
-      expect(vm.$el.querySelector('#row-1')).to.have.class('smart-filter')
-      expect(vm.$el.querySelector('#row-1')).to.have.class('custom-filter')
-      expect(vm.$el.querySelector('#row-3')).not.to.have.class('smart-filter')
+      expect(vm.$el.querySelector('#row-1-ut')).to.exist
+      expect(vm.$el.querySelector('#row-3-ut')).to.exist
+      expect(vm.$el.querySelector('#row-1-ut')).to.have.class('smart-filter')
+      expect(vm.$el.querySelector('#row-1-ut')).to.have.class('custom-filter')
+      expect(vm.$el.querySelector('#row-3-ut')).not.to.have.class('smart-filter')
+      done()
+    })
+  })
+  it('should filter in the right table', (done) => {
+    const vm = new Vue({
+      replace: false,
+      template: `<div>
+      <smart-table :body="testBody2" v-ref:ut1></smart-table>
+      <smart-table :body="testBody2" v-ref:ut2></smart-table>
+      <smart-table :body="testBody2" v-ref:ut3></smart-table>
+      </div>`,
+      components: {'smart-table': SmartTable},
+      data: { testBody2 }
+    }).$mount()
+    // check that there is only one row visible and that it contains the Marco row
+    vm.$broadcast('filter', {filter: '22', col: 'age', table: 'ut2'})
+    vm.$nextTick(() => {
+      expect(vm.$el.querySelector('#row-1-ut2')).to.exist
+      expect(vm.$el.querySelector('#row-3-ut2')).to.exist
+      expect(vm.$el.querySelector('#row-1-ut2')).to.have.class('smart-filter')
+      expect(vm.$el.querySelector('#row-1-ut2')).to.have.class('custom-filter')
+      expect(vm.$el.querySelector('#row-3-ut2')).not.to.have.class('smart-filter')
       done()
     })
   })
   it('should filter by age and then by name, then again by age', (done) => {
     const vm = new Vue({
       replace: false,
-      template: '<div><smart-table :body="testBody2" v-ref:ut></smart-table></div>',
+      template: '<div><smart-table :body="testBody2"></smart-table></div>',
       components: {'smart-table': SmartTable},
       data: { testBody2 }
     }).$mount()
@@ -285,7 +298,7 @@ describe('SmartTable.vue', () => {
   it('should filter by a custom function', (done) => {
     const vm = new Vue({
       replace: false,
-      template: '<div><smart-table :body="testBody2"  v-ref:ut><invert col="age"></invert></smart-table></div>',
+      template: '<div><smart-table :body="testBody2"><invert col="age"></invert></smart-table></div>',
       components: {'smart-table': SmartTable, 'invert': { template: '<p></p>', methods: {filterFunction (filter) {
         return function (val) {
           return String(filter) !== String(val)
@@ -307,7 +320,7 @@ describe('SmartTable.vue', () => {
   it('should filter by a default function for custom components', (done) => {
     const vm = new Vue({
       replace: false,
-      template: '<div><smart-table :body="testBody2"  v-ref:ut><empty col="age"></empty></smart-table></div>',
+      template: '<div><smart-table :body="testBody2"><empty col="age"></empty></smart-table></div>',
       components: {'smart-table': SmartTable, 'empty': { template: '<p></p>' }},
       data: { testBody2 }
     }).$mount()
@@ -380,6 +393,30 @@ describe('SmartTable.vue', () => {
           done()
         })
       })
+    })
+  })
+  it('should show only the first page', () => {
+    const vm = new Vue({
+      template: '<div><smart-table :body="testBody" :items-per-page="1" v-ref:ut></smart-table></div>',
+      components: {'smart-table': SmartTable},
+      data: {testBody}
+    }).$mount()
+    vm.$refs.ut.$el.querySelectorAll('tbody tr').length.should.eql(1)
+    vm.$refs.ut.$el.querySelectorAll('tbody tr')[0].textContent.should.contain('34')
+  })
+  it('should show only the second page', (done) => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="testBody" :items-per-page="1" v-ref:ut></smart-table></div>',
+      components: {'smart-table': SmartTable},
+      data: {testBody}
+    }).$mount('body')
+    vm.$refs.ut.currentPage = 2
+    vm.$refs.ut.$el.querySelectorAll('tbody tr').length.should.eql(1)
+    vm.$refs.ut.$el.querySelectorAll('tbody tr')[0].textContent.should.contain('34')
+    vm.$nextTick(() => {
+      vm.$refs.ut.$el.querySelectorAll('tbody tr')[0].textContent.should.contain('22')
+      done()
     })
   })
 })

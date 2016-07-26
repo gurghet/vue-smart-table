@@ -9,34 +9,29 @@
         </th>
       </tr>
       </thead>
+      <tfoot>
+        <tr v-for="footer in footers">
+          <th
+            :colspan="tableHeader.length"
+            :class="tdFooterClasses(footer) + ' footer-row'"
+            :id="footer + (tableId ? ('-' + tableId) : '')">
+            <component :is="footer"></component>
+          </th>
+        </tr>
+      </tfoot>
       <tbody>
-      <tr v-for="row in pBody" id="row-{{row._id}}" track-by="_id" :class="trClasses(row._id, row._show)">
+      <tr v-for="row in bodyPage" :id="'row-' + row._id + (tableId ? ('-' + tableId) : '')" track-by="_id" :class="trClasses(row._id, row._show)">
         <td
           v-for="col in tableHeader"
           track-by="key"
-          :id="'cell-' + row._id + '-' + col.key"
+          :id="'cell-' + row._id + '-' + col.key + (tableId ? ('-' + tableId) : '')"
           :class="tdClasses(col.key, row._id) + ' value-cell cell-' + col.key"
         >
+          <component :is="col.key" :value="row[col.key]" :id="row._id" :col="col.key" :editable="isEditable(col.key)"></component>
         </td><!-- todo: when upgrading to vue 2.x.x put a th here for the mainCol -->
       </tr>
-      <!--tr v-if="addRow" class="row-new">
-        <td
-          v-for="col in tableHeader"
-          id="edit-cell-{{col.key}}"
-          :class="tdClasses(col.key, '__edit') + ' edit-cell'"
-        >
-          <div
-            id="edit-new-{{col.key}}"
-            class="add-row"
-            >
-            <slot :name="col.key">
-            </slot>
-          </div>
-        </td>
-      </tr-->
       </tbody>
     </table>
-    <!--div class="add-row-button" v-show="canSaveNewRow"><button class="ui button" @click="saveNewRow">Add Row</button></div-->
     <div class="error-panel" v-show="error">{{error | json}}</div>
   </div>
 </template>
@@ -50,7 +45,7 @@
   Vue.component('plain-text', PlainText)
   const commonTagRE = /^(div|p|span|img|a|b|i|br|ul|ol|li|h1|h2|h3|h4|h5|h6|code|pre|table|th|td|tr|form|label|input|select|option|nav|article|section|header|footer)$/i
   export default {
-    name: 'VueSmartTable',
+    name: 'SmartTable',
     data () {
       return {
         error: false,
@@ -63,7 +58,10 @@
         pBody: [],
         elHarvest: [],
         column2stampMap: {},
-        counter: {c: 0}
+        counter: {c: 0},
+        footerTemplates: [],
+        footers: [],
+        currentPage: 1
       }
     },
     props: {
@@ -87,31 +85,21 @@
       },
       idCol: {
         type: String,
-        required: false,
         default: '_id'
       },
-      /* footer: {
-        required: false
-      },*/
       bodyPath: {
         type: String,
         default: 'body'
       },
       body: {
         type: Array,
-        required: false,
         default () {
           return []
         }
       },
-      // actions: [Object, Array],
       endpoint: {
         type: String,
         default: 'http://localhost:8080'
-      },
-      labelCol: {
-        type: String,
-        default: 'name'
       },
       editable: {
         type: Array,
@@ -122,15 +110,21 @@
       addRow: {
         type: Boolean,
         default: false
+      },
+      itemsPerPage: {
+        type: Number,
+        default: 20
       }
     },
     computed: {
-      placeholder () {
-        if (this.autoLoad) {
-          return '...'
-        } else {
-          return '&#9888'
-        }
+      numPages () {
+        return Math.ceil(this.pBody.filter(i => i._show === true).length / this.itemsPerPage)
+      },
+      tableId () {
+        return this.$options._ref ? this.$options._ref : ''
+      },
+      bodyPage () {
+        return bodyParsing.returnPage(this.pBody, {itemsPerPage: this.itemsPerPage, currentPage: this.currentPage})
       },
       tableClassesProcessed () {
         if (this.orderBy !== []) {
@@ -139,31 +133,11 @@
           return this.tableClasses
         }
       },
-      /* processedFooter () {
-        if (this.footer === undefined) {
-          return []
-        }
-        if (this.footer.constructor === Array) {
-          if (this.footer.length > 0 &&
-            this.footer[0].constructor === Array) { // this is a matrix
-            return this.footer
-          } else { // this is an array
-            return [this.footer] // now it is also a matrix
-          }
-        }
-        if (typeof this.footer === 'object') {
-          return this.footer
-        }
-      },*/
       mandatoryFields () {
         return this.tableHeader.filter(col => this.isMandatoryField(col.key))
       },
       canSaveNewRow () {
         return this.mandatoryFields.every(col => this.validate(col, this.newRowInput[col])) && this.addRow
-      },
-      // fields that right now are visible and editable and should present themselves in the new row if present
-      editableFields () {
-        return this.tableHeader.filter(col => this.isEditable(col.key))
       },
       tableHeader () {
         // if not every column is a string return as is
@@ -201,17 +175,6 @@
 
         bodyParsing.camelizeHeader(finalHeader)
         return finalHeader
-      },
-      mainCol () {
-        // choose an appropriate default label column
-        if (this.tableHeader.find(col => col.key === this.labelCol) === undefined) {
-          return this.tableHeader[0].key
-        } else {
-          return this.labelCol
-        }
-      },
-      shouldShowId () {
-        return this.tableHeader.find(col => col.key === '_id') !== undefined
       }
     },
     beforeCompile () {
@@ -220,7 +183,7 @@
       }
 
       if (this.autoLoad === false) {
-        this.makepBody('immediateRender')
+        this.makepBody('immediateRender') // todo: this immediateRender is useless, no point i build the pbody here
       }
 
       // Deprecation warning for slot
@@ -234,6 +197,10 @@
         // Harvest all the custom components from the slot
         Array.from(this.$options._content.querySelectorAll('[col]')).forEach(el => {
           this.elHarvest.push(this.$options._content.removeChild(el))
+        })
+        // Harvest the footer elements
+        Array.from(this.$options._content.querySelectorAll('footer')).forEach(el => {
+          this.footerTemplates.push(this.$options._content.removeChild(el))
         })
         // Drain spurious elements draining the slot
         this.$options._content.innerHTML = ''
@@ -266,17 +233,75 @@
           'you instantiate your root Vue instance. Skipping')
           return
         }
-        this.column2stampMap[col] = {
-          el () { return el.cloneNode(true) },
-          Ctor: res
+        const baseMixin = res.options
+        const propsMixin = {
+          props: {
+            editable: Boolean,
+            value: {},
+            mode: { type: String, default: 'readOnly' },
+            col: String,
+            id: {}
+          }
         }
+        const initProps = {
+          init () {
+            Array.from(el.attributes).forEach(att => {
+              this.$options.el.setAttribute(att.name, att.value)
+            })
+          }
+        }
+        const smartMethods = {
+          methods: {
+            enterEditMode () {
+              this.$dispatch('enterEditMode', {id: this.id, col: this.col})
+            },
+            saveNewValue () {
+              this.$dispatch('saveNewValue', {id: this.id, col: this.col})
+            },
+            cancel () {
+              this.$dispatch('cancel', {id: this.id, col: this.col})
+            }
+          }
+        }
+        this.$options.components[col] = Vue.extend({
+          mixins: [baseMixin, propsMixin, initProps, smartMethods] // todo also copy content
+        })
+      })
+      // build footers
+      let smartFooter = {
+        computed: {
+          currentPage () {
+            return this.$parent.currentPage
+          },
+          numPages () {
+            return this.$parent.numPages
+          }
+        },
+        methods: {
+          pag (p) {
+            this.$dispatch('pagination', { goTo: p })
+          },
+          max (a, b) {
+            return Math.max(a, b)
+          },
+          min (a, b) {
+            return Math.min(a, b)
+          }
+        }
+      }
+      let counter = 0
+      this.footerTemplates.forEach(el => {
+        this.$options.components['footer' + counter] = Vue.extend({
+          template: el.innerHTML,
+          mixins: [smartFooter]
+        })
+        this.footers.push('footer' + counter)
+        counter++
       })
     },
     compiled () {
       if (this.autoLoad === true) {
         this.refresh()
-      } else {
-        this.updateInjectedValues()
       }
     },
     watch: {
@@ -297,20 +322,22 @@
 
         // destroy removed components
         let insistingIds = this.pBody.map(r => r._id)
-        let childrenToRemove = this.$children.filter(c => insistingIds.indexOf(c.id) === -1)
+        let childrenToRemove = this.$children.filter(c => c.id && insistingIds.indexOf(c.id) === -1)
         childrenToRemove.forEach(c => c.$destroy())
 
-        if (immediateRender) {
-          this.updateInjectedValues()
-        } else {
-          this.$nextTick(() => {
-            this.updateInjectedValues()
-          })
-        }
+        // register all missing components as PlainText
+        this.tableHeader.map(col => col.key).forEach(col => {
+          if (this.$options.components[col] === undefined) {
+            this.$options.components[col] = Vue.extend(PlainText)
+          }
+        })
       },
       compareFunction (sortKey) {
         let child = this.$children.find(c => c.col === sortKey)
         return child.compareFunction
+      },
+      tdFooterClasses (index) {
+        return ''
       },
       tdClasses (col, id) {
         let acc = ''
@@ -378,75 +405,6 @@
       validate (col, value) {
         return (value !== undefined && value !== '')
         // todo: hook for external validation
-      },
-      /**
-       * Wait before the table actually finishes rendering
-       * before calling this function since it writes only
-       * based on what it finds on the DOM
-       */
-      updateInjectedValues () {
-        function byId (id) {
-          return function (row) {
-            // we cast row._id to string because we are going
-            // to extract id from a string, so there is no
-            // chance that it retains its original type
-            return String(row._id) === id
-          }
-        }
-        let smartTable = this
-        Array.from(this.$el.querySelectorAll('.value-cell')).forEach(cellEl => {
-          let [, id, col] = cellEl.id.match(/^cell-([a-zA-Z0-9 ._-]+)-([a-zA-Z0-9_.+]+)$/)
-          let comp = this.$children.find(c => c.id === id && c.col === col)
-          if (comp === undefined) {
-            // new, create!
-            let dataMixin = {
-              data () {
-                let defaultValue = this.constructor.options.data ? this.constructor.options.data().value : undefined
-                return {
-                  editable: smartTable.isEditable(col),
-                  value: smartTable.pBody.find(byId(id))[col] || defaultValue,
-                  mode: 'readOnly',
-                  col,
-                  id
-                }
-              }
-            }
-            let smartMethods = {
-              methods: {
-                enterEditMode () {
-                  this.$dispatch('enterEditMode', {id: this.id, col: this.col})
-                },
-                saveNewValue () {
-                  this.$dispatch('saveNewValue', {id: this.id, col: this.col})
-                },
-                cancel () {
-                  this.$dispatch('cancel', {id: this.id, col: this.col})
-                }
-              }
-            }
-            let altCol = camelCase(col.replace(/\-/, ' ')
-                           .replace(/\./, 'ʬ').replace(/\+/, 'ʭ'))
-                           .replace(/ʬ/, '.').replace(/ʭ/, '+')
-            let res = smartTable.column2stampMap[col] ||
-                      smartTable.column2stampMap[altCol]
-            let elInstance = res ? res.el : document.createElement('plain-text')
-            let compOptions = Object.assign({
-              el: elInstance,
-              mixins: [dataMixin, smartMethods],
-              parent: smartTable
-            })
-            let Ctor = res ? res.Ctor : Vue.extend(PlainText)
-            comp = new Ctor(compOptions)
-            // manually appending the child
-            cellEl.appendChild(comp.$el)
-            // manually appending will not trigger normal
-            // ready hook, fire the hook:attached event manually
-            comp.$dispatch('hook:attached')
-          } else {
-            // old, refresh
-            comp.value = smartTable.pBody.find(byId(id))[col] || comp.Ctor && comp.Ctor.options.data().value
-          }
-        })
       },
       // this field, if visible, should be editable and present in the new row
       isEditable (col) {
@@ -568,6 +526,24 @@
       }
     },
     events: {
+      'pagination' ({goTo}) {
+        let targetPage = -1
+        if (goTo === this.currentPage) {
+          return
+        }
+        if (goTo === 'next' && this.currentPage < this.numPages) {
+          targetPage = this.currentPage + 1
+        }
+        if (goTo === 'prev' && this.currentPage > 0) {
+          targetPage = this.currentPage - 1
+        }
+        if (Number.isInteger(goTo)) {
+          targetPage = goTo
+        }
+        if (targetPage !== -1) {
+          this.currentPage = targetPage
+        }
+      },
       'saveNewValue' ({id, col}) {
         let child = this.$children.find(c => c.id === id && c.col === col)
         if (id === '____add-row') {
@@ -603,7 +579,10 @@
           }, 120)
         }
       },
-      'filter' ({filter, col}) {
+      'filter' ({filter, col, table = this.tableId}) {
+        if (table !== this.tableId) {
+          return
+        }
         function sameCols (col1, col2) {
           if (col1 === col2) return true
           if (col1.length !== col2.length) return false

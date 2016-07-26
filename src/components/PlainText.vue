@@ -35,13 +35,8 @@
   export default {
     data () {
       return {
-        value: undefined,
         newValue: undefined,
-        id: undefined,
-        col: undefined,
-        editable: false,
-        compareFunction: undefined,
-        mode: 'readOnly'
+        compareFunction: undefined
       }
     },
     props: {
@@ -52,7 +47,13 @@
       lexicographicalOrdering: {
         type: Boolean,
         default: false
-      }
+      },
+      // explicitly declare props because we are not injecting them
+      editable: Boolean,
+      value: {},
+      mode: { type: String, default: 'readOnly' },
+      col: String,
+      id: {}
     },
     compiled () {
       if (this.lexicographicalOrdering === true) {

@@ -510,6 +510,48 @@ describe('sortBody', () => {
   })
 })
 
+describe('paginateBody', () => {
+  it('should return page 1', () => {
+    const manyItems = [
+      {name: 'rastle'},
+      {name: 'peg'},
+      {name: 'jelly'}
+    ]
+    const result = bodyParsing.returnPage(manyItems, {itemsPerPage: 2, currentPage: 1})
+    result.should.eql([
+      {name: 'rastle'},
+      {name: 'peg'}
+    ])
+  })
+
+  it('should return page 2', () => {
+    const manyItems = [
+      {name: 'rastle'},
+      {name: 'peg'},
+      {name: 'jelly'}
+    ]
+    const result = bodyParsing.returnPage(manyItems, {itemsPerPage: 2, currentPage: 2})
+    result.should.eql([
+      {name: 'jelly'}
+    ])
+  })
+
+  it('should return page 1 with all the objects when defaulting', () => {
+    const manyItems = [
+      {name: 'rastle'},
+      {name: 'peg'},
+      {name: 'jelly'}
+    ]
+    const result = bodyParsing.returnPage(manyItems)
+    result.should.eql([
+      {name: 'rastle'},
+      {name: 'peg'},
+      {name: 'jelly'}
+    ])
+  })
+  // take data generally from a second body formed only by relevant items on the page and from there create pages
+})
+
 describe('deriveBody', () => {
   it('should parse dot notation', () => {
     let raw = [

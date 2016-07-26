@@ -41,7 +41,7 @@ describe('Resource', () => {
           })
         }
       }
-    }).$mount()
+    }).$mount('body')
   })
   it('should query the specified endpoint', (done) => {
     Vue.http.interceptors.shift()
