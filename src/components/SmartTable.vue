@@ -276,6 +276,12 @@
           },
           numPages () {
             return this.$parent.numPages
+          },
+          body () {
+            return this.pBody
+          },
+          header () {
+            return this.tableHeader
           }
         },
         methods: {
