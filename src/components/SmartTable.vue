@@ -269,6 +269,7 @@
       })
       // build footers
       let smartFooter = {
+        components: this.$root.$options.components,
         computed: {
           currentPage () {
             return this.$parent.currentPage
@@ -281,11 +282,8 @@
           pag (p) {
             this.$dispatch('pagination', { goTo: p })
           },
-          max (a, b) {
-            return Math.max(a, b)
-          },
-          min (a, b) {
-            return Math.min(a, b)
+          offset (length = 5) {
+            return Math.max(1, Math.min(this.numPages - (length - 1), Math.round(this.currentPage - length / 2)))
           }
         }
       }
@@ -526,19 +524,19 @@
       }
     },
     events: {
-      'pagination' ({goTo}) {
+      'pagination' ({goto}) {
         let targetPage = -1
-        if (goTo === this.currentPage) {
+        if (goto === this.currentPage) {
           return
         }
-        if (goTo === 'next' && this.currentPage < this.numPages) {
+        if (goto === 'next' && this.currentPage < this.numPages) {
           targetPage = this.currentPage + 1
         }
-        if (goTo === 'prev' && this.currentPage > 0) {
+        if (goto === 'prev' && this.currentPage > 1) {
           targetPage = this.currentPage - 1
         }
-        if (Number.isInteger(goTo)) {
-          targetPage = goTo
+        if (Number.isInteger(goto)) {
+          targetPage = goto
         }
         if (targetPage !== -1) {
           this.currentPage = targetPage

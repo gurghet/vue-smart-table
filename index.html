@@ -68,118 +68,7 @@
   {hello:'to you', world:'hello'},
   {hello:'to you', world:'hello'},
   {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
   {hello:'to you', world:'peanuts'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
-  {hello:'to you', world:'hello'},
   {hello:'to you', world:'hello'},
   {hello:'to you', world:'hello'},
   {hello:'to you', world:'hello'},
@@ -194,19 +83,21 @@
   :order-by="['hello', 'world']"
   v-ref:ut>
     <footer>
-      <div class="ui right floated pagination menu">
+      <!--div class="ui right floated pagination menu">
         <a class="icon item" @click="pag('prev')">
           <i class="left chevron icon"></i>
         </a>
-        <a v-for="n in 5" 
-          :class="n+max(1,min(numPages-4,currentPage-2)) === currentPage ? 'item disabled' : 'item'" 
-          @click="pag(n+max(1,min(numPages-4,currentPage-2)))"
+        <a v-for="n in 4" 
+          :class="n+offset(4) === currentPage ? 'item disabled' : 'item'" 
+          @click="pag(n+offset(4))"
         >
-          {{n+max(1,min(numPages-4,currentPage-2))}}</a>
+          {{n+offset(4)}}</a>
         <a class="icon item" @click="pag('next')">
           <i class="right chevron icon"></i>
         </a>
-      </div>
+      </div-->
+      <div>
+        <built-in-footer :current-page="currentPage" :num-pages="numPages"></built-in-footer>
       </div>
     </footer>
   </smart-table>

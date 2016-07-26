@@ -7,6 +7,7 @@ import Contacts from './components/Contacts'
 import Nationality from './components/Nationality'
 import Fontawesome from './components/Fontawesome'
 import ExampleComponent from './components/ExampleComponent'
+import BuiltInFooter from './components/Footer'
 
 Vue.use(VueResource)
 Vue.component('smart-table', SmartTable)
@@ -23,7 +24,7 @@ new Vue({
       this.$broadcast('filter', {filter: val, col: 'hello'})
     }
   },
-  components: { SmartTable, Src2img, Contacts, Nationality, Fontawesome, ExampleComponent },
+  components: { SmartTable, Src2img, Contacts, Nationality, Fontawesome, ExampleComponent, BuiltInFooter },
   methods: {
     add () {
       let m = {hello: Math.random(), world: 'chtulu'}
