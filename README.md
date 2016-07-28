@@ -103,6 +103,8 @@ After that you can freely use it in your templates:
 <smart-table :body="[{hello:'world'}]"></smart-table>
 ```
 
+![Smart Table Tutorial in under 20 seconds](http://i.imgur.com/YdXUZmV.gif)
+
 ## Documentation
 
 You will find documentation at the wiki page (although there is no versioning there, so heads up)
