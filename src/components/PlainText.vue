@@ -3,7 +3,7 @@
     <input
       v-show="(mode === 'edit' || mode === 'saving') && multiline === false"
       type="text"
-      v-model="newValue"
+      v-model="value"
       @blur="save"
       @keyup.13="save"
       @keyup.27="cancel"
@@ -11,7 +11,7 @@
     >
     <textarea
       v-show="(mode === 'edit' || mode === 'saving') && multiline === true"
-      v-model="newValue"
+      v-model="value"
       @keyup.27="cancel"
       :disabled="mode === 'saving'"
     ></textarea>
@@ -35,8 +35,8 @@
   export default {
     data () {
       return {
-        newValue: undefined,
-        compareFunction: undefined
+        compareFunction: undefined,
+        valueBeforeEnteringEditMode: undefined
       }
     },
     props: {

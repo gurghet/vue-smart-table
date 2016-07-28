@@ -230,6 +230,15 @@ describe('SmartTable.vue', () => {
     expect(vm.$el.querySelectorAll('.footer-row td').length).to.eql(6)
     expect(vm.$el.querySelectorAll('.footer-row td')[3].textContent).to.contain('foot')
   })
+  it('should recognize editable fields when camelized', () => {
+    const vm = new Vue({
+      replace: false,
+      template: '<div><smart-table :body="editableBody" :editable="[\'editable field\']" v-ref:ut></smart-table></div>',
+      components: {SmartTable},
+      data: {editableBody: [{'editable field': 'edit me'}]}
+    }).$mount()
+    vm.$refs.ut.isEditable('editableField').should.be.true
+  })
   it('should filter by age', (done) => {
     const vm = new Vue({
       replace: false,

@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>vuesmarttable</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/semantic.css" />
+    <!--link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/semantic.css" /-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
     <style>
       .smart-table {
         margin: 25px;
@@ -43,7 +44,7 @@
   </smart-table-->
   <button @click="add">add</button>
   <button @click="remove">remove</button>
-  <smart-table
+  <!--smart-table
   :items-per-page="10"
   :body="[{hello:'world'},
   {hello:'to you', world:'hello'},
@@ -83,7 +84,7 @@
   :order-by="['hello', 'world']"
   v-ref:ut>
     <footer>
-      <!--div class="ui right floated pagination menu">
+      <!-/-div class="ui right floated pagination menu">
         <a class="icon item" @click="pag('prev')">
           <i class="left chevron icon"></i>
         </a>
@@ -95,12 +96,30 @@
         <a class="icon item" @click="pag('next')">
           <i class="right chevron icon"></i>
         </a>
-      </div-->
+      </div-/->
       <div>
         <built-in-footer :current-page="currentPage" :num-pages="numPages"></built-in-footer>
       </div>
     </footer>
+  </smart-table-->
+  <smart-table
+    :body="[{'editable field':'worldo'}]"
+    :editable="['editable field']">
+    <plain-text :multiline="true" col="editable field"></plain-text>
   </smart-table>
+  <!--smart-table
+    :header="[
+    {key: 'name', label: 'Name'},
+    {key: 'name+picture', label: 'Picture'},
+    {key: 'name+items', label: 'Items'}
+    ]"
+    :body="[
+      {name: 'bulbasaur'},
+      {name: 'pikachu'}
+    ]">
+    <pokepic col="name+picture"></pokepic>
+    <itempic col="name+items"></itempic>
+  </smart-table-->
   <!-- built files will be auto injected -->
   </body>
 </html>

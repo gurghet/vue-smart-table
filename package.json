@@ -1,6 +1,6 @@
 {
   "name": "vue-smart-table",
-  "version": "2.6.0-alpha1",
+  "version": "2.6.0-beta1",
   "description": "A table with dynamic components for vue.js",
   "main": "src/components/SmartTable.vue",
   "author": "Andrea Passaglia <gurghet@gmail.com>",
@@ -34,7 +34,7 @@
   },
   "peerDependencies": {
     "vue": "1.0.26",
-    "vue-resource": "^0.8.0"
+    "vue-resource": "^0.9.0"
   },
   "devDependencies": {
     "babel-cli": "^6.0.0",

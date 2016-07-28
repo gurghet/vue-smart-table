@@ -151,7 +151,7 @@
         }
         // else, the header is an array of strings, build one
         // 1. check that the header has the same number of columns as the body
-        let body = this.body
+        let body = this.body || []
         // columns is the set of all the columns in the body
         let columns = [...new Set([].concat.apply([], body.map(row => Object.keys(row))))]
         // filter hidden columns (columns with keys that start with underscore)
@@ -176,6 +176,9 @@
         bodyParsing.camelizeHeader(finalHeader)
         return finalHeader
       }
+    },
+    init () {
+
     },
     beforeCompile () {
       if ((this.body === undefined || this.body.length < 1) && this.autoLoad === false) {
@@ -234,6 +237,13 @@
           return
         }
         const baseMixin = res.options
+        const dataMixin = {
+          data () {
+            return {
+              valueBeforeEnteringEditMode: undefined
+            }
+          }
+        }
         const propsMixin = {
           props: {
             editable: Boolean,
@@ -264,7 +274,7 @@
           }
         }
         this.$options.components[col] = Vue.extend({
-          mixins: [baseMixin, propsMixin, initProps, smartMethods] // todo also copy content
+          mixins: [baseMixin, dataMixin, propsMixin, initProps, smartMethods] // todo also copy content
         })
       })
       // build footers
@@ -316,7 +326,8 @@
     methods: {
       makepBody (immediateRender = false) {
         let malleableBody = []
-        this.body.forEach(row => {
+        const body = this.body || []
+        body.forEach(row => {
           malleableBody.push(Object.assign({}, row, {_show: true}))
         })
         Vue.set(this, 'pBody', malleableBody)
@@ -412,35 +423,35 @@
       },
       // this field, if visible, should be editable and present in the new row
       isEditable (col) {
-        return this.editable.indexOf(col) !== -1
+        return this.editable.indexOf(col) !== -1 ||
+               this.editable.map(c => camelCase(c)).indexOf(col) !== -1 ||
+               this.editable.map(c => pascalCase(c)).indexOf(col) !== -1
       },
       /**
        *
        * @param resource {value, id, col}
        * @param httpRESTreq if false will not propagate PUT request
          */
-      put (resource, httpRESTreq = true) {
+      put ({value, id, col, child}, httpRESTreq = true) {
+        let childDidntExplicitlySetAValue = value === undefined
+        let valueToSend = value || child.value
         this.$dispatch('before-request')
-        let child = this.$children.find(c => c.id === resource.id && c.col === resource.col)
-        if (child === undefined) {
-          console.error('Children with id ' + resource.id + ' was not found')
-          return
-        }
         Vue.set(child, 'mode', 'saving')
         if (httpRESTreq) {
-          this.$http.put(this.endpoint + '/' + resource.id + '/' + resource.col, {
+          this.$http.put(this.endpoint + '/' + id + '/' + col, {
             action: 'edit',
-            value: resource.value
-          }).then((response) => {
+            value: valueToSend
+          }).then(response => {
             Vue.set(child, 'mode', 'readOnly')
-            Vue.set(child, 'value', resource.value)
             this.$dispatch('successful-request')
             this.$dispatch('after-request')
-            this.$set('error', false)
             this.maybeRefresh()
-          }, (response) => {
+          }, response => {
             Vue.set(child, 'mode', 'readOnly')
-            this.$set('error', {status: response.status, data: response.data.error})
+            if (childDidntExplicitlySetAValue) {
+              Vue.set(child, 'value', child.valueBeforeEnteringEditMode)
+            }
+            this.$dispatch('error', {table: this.$options._ref, status: response.status, data: response.data})
             this.$dispatch('failed-request')
             this.$dispatch('after-request')
           })
@@ -548,13 +559,16 @@
           this.currentPage = targetPage
         }
       },
-      'saveNewValue' ({id, col}) {
+      'saveNewValue' ({id, col, value}) {
         let child = this.$children.find(c => c.id === id && c.col === col)
+        if (child === undefined) {
+          console.error('[Smart Table Error] Component with id ' + id + ' in column ' + col + 'was not found')
+        }
         if (id === '____add-row') {
           this.newRowInput[col] = child.newValue
         } else {
           if (child.mode === 'edit') {
-            this.put({value: child.newValue, id, col})
+            this.put({value, id, col, child})
           }
         }
       },
@@ -565,8 +579,8 @@
             console.log('Clicked non-editable field ' + col + '-' + id + '. Ignoring.')
             return
           }
+          child.valueBeforeEnteringEditMode = child.value
           child.mode = 'edit'
-          child.newValue = child.value
         }
       },
       'cancel' ({id, col}) {
@@ -578,7 +592,7 @@
           setTimeout(() => {
             if (child.mode === 'edit') {
               child.mode = 'readOnly'
-              child.newValue = undefined
+              child.value = child.valueBeforeEnteringEditMode
             }
           }, 120)
         }
