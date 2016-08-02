@@ -15,7 +15,7 @@
             :colspan="tableHeader.length"
             :class="tdFooterClasses(footer) + ' footer-row'"
             :id="footer + (tableId ? ('-' + tableId) : '')">
-            <component :is="footer"></component>
+            <component :is="footer" :current-page="currentPage" :num-pages="numPages" :body="pBody" :header="tableHeader" :statics="statics"></component>
           </th>
         </tr>
       </tfoot>
@@ -60,7 +60,10 @@
         column2stampMap: {},
         counter: {c: 0},
         footerTemplates: [],
+        footerComponents: [],
         footers: [],
+        statics: [],
+        staticsToAdd: [],
         currentPage: 1
       }
     },
@@ -147,6 +150,17 @@
             return
           }
           bodyParsing.camelizeHeader(this.header)
+          // create static data
+          this.header.filter(c => c.static !== undefined).forEach(c => {
+            if (c.key === undefined && typeof c.static === 'string') {
+              c.key = c.static
+            }
+            if (Array.isArray(c.static)) {
+              this.staticsToAdd.push(...c.static)
+            } else {
+              this.staticsToAdd.push(c.static)
+            }
+          })
           return this.header
         }
         // else, the header is an array of strings, build one
@@ -186,7 +200,8 @@
       }
 
       if (this.autoLoad === false) {
-        this.makepBody('immediateRender') // todo: this immediateRender is useless, no point i build the pbody here
+        this.makepBody()
+        this.addStatics()
       }
 
       // Deprecation warning for slot
@@ -203,6 +218,10 @@
         })
         // Harvest the footer elements
         Array.from(this.$options._content.querySelectorAll('footer')).forEach(el => {
+          const footerComponent = el.getAttribute(':is') || el.getAttribute('v-bind:is')
+          if (footerComponent) {
+            this.footerComponents.push(footerComponent)
+          }
           this.footerTemplates.push(this.$options._content.removeChild(el))
         })
         // Drain spurious elements draining the slot
@@ -216,7 +235,7 @@
         // discouraging language students and professionals from using
         // the table, need to find a better solution.
         let col = camelCase(el.attributes.col.value.replace(/\-/, ' ')
-          .replace(/\./, 'ʬ').replace(/\+/, 'ʭ')).replace(/ʬ/, '.').replace(/ʭ/, '+')
+          .replace(/\./, 'ʬ').replace(/\+/, 'ʭ').replace(/_/, 'ʫ')).replace(/ʬ/, '.').replace(/ʭ/, '+').replace(/ʫ/, '_')
         if (commonTagRE.test(tag)) {
           console.error('[Smart Table Usage Error] HTML element"' + tag +
           '" cannot be a component. Skipping')
@@ -270,30 +289,20 @@
             },
             cancel () {
               this.$dispatch('cancel', {id: this.id, col: this.col})
+            },
+            statics (staticName) {
+              return this.$parent.statics.find(s => s._id === this.id)[staticName]
             }
           }
         }
         this.$options.components[col] = Vue.extend({
-          mixins: [baseMixin, dataMixin, propsMixin, initProps, smartMethods] // todo also copy content
+          mixins: [baseMixin, dataMixin, propsMixin, initProps, smartMethods] // todo: also copy content
         })
       })
       // build footers
       let smartFooter = {
         components: this.$root.$options.components,
-        computed: {
-          currentPage () {
-            return this.$parent.currentPage
-          },
-          numPages () {
-            return this.$parent.numPages
-          },
-          body () {
-            return this.pBody
-          },
-          header () {
-            return this.tableHeader
-          }
-        },
+        props: ['currentPage', 'numPages', 'body', 'header', 'statics'],
         methods: {
           pag (p) {
             this.$dispatch('pagination', { goTo: p })
@@ -312,6 +321,17 @@
         this.footers.push('footer' + counter)
         counter++
       })
+      this.footerComponents.forEach(cmpName => {
+        const res = this.$root.$options.components[cmpName] ||
+                    this.$root.$options.components[camelCase(cmpName)] ||
+                    this.$root.$options.components[pascalCase(cmpName)]
+        const baseMixin = res.options
+        this.$options.components['footer' + counter] = Vue.extend({
+          mixins: [baseMixin, smartFooter]
+        })
+        this.footers.push('footer' + counter)
+        counter++
+      })
     },
     compiled () {
       if (this.autoLoad === true) {
@@ -321,18 +341,19 @@
     watch: {
       'body' () {
         this.makepBody()
+        this.addStatics()
       }
     },
     methods: {
-      makepBody (immediateRender = false) {
+      makepBody () {
         let malleableBody = []
         const body = this.body || []
         body.forEach(row => {
           malleableBody.push(Object.assign({}, row, {_show: true}))
         })
         Vue.set(this, 'pBody', malleableBody)
-        bodyParsing.deriveBody(this.pBody, this.tableHeader.map(c => c.key))
         bodyParsing.bodyWithIds(this.pBody, this.idCol)
+        bodyParsing.deriveBody(this.pBody, this.tableHeader.map(c => c.key))
         this.applyFilters()
 
         // destroy removed components
@@ -346,6 +367,26 @@
             this.$options.components[col] = Vue.extend(PlainText)
           }
         })
+      },
+      addStatics () {
+        this.staticsToAdd.forEach(s => {
+          this.pBody.forEach(row => {
+            const curVal = this.statics.find(_s => _s._id === row._id)
+            if (curVal === undefined) {
+              this.statics.push({ _id: row._id, [s]: { v: undefined } })
+            } else {
+              if (curVal[s] === undefined) {
+                Object.assign(curVal, { [s]: { v: undefined } })
+              }
+            }
+          })
+        })
+        // destroy removed components statics
+        let insistingIds = this.statics.map(s => s._id)
+        let staticsIdsToRemove = insistingIds.filter(s => this.pBody.map(r => r._id).indexOf(s) === -1)
+        staticsIdsToRemove.map(sId => this.statics.find(s => s._id === sId)).forEach(s => this.statics.$remove(s))
+        debugger
+        this.staticsToAdd = []
       },
       compareFunction (sortKey) {
         let child = this.$children.find(c => c.col === sortKey)
