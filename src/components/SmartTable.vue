@@ -15,7 +15,7 @@
             :colspan="tableHeader.length"
             :class="tdFooterClasses(footer) + ' footer-row'"
             :id="footer + (tableId ? ('-' + tableId) : '')">
-            <component :is="footer" :current-page="currentPage" :num-pages="numPages" :body="pBody" :header="tableHeader" :statics="statics"></component>
+            <component :is="footer" :current-page="currentPage" :num-pages="numPages" :body="pBody" :header="tableHeader" :statics="statics" :meta="meta"></component>
           </th>
         </tr>
       </tfoot>
@@ -56,6 +56,7 @@
         mandatory: [], // [col]true|false
         filters: [], // {filter: string or function, col: string or array of strings}
         pBody: [],
+        meta: undefined,
         elHarvest: [],
         column2stampMap: {},
         counter: {c: 0},
@@ -102,7 +103,7 @@
       },
       endpoint: {
         type: String,
-        default: 'http://localhost:8080'
+        default: undefined
       },
       editable: {
         type: Array,
@@ -191,12 +192,12 @@
         return finalHeader
       }
     },
-    init () {
-
-    },
     beforeCompile () {
       if ((this.body === undefined || this.body.length < 1) && this.autoLoad === false) {
         console.warn('[Smart Table Usage Warning] Body passed is empty, if you want to load data set auto-load to true')
+      }
+      if (this.autoLoad === true && this.endpoint === undefined) {
+        console.error('[Smart Table Usage Error] Auto-load was set to true, but there is no endpoint prop set (ensure that it is a static prop, with no :)')
       }
 
       if (this.autoLoad === false) {
@@ -302,7 +303,7 @@
       // build footers
       let smartFooter = {
         components: this.$root.$options.components,
-        props: ['currentPage', 'numPages', 'body', 'header', 'statics'],
+        props: ['currentPage', 'numPages', 'body', 'header', 'statics', 'meta'],
         methods: {
           pag (p) {
             this.$dispatch('pagination', { goTo: p })
@@ -342,6 +343,9 @@
       'body' () {
         this.makepBody()
         this.addStatics()
+      },
+      'endpoint' () {
+        this.refresh()
       }
     },
     methods: {
@@ -385,7 +389,6 @@
         let insistingIds = this.statics.map(s => s._id)
         let staticsIdsToRemove = insistingIds.filter(s => this.pBody.map(r => r._id).indexOf(s) === -1)
         staticsIdsToRemove.map(sId => this.statics.find(s => s._id === sId)).forEach(s => this.statics.$remove(s))
-        debugger
         this.staticsToAdd = []
       },
       compareFunction (sortKey) {
@@ -418,19 +421,23 @@
       },
       refresh () {
         this.$dispatch('before-request')
-        this.$http.get(this.endpoint).then((response) => {
+        this.$http.get(this.endpoint).then(response => {
           let retBody = []
           if (this.bodyPath.length === 0) {
             retBody = response.data
           } else {
             retBody = response.data[this.bodyPath]
+            this.meta = response.data
+            delete this.meta[this.bodyPath]
+          }
+          if (retBody === undefined) {
+            console.warn('[Smart Table Warning] Received body was empty. Body-path used was: \'' + this.bodyPath + '\'')
           }
           Vue.set(this, 'body', retBody)
           this.makepBody()
           this.$dispatch('successful-request')
           this.$dispatch('after-request')
           this.$set('error', false)
-          this.updateInjectedValues()
         }, (response) => {
           this.$set('error', { status: response.status, data: response.data.error })
           this.$dispatch('failed-request')
