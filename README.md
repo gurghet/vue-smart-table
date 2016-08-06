@@ -7,7 +7,7 @@
 ![Smart Table for pokeapi.co](http://i.imgur.com/NonKEgZ.gif)
 [____________________________LIVE DEMO](https://jsfiddle.net/gurghet/3oe341LL/1/)
 
-> Vue Smart Table lets you deploy beautiful tables when you are in a hurry and all you got is a tangled json from the backend.
+> Vue Smart Table lets you deploy beautiful, complex tables when you are in a hurry and all you got is a tangled json from the backend.
 
 > After such a hack you are left with super mainainable code because the table is completely modular and divided in components.
 
