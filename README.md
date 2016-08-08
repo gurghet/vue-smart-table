@@ -5,7 +5,7 @@
 [![Twitter URL](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&maxAge=2592000)](http://twitter.com/share?text=Cut%20development%20time.%20Smart%20Table%20renders%20cool%20ui%20grids%20with%200%20effort%20and%20max%20modularity&url=http://bit.ly/29TxlG6)
 
 ![Smart Table for pokeapi.co](http://i.imgur.com/NonKEgZ.gif)
-[____________________________LIVE DEMO](https://jsfiddle.net/3oe341LL/6/)
+[____________________________LIVE DEMO](https://jsfiddle.net/gurghet/xpp80yx0/)
 
 > Vue Smart Table lets you deploy beautiful, complex tables when you are in a hurry and all you got is a tangled json from the backend.
 
