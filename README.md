@@ -4,9 +4,6 @@
 [![npm](https://img.shields.io/npm/dt/vue-smart-table.svg?maxAge=2592000)](https://www.npmjs.com/package/vue-smart-table)
 [![Twitter URL](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&maxAge=2592000)](http://twitter.com/share?text=Cut%20development%20time.%20Smart%20Table%20renders%20cool%20ui%20grids%20with%200%20effort%20and%20max%20modularity&url=http://bit.ly/29TxlG6)
 
-![Smart Table for pokeapi.co](http://i.imgur.com/NonKEgZ.gif)
-[____________________________LIVE DEMO](https://jsfiddle.net/gurghet/xpp80yx0/)
-
 > Vue Smart Table lets you deploy beautiful, complex tables when you are in a hurry and all you got is a tangled json from the backend.
 
 > After such a hack you are left with super mainainable code because the table is completely modular and divided in components.
@@ -122,6 +119,11 @@ The format of the `body` prop is like the following:
 [ { _id: 3 , name: 'John'  , surname: 'Smith' },
   { _id: 92, name: 'Fulano', surname: 'Perro' } ]
 ```
+
+## Pokédex table
+
+![Smart Table for pokeapi.co](http://i.imgur.com/NonKEgZ.gif)
+[____________________________LIVE DEMO](https://jsfiddle.net/gurghet/xpp80yx0/)
 
 ## Contribute
 
