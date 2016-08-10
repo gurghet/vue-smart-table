@@ -4,11 +4,7 @@
 [![npm](https://img.shields.io/npm/dt/vue-smart-table.svg?maxAge=2592000)](https://www.npmjs.com/package/vue-smart-table)
 <a class="github-button" href="https://github.com/gurghet/vue-smart-table" data-icon="octicon-star" data-count-href="/gurghet/vue-smart-table/stargazers" data-count-api="/repos/gurghet/vue-smart-table#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star gurghet/vue-smart-table on GitHub">Star</a>
 
-> Vue Smart Table lets you deploy beautiful, complex tables when you are in a hurry and all you got is a tangled json from the backend.
-
-> After such a hack you are left with super mainainable code because the table is completely modular and divided in components.
-
-> You can then pick it up and perfect your work without long rewrites.
+> Vue Smart Table is a simple but powerful table framework. Every column is a component.
 
 ## Usage
 
