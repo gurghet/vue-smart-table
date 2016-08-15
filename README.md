@@ -119,7 +119,7 @@ The format of the `body` prop is like the following:
 ## Pokédex table
 
 ![Smart Table for pokeapi.co](http://i.imgur.com/NonKEgZ.gif)
-[____________________________LIVE DEMO](https://jsfiddle.net/gurghet/xpp80yx0/)
+[____________________________LIVE DEMO](https://jsfiddle.net/gurghet/xpp80yx0/1/)
 
 ## Contribute
 
