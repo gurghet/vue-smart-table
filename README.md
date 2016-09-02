@@ -86,7 +86,7 @@ The `vue-smart-table.js` does not contain `vue` and `vue-resource` dependencies,
 ``` html
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-smart-table/2.5.0/vue-smart-table.js"></script>
 <!-- or -->
-<script src="https://npmcdn.com/vue-smart-table@2.5.0/dist/static/vue-smart-table.js"></script>
+<script src="https://unpkg.com/vue-smart-table@2.5.0/dist/static/vue-smart-table.js"></script>
 ```
 
 That’s it! The component will register itself! Remember do add a `min.js` when going in production.
