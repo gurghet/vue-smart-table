@@ -2,7 +2,6 @@
 
 [![Join the chat at https://gitter.im/gurghet/vue-smart-table](https://badges.gitter.im/gurghet/vue-smart-table.svg)](https://gitter.im/gurghet/vue-smart-table?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![npm](https://img.shields.io/npm/dt/vue-smart-table.svg?maxAge=2592000)](https://www.npmjs.com/package/vue-smart-table)
-<a class="github-button" href="https://github.com/gurghet/vue-smart-table" data-icon="octicon-star" data-count-href="/gurghet/vue-smart-table/stargazers" data-count-api="/repos/gurghet/vue-smart-table#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star gurghet/vue-smart-table on GitHub">Star</a>
 
 > Vue Smart Table is a simple but powerful table framework. Every column is a component.
 
