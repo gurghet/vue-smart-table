@@ -182,4 +182,4 @@ function camelizeHeader (header) {
   })
 }
 
-export default { deriveBody, bodyWithIds, filterBody, sortBody, camelizeHeader }
+module.exports = { deriveBody, bodyWithIds, filterBody, sortBody, camelizeHeader }
