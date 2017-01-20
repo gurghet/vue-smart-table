@@ -1,3 +1,5 @@
+> Not compatible with Vue 2.0 the new version will be out in March-April
+
 # vue-smart-table
 
 [![Join the chat at https://gitter.im/gurghet/vue-smart-table](https://badges.gitter.im/gurghet/vue-smart-table.svg)](https://gitter.im/gurghet/vue-smart-table?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
