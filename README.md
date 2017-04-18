@@ -166,9 +166,9 @@ Here is a list of similar components that also display a table:
 
 - [vue-table](https://github.com/ratiw/vue-table)
 
-##Changelog
+## Changelog
 
-###2.5.0
+### 2.5.0
 
 - Complete engine rewrite!
   - Core logic was ~100 lines, now only ~15
@@ -177,51 +177,51 @@ Here is a list of similar components that also display a table:
   - wow!
 - [Feature] Client filtering is now supported through the `filter` event
 
-###2.4.3
+### 2.4.3
 
 - [Fix] Polyfill for find added for Chrome for Android
 
-###2.4.2
+### 2.4.2
 
 - [Fix] As a workaround for Safari, use explicitly CSS polyfill
 
-###2.4.1
+### 2.4.1
 
 - [Fix] Added polyfill for CSS.escape
 - [Fix] Removed instances of HTMLNodelist.forEach
 
-###2.4.0
+### 2.4.0
 
 - [Feature] Inline edit capabilities with more advanced components
 - Breaking change: format of the `header` prop is changed (`:header="[{key: 'key1', label: 'label'}, {key: 'keyEqualsToLabel'}]"`
 - Breaking change: `body-field` => `body-path`
 - Bootstrap/Semantic compatibility
 
-###2.3.1
+### 2.3.1
 
 - [Fix] Shows `_id` column if explicitly set in the header
 
-###2.3.0
+### 2.3.0
 
 - click column headers to order by that column
 
-###2.2.1
+### 2.2.1
 
 - again forgot about the dist files -.-
 
-###2.2.0
+### 2.2.0
 
 - can set body-field to empty string if data is already in an array
 
-###2.1.1
+### 2.1.1
 
 - forgot to rebuild the dist files -.-
 
-###2.1.0
+### 2.1.0
 
 - derived columns (`:header="{'home+office+mobile':'contacts'}"`)
 
-###2.0.0
+### 2.0.0
 
 - completely new body format (see docs)
 - auto loading data on startup using the "auto-load" prop
@@ -229,11 +229,11 @@ Here is a list of similar components that also display a table:
 - ids can now include letters, some signs (._-) and can be null
 - body and id fields can be changed through "body-field" and "id-col" props
 
-###1.0.5
+### 1.0.5
 
 - stains the global scope with SmartTable constructor
 
-###1.0.4
+### 1.0.4
 
 Working on break dependencies on other modules
 - build now yields only two files
