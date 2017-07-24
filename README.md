@@ -1,4 +1,4 @@
-> Not compatible with Vue 2.0 the new version will be out in March-April
+> Not compatible with Vue 2.0, looking for a maintainer for this project.
 
 # vue-smart-table
 
